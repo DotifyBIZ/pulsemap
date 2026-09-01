@@ -1,10 +1,13 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Windows.System;
 
 namespace Pulsemap.App.ViewModels;
 
@@ -23,14 +26,20 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly ISurveyFileService _surveyFileService;
     private readonly IPropagationModel _propagationModel;
     private readonly IApPlacementOptimizer _placementOptimizer;
+    private readonly IWlanAdapterService _wlanAdapterService;
 
     private string? _filePath;
 
-    public WorkspaceViewModel(ISurveyFileService surveyFileService, IPropagationModel propagationModel, IApPlacementOptimizer placementOptimizer)
+    public WorkspaceViewModel(
+        ISurveyFileService surveyFileService,
+        IPropagationModel propagationModel,
+        IApPlacementOptimizer placementOptimizer,
+        IWlanAdapterService wlanAdapterService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
         _placementOptimizer = placementOptimizer;
+        _wlanAdapterService = wlanAdapterService;
     }
 
     public event EventHandler? FloorChanged;
@@ -86,6 +95,31 @@ public partial class WorkspaceViewModel : ObservableObject
         _ => band.ToString(),
     };
 
+    // Adapter tab
+    public ObservableCollection<NetworkAdapterInfo> Adapters { get; } = [];
+
+    public ObservableCollection<WlanNetworkDisplay> ScanResults { get; } = [];
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
+    public partial NetworkAdapterInfo? SelectedAdapter { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
+    public partial bool IsScanning { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLocationSettingsLink))]
+    public partial WlanScanStatus? LastScanStatus { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasScanStatusMessage))]
+    public partial string? ScanStatusMessage { get; set; }
+
+    public bool HasScanStatusMessage => ScanStatusMessage is not null;
+
+    public bool ShowLocationSettingsLink => LastScanStatus == WlanScanStatus.LocationAccessDenied;
+
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
         _filePath = filePath;
@@ -100,6 +134,7 @@ public partial class WorkspaceViewModel : ObservableObject
             OnPropertyChanged(nameof(AvailableBands));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
             Recompute();
+            await LoadAdaptersAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -110,6 +145,75 @@ public partial class WorkspaceViewModel : ObservableObject
             IsLoading = false;
         }
     }
+
+    private async Task LoadAdaptersAsync(CancellationToken cancellationToken)
+    {
+        var adapters = await _wlanAdapterService.GetAdaptersAsync(cancellationToken);
+        Adapters.Clear();
+        foreach (var adapter in adapters)
+        {
+            Adapters.Add(adapter);
+        }
+
+        SelectedAdapter = Adapters.Count > 0 ? Adapters[0] : null;
+    }
+
+    private bool CanScan() => SelectedAdapter is not null && !IsScanning;
+
+    [RelayCommand(CanExecute = nameof(CanScan))]
+    private async Task ScanAsync()
+    {
+        if (SelectedAdapter is null)
+        {
+            return;
+        }
+
+        IsScanning = true;
+        ScanStatusMessage = null;
+        try
+        {
+            var result = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+            LastScanStatus = result.Status;
+            ScanResults.Clear();
+
+            switch (result.Status)
+            {
+                case WlanScanStatus.Success:
+                    foreach (var network in result.Networks.OrderByDescending(n => n.SignalDbm))
+                    {
+                        string bandPart = network.Band is { } band ? BandDisplayName(band) : "unknown band";
+                        string ssid = string.IsNullOrEmpty(network.Ssid) ? "(hidden network)" : network.Ssid;
+                        ScanResults.Add(new WlanNetworkDisplay(
+                            ssid,
+                            $"{network.Bssid} · ch{network.Channel} · {bandPart} · {network.SignalDbm:0} dBm"));
+                    }
+
+                    ScanStatusMessage = result.Networks.Count == 0 ? "No networks found nearby." : null;
+                    break;
+
+                case WlanScanStatus.LocationAccessDenied:
+                    ScanStatusMessage = "Windows needs Location access to show WiFi scan results for this app.";
+                    break;
+
+                case WlanScanStatus.NoAdapter:
+                    ScanStatusMessage = "Couldn't reach the WLAN service — is WiFi hardware available and enabled?";
+                    break;
+
+                case WlanScanStatus.Failed:
+                default:
+                    ScanStatusMessage = "The scan didn't complete. Try again.";
+                    break;
+            }
+        }
+        finally
+        {
+            IsScanning = false;
+        }
+    }
+
+    [RelayCommand]
+    private static async Task OpenLocationSettingsAsync() =>
+        await Launcher.LaunchUriAsync(new Uri("ms-settings:privacy-location"));
 
     public async Task AddTestPointAsync(Point2D position)
     {

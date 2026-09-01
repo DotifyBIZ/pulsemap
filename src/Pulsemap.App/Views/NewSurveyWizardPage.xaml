@@ -37,14 +37,17 @@
                     <!-- Step 1: Basics -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsBasicsStepVisible, Mode=OneWay}" Spacing="20">
                         <TextBlock Text="1. Basics" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                        <TextBox Header="Survey name" PlaceholderText="e.g. Riverside Distribution Center" Text="{x:Bind ViewModel.SurveyName, Mode=TwoWay}" />
+                        <TextBox
+                            Header="Survey name"
+                            PlaceholderText="e.g. Riverside Distribution Center"
+                            Text="{x:Bind ViewModel.SurveyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBox
                             Header="Site description (optional)"
                             PlaceholderText="A short note about this site"
                             AcceptsReturn="True"
                             TextWrapping="Wrap"
                             Height="80"
-                            Text="{x:Bind ViewModel.SiteDescription, Mode=TwoWay}" />
+                            Text="{x:Bind ViewModel.SiteDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <StackPanel Spacing="8">
                             <TextBlock Text="What are you surveying?" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
                             <RadioButton
@@ -89,7 +92,7 @@
                                                 <ColumnDefinition Width="90" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" PlaceholderText="Room name" Text="{x:Bind Name, Mode=TwoWay}" />
+                                            <TextBox Grid.Column="0" PlaceholderText="Room name" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                             <NumberBox Grid.Column="1" PlaceholderText="Width (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind WidthMeters, Mode=TwoWay}" />
                                             <NumberBox Grid.Column="2" PlaceholderText="Length (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind LengthMeters, Mode=TwoWay}" />
                                             <Button Grid.Column="3" Content="Remove" Tag="{x:Bind}" Click="RemoveRoom_Click" />

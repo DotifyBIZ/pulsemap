@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Persistence;
@@ -82,6 +83,7 @@ public partial class App : Application
         // App
         services.AddSingleton<ISurveyLibraryService, SurveyLibraryService>();
         services.AddSingleton<IFloorPlanFilePickerService, FloorPlanFilePickerService>();
+        services.AddSingleton<IWlanAdapterService, WlanAdapterService>();
 
         // ViewModels — transient, recreated per navigation.
         services.AddTransient<HomeViewModel>();

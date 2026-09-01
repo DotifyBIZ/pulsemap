@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Pulsemap.App.Controls"
+    xmlns:vm="using:Pulsemap.App.ViewModels"
     mc:Ignorable="d"
     Background="{StaticResource Gray50Brush}">
 
@@ -44,7 +45,7 @@
         <Grid Grid.Row="2" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="440" />
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Margin="0,0,16,0">
@@ -86,7 +87,7 @@
                         </StackPanel>
                     </PivotItem>
 
-                    <PivotItem Header="Recommendations">
+                    <PivotItem Header="Suggestions">
                         <StackPanel Spacing="12">
                             <Button
                                 Content="Suggest Placements"
@@ -105,11 +106,48 @@
                     </PivotItem>
 
                     <PivotItem Header="Adapter">
-                        <TextBlock
-                            Text="Adapter detection isn't available in this build yet — reserved for a future update."
-                            TextWrapping="Wrap"
-                            FontSize="{StaticResource FontSizeSm}"
-                            Foreground="{StaticResource Gray500Brush}" />
+                        <StackPanel Spacing="12">
+                            <ComboBox
+                                Header="Adapter"
+                                ItemsSource="{x:Bind ViewModel.Adapters}"
+                                SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
+                                DisplayMemberPath="Name"
+                                HorizontalAlignment="Stretch" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Button
+                                    Content="Scan"
+                                    Background="{StaticResource Primary600Brush}"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    Padding="16,10"
+                                    Command="{x:Bind ViewModel.ScanCommand}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
+                            </StackPanel>
+
+                            <TextBlock
+                                Text="{x:Bind ViewModel.ScanStatusMessage, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.HasScanStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray500Brush}" />
+
+                            <Button
+                                Content="Open Location Settings"
+                                Visibility="{x:Bind ViewModel.ShowLocationSettingsLink, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.OpenLocationSettingsCommand}" />
+
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.ScanResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WlanNetworkDisplay">
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                     </PivotItem>
                 </Pivot>
             </Border>
