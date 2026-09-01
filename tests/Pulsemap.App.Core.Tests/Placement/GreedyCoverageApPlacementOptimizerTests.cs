@@ -69,10 +69,13 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     [Fact]
     public void SuggestPlacements_ChannelWithMeasuredInterference_IsDeprioritized()
     {
+        // Channel ranking is intentionally floor-wide (unlike the SINR coverage-reliability
+        // threshold, which is position-gated) — parked far outside any candidate area so this
+        // test isolates channel ranking without also triggering the SINR effect.
         var floor = SquareRoomFloor(sizeMeters: 10);
         floor.TestPoints.Add(new TestPoint
         {
-            Position = new Point2D(5, 5),
+            Position = new Point2D(1000, 1000),
             InterferenceReadings =
             [
                 new WlanNetworkReading("NeighborNet", "AA:AA:AA:AA:AA:AA", Band.TwoPointFourGhz, 1, -40),
@@ -94,6 +97,70 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
 
         Assert.Single(placements);
         Assert.Equal(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
+    }
+
+    [Fact]
+    public void SuggestPlacements_NoInterference_LargeRoomStillCoveredByOneAp()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 20);
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+    }
+
+    [Fact]
+    public void SuggestPlacements_StrongMeasuredInterferenceInFarCorner_RequiresMoreThanOneAp()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 20);
+        floor.TestPoints.Add(new TestPoint
+        {
+            Position = new Point2D(20, 20),
+            InterferenceReadings =
+            [
+                new WlanNetworkReading("StrongNeighbor", "AA:AA:AA:AA:AA:AA", Band.TwoPointFourGhz, 6, -35),
+            ],
+        });
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.True(placements.Count > 1, $"Expected the SINR-adjusted threshold near strong interference to force a second AP, got {placements.Count}.");
+    }
+
+    [Fact]
+    public void SuggestPlacements_MeasurementFarFromCandidateArea_DoesNotAffectPlacement()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 10);
+        floor.TestPoints.Add(new TestPoint
+        {
+            Position = new Point2D(1000, 1000),
+            InterferenceReadings =
+            [
+                new WlanNetworkReading("FarAwayNetwork", "AA:AA:AA:AA:AA:AA", Band.TwoPointFourGhz, 6, -20),
+            ],
+        });
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+    }
+
+    [Fact]
+    public void SuggestPlacements_NearbyMeasurementOnDifferentBand_DoesNotAffectPlacement()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 20);
+        floor.TestPoints.Add(new TestPoint
+        {
+            Position = new Point2D(20, 20),
+            InterferenceReadings =
+            [
+                new WlanNetworkReading("NeighborOnFiveGhz", "AA:AA:AA:AA:AA:AA", Band.FiveGhz, 36, -35),
+            ],
+        });
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
     }
 
     // Three 10x10m rooms in a row, separated by concrete dividing walls — enough attenuation at
