@@ -102,6 +102,7 @@ public partial class App : Application
         // App
         services.AddSingleton<ISurveyLibraryService, SurveyLibraryService>();
         services.AddSingleton<IFloorPlanFilePickerService, FloorPlanFilePickerService>();
+        services.AddSingleton<FloorPlanImageCache>();
         services.AddSingleton<IWlanAdapterService, WlanAdapterService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
 
