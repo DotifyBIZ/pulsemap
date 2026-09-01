@@ -39,7 +39,11 @@ jobs:
 
   release:
     needs: build-verify
-    runs-on: ubuntu-latest
+    # Was ubuntu-latest — moved to windows-latest because the release itself now also builds the
+    # InnoSetup installer (scripts/build-installer.ps1, invoked by @semantic-release/exec's
+    # prepareCmd), which needs a real `dotnet publish` of the WinUI3 app plus ISCC.exe. Node/npm
+    # for semantic-release itself runs fine on windows-latest too.
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,6 +53,13 @@ jobs:
           # requires the credential actions/checkout leaves behind by default.
           persist-credentials: true
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -56,6 +67,14 @@ jobs:
 
       - name: Install release tooling
         run: npm ci
+
+      # windows-latest (Windows Server 2025) dropped the Inno Setup preinstall that the older
+      # windows-2022 image had — confirmed against actions/runner-images, not assumed. Version
+      # pinned the same way every other dependency in this repo is.
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup --version=6.7.1 -y --no-progress
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files (x86)\Inno Setup 6"
 
       - name: Run semantic-release
         env:
