@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Pulsemap.App.Views.WorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Pulsemap.App.Controls"
+    xmlns:vm="using:Pulsemap.App.ViewModels"
+    mc:Ignorable="d"
+    Background="{StaticResource Gray50Brush}">
+
+    <Grid Padding="32,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Button Grid.Column="1" Content="Back" Click="Back_Click" />
+        </Grid>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
+            <ToggleButton x:Name="SelectToolButton" Content="Select" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Name="AddTestPointToolButton" Content="Add Test Point" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Name="DrawWallToolButton" Content="Draw Wall" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Name="DeleteToolButton" Content="Delete" Checked="ToolToggle_Checked" />
+
+            <ComboBox x:Name="BandSelector" Width="120" Margin="16,0,0,0" SelectionChanged="BandSelector_SelectionChanged" />
+
+            <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
+        </StackPanel>
+
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="440" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Margin="0,0,16,0">
+                <controls:FloorPlanCanvas x:Name="PlanCanvas" />
+            </Border>
+
+            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                <Pivot>
+                    <PivotItem Header="Coverage">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Signal legend" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Rectangle Width="14" Height="14" Fill="Green" RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="Excellent (&#8805; -50dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Rectangle Width="14" Height="14" Fill="YellowGreen" RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="Good (&#8805; -60dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Rectangle Width="14" Height="14" Fill="Gold" RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="Fair (&#8805; -67dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Rectangle Width="14" Height="14" Fill="Orange" RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="Weak (&#8805; -75dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Rectangle Width="14" Height="14" Fill="Red" RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="Poor (&lt; -75dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock
+                                Text="Predictive only, from placed access points — not yet based on real measurements."
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeXs}"
+                                Foreground="{StaticResource Gray400Brush}" />
+                        </StackPanel>
+                    </PivotItem>
+
+                    <PivotItem Header="Suggestions">
+                        <StackPanel Spacing="12">
+                            <Button
+                                Content="Suggest Placements"
+                                Background="{StaticResource Primary600Brush}"
+                                Foreground="White"
+                                CornerRadius="6"
+                                Padding="16,10"
+                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}" />
+                            <TextBlock
+                                x:Name="AccessPointSummaryText"
+                                Text="{x:Bind ViewModel.AccessPointSummaryDisplay, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray700Brush}" />
+                        </StackPanel>
+                    </PivotItem>
+
+                    <PivotItem Header="Adapter">
+                        <StackPanel Spacing="12">
+                            <ComboBox
+                                Header="Adapter"
+                                ItemsSource="{x:Bind ViewModel.Adapters}"
+                                SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
+                                DisplayMemberPath="Name"
+                                HorizontalAlignment="Stretch" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Button
+                                    Content="Scan"
+                                    Background="{StaticResource Primary600Brush}"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    Padding="16,10"
+                                    Command="{x:Bind ViewModel.ScanCommand}" />
+                                <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
+                            </StackPanel>
+
+                            <TextBlock
+                                Text="{x:Bind ViewModel.ScanStatusMessage, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.HasScanStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray500Brush}" />
+
+                            <Button
+                                Content="Open Location Settings"
+                                Visibility="{x:Bind ViewModel.ShowLocationSettingsLink, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.OpenLocationSettingsCommand}" />
+
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.ScanResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WlanNetworkDisplay">
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </PivotItem>
+                </Pivot>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

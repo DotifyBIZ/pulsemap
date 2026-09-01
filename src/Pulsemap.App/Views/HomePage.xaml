@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Pulsemap.App.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:services="using:Pulsemap.App.Services"
+    mc:Ignorable="d"
+    Background="{StaticResource Gray50Brush}">
+
+    <Grid Padding="32,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Home" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="Your surveys, all in one place." FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Button Grid.Column="1" VerticalAlignment="Top" Background="{StaticResource Primary600Brush}" CornerRadius="6" Padding="16,10" Click="NewSurvey_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="White" />
+                    <TextBlock Text="New Survey" Foreground="White" FontWeight="SemiBold" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <TextBlock Grid.Row="1" Text="Recent surveys" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" Margin="0,32,0,14" />
+
+        <Grid Grid.Row="2">
+            <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0" />
+
+            <GridView
+                ItemsSource="{x:Bind ViewModel.Surveys}"
+                SelectionMode="None"
+                IsItemClickEnabled="True"
+                ItemClick="SurveysGridView_ItemClick"
+                HorizontalAlignment="Left">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="services:SurveySummary">
+                        <Border
+                            Background="White"
+                            CornerRadius="16"
+                            BorderBrush="{StaticResource Gray200Brush}"
+                            BorderThickness="1"
+                            Padding="20"
+                            Width="320">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{x:Bind Name}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind SiteDescription}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind ModifiedAtDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray400Brush}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </Grid>
+    </Grid>
+</Page>

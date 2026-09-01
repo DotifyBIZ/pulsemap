@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Pulsemap.App.Views.NewSurveyWizardPage"
+    x:Name="PageRoot"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Pulsemap.App.Core.Models"
+    mc:Ignorable="d"
+    Background="{StaticResource Gray50Brush}">
+
+    <Grid Padding="32,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="New Survey" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="Set up a survey — you'll draw walls and collect measurements in the workspace." FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Button Grid.Column="1" VerticalAlignment="Top" Content="Cancel" Click="Cancel_Click" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" Margin="0,24,0,0" HorizontalAlignment="Left" HorizontalScrollBarVisibility="Disabled">
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="32" Width="560">
+                <Grid>
+                    <!-- Step 1: Basics -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsBasicsStepVisible, Mode=OneWay}" Spacing="20">
+                        <TextBlock Text="1. Basics" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBox
+                            Header="Survey name"
+                            PlaceholderText="e.g. Riverside Distribution Center"
+                            Text="{x:Bind ViewModel.SurveyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox
+                            Header="Site description (optional)"
+                            PlaceholderText="A short note about this site"
+                            AcceptsReturn="True"
+                            TextWrapping="Wrap"
+                            Height="80"
+                            Text="{x:Bind ViewModel.SiteDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="What are you surveying?" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
+                            <RadioButton
+                                x:Name="NewDeploymentRadio"
+                                Content="New deployment — no access points yet"
+                                GroupName="SurveyType"
+                                IsChecked="True"
+                                Checked="SurveyTypeRadio_Checked" />
+                            <RadioButton
+                                x:Name="ExistingAuditRadio"
+                                Content="Existing network — auditing what's already there"
+                                GroupName="SurveyType"
+                                Checked="SurveyTypeRadio_Checked" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Step 2: Floor plan -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsFloorPlanStepVisible, Mode=OneWay}" Spacing="20">
+                        <TextBlock Text="2. Floor plan" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <StackPanel Spacing="8">
+                            <RadioButton
+                                x:Name="RoomListRadio"
+                                Content="Room list — describe rooms by name and size"
+                                GroupName="FloorPlanStyle"
+                                IsChecked="True"
+                                Checked="FloorPlanStyleRadio_Checked" />
+                            <RadioButton
+                                x:Name="ImageRadio"
+                                Content="Image or PDF — upload an existing floor plan"
+                                GroupName="FloorPlanStyle"
+                                Checked="FloorPlanStyleRadio_Checked" />
+                        </StackPanel>
+
+                        <StackPanel Visibility="{x:Bind ViewModel.IsRoomListStyleSelected, Mode=OneWay}" Spacing="12">
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.Rooms}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:RoomListEntry">
+                                        <Grid ColumnSpacing="8" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="90" />
+                                                <ColumnDefinition Width="90" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" PlaceholderText="Room name" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <NumberBox Grid.Column="1" PlaceholderText="Width (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind WidthMeters, Mode=TwoWay}" />
+                                            <NumberBox Grid.Column="2" PlaceholderText="Length (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind LengthMeters, Mode=TwoWay}" />
+                                            <Button Grid.Column="3" Content="Remove" Tag="{x:Bind}" Click="RemoveRoom_Click" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="+ Add room" Command="{x:Bind ViewModel.AddRoomCommand}" />
+                        </StackPanel>
+
+                        <StackPanel Visibility="{x:Bind ViewModel.IsImageStyleSelected, Mode=OneWay}" Spacing="12">
+                            <Button Content="Choose file…" Command="{x:Bind ViewModel.PickImageCommand}" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedImageFileName, Mode=OneWay}" Foreground="{StaticResource Gray500Brush}" FontSize="{StaticResource FontSizeSm}" />
+                            <NumberBox Header="Pixels per meter" SmallChange="1" Value="{x:Bind ViewModel.PixelsPerMeter, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Step 3: Building details -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsBuildingDetailsStepVisible, Mode=OneWay}" Spacing="20">
+                        <TextBlock Text="3. Building details" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock
+                            Text="Default wall material for auto-generated room walls. You can override individual walls later in the workspace."
+                            TextWrapping="Wrap"
+                            FontSize="{StaticResource FontSizeSm}"
+                            Foreground="{StaticResource Gray500Brush}" />
+                        <ComboBox Header="Default wall material" SelectedIndex="0" SelectionChanged="WallMaterialComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Drywall" Tag="Drywall" />
+                            <ComboBoxItem Content="Glass (standard)" Tag="GlassStandard" />
+                            <ComboBoxItem Content="Glass (low-E)" Tag="GlassLowE" />
+                            <ComboBoxItem Content="Wood" Tag="Wood" />
+                            <ComboBoxItem Content="Brick" Tag="Brick" />
+                            <ComboBoxItem Content="Concrete" Tag="Concrete" />
+                            <ComboBoxItem Content="Reinforced concrete" Tag="ReinforcedConcrete" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Step 4: Adapter & bands -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsAdapterBandsStepVisible, Mode=OneWay}" Spacing="16">
+                        <TextBlock Text="4. Adapter &amp; bands" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock
+                            Text="Which bands should this survey cover? Live adapter detection happens in the workspace."
+                            TextWrapping="Wrap"
+                            FontSize="{StaticResource FontSizeSm}"
+                            Foreground="{StaticResource Gray500Brush}" />
+                        <CheckBox Content="2.4 GHz" IsChecked="{x:Bind ViewModel.Includes24Ghz, Mode=TwoWay}" />
+                        <CheckBox Content="5 GHz" IsChecked="{x:Bind ViewModel.Includes5Ghz, Mode=TwoWay}" />
+                        <CheckBox Content="6 GHz" IsChecked="{x:Bind ViewModel.Includes6Ghz, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <!-- Step 5: Review -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}" Spacing="16">
+                        <TextBlock Text="5. Review" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Name" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock Text="{x:Bind ViewModel.SurveyName, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Survey type" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock Text="{x:Bind ViewModel.SurveyTypeSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Floor plan" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock Text="{x:Bind ViewModel.FloorPlanSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Default wall material" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock Text="{x:Bind ViewModel.DefaultWallMaterialDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Bands" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock Text="{x:Bind ViewModel.BandsSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                        </StackPanel>
+
+                        <InfoBar Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="12" Margin="0,20,0,0">
+            <Button Content="Back" Command="{x:Bind ViewModel.BackCommand}" />
+            <Button
+                Content="Next"
+                Background="{StaticResource Primary600Brush}"
+                Foreground="White"
+                CornerRadius="6"
+                Padding="16,10"
+                Command="{x:Bind ViewModel.NextCommand}"
+                Visibility="{x:Bind ViewModel.IsNotReviewStep, Mode=OneWay}" />
+            <Button
+                Content="Create Survey"
+                Background="{StaticResource Primary600Brush}"
+                Foreground="White"
+                CornerRadius="6"
+                Padding="16,10"
+                Command="{x:Bind ViewModel.CreateSurveyCommand}"
+                Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}" />
+            <ProgressRing IsActive="{x:Bind ViewModel.IsCreating, Mode=OneWay}" Width="24" Height="24" />
+        </StackPanel>
+    </Grid>
+</Page>

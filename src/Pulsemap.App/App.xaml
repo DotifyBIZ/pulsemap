@@ -8,9 +8,60 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!--
+                Design tokens (docs/design-tokens.md) — inlined here rather than a separate merged
+                ResourceDictionary file: this environment's XAML compiler (WindowsAppSDK.WinUI
+                2.3.6) fails on any standalone ResourceDictionary-rooted .xaml file with an
+                unrelated "cannot find Polish error-message resources" internal error, regardless
+                of the file's content or location. Application/Page/Window-rooted files are
+                unaffected, so resources live directly in this file instead.
+            -->
+
+            <!-- Primary (brand red) -->
+            <Color x:Key="Primary50Color">#FFFEF2F2</Color>
+            <Color x:Key="Primary600Color">#FFB41618</Color>
+            <Color x:Key="Primary700Color">#FF971214</Color>
+            <SolidColorBrush x:Key="Primary50Brush" Color="{StaticResource Primary50Color}" />
+            <SolidColorBrush x:Key="Primary600Brush" Color="{StaticResource Primary600Color}" />
+            <SolidColorBrush x:Key="Primary700Brush" Color="{StaticResource Primary700Color}" />
+
+            <!-- Secondary (navy) -->
+            <Color x:Key="Secondary50Color">#FFEEEEF8</Color>
+            <Color x:Key="Secondary600Color">#FF211F60</Color>
+            <SolidColorBrush x:Key="Secondary50Brush" Color="{StaticResource Secondary50Color}" />
+            <SolidColorBrush x:Key="Secondary600Brush" Color="{StaticResource Secondary600Color}" />
+
+            <!-- Neutrals (Tailwind gray scale) -->
+            <Color x:Key="Gray50Color">#FFF9FAFB</Color>
+            <Color x:Key="Gray200Color">#FFE5E7EB</Color>
+            <Color x:Key="Gray400Color">#FF9CA3AF</Color>
+            <Color x:Key="Gray500Color">#FF6B7280</Color>
+            <Color x:Key="Gray700Color">#FF374151</Color>
+            <Color x:Key="Gray900Color">#FF111827</Color>
+            <SolidColorBrush x:Key="Gray50Brush" Color="{StaticResource Gray50Color}" />
+            <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200Color}" />
+            <SolidColorBrush x:Key="Gray400Brush" Color="{StaticResource Gray400Color}" />
+            <SolidColorBrush x:Key="Gray500Brush" Color="{StaticResource Gray500Color}" />
+            <SolidColorBrush x:Key="Gray700Brush" Color="{StaticResource Gray700Color}" />
+            <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900Color}" />
+
+            <!-- Semantic (state, never the brand accent) -->
+            <Color x:Key="SuccessColor">#FF16A34A</Color>
+            <Color x:Key="WarningColor">#FFF59E0B</Color>
+            <Color x:Key="DangerColor">#FFEF4444</Color>
+            <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+            <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+            <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+
+            <!-- Type scale (px size / line-height) -->
+            <x:Double x:Key="FontSizeXs">12</x:Double>
+            <x:Double x:Key="FontSizeSm">14</x:Double>
+            <x:Double x:Key="FontSizeBase">16</x:Double>
+            <x:Double x:Key="FontSizeLg">18</x:Double>
+            <x:Double x:Key="FontSizeXl">20</x:Double>
+            <x:Double x:Key="FontSize2xl">24</x:Double>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
