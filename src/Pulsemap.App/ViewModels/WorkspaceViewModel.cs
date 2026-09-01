@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Interpolation;
+using Pulsemap.App.Core.Measurement;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
@@ -102,6 +103,8 @@ public partial class WorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
     public partial NetworkAdapterInfo? SelectedAdapter { get; set; }
 
     [ObservableProperty]
@@ -119,6 +122,39 @@ public partial class WorkspaceViewModel : ObservableObject
     public bool HasScanStatusMessage => ScanStatusMessage is not null;
 
     public bool ShowLocationSettingsLink => LastScanStatus == WlanScanStatus.LocationAccessDenied;
+
+    // Guided measurement walk
+    private Queue<Point2D> _guidedWalkQueue = new();
+    private int _guidedWalkTotalPoints;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGuidedWalkIdle))]
+    [NotifyPropertyChangedFor(nameof(GuidedWalkProgressDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelGuidedWalkCommand))]
+    public partial bool IsGuidedWalkActive { get; set; }
+
+    public bool IsGuidedWalkIdle => !IsGuidedWalkActive;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GuidedWalkProgressDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    public partial Point2D? CurrentWalkPoint { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    public partial bool IsCapturingWalkPoint { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGuidedWalkStatusMessage))]
+    public partial string? GuidedWalkStatusMessage { get; set; }
+
+    public bool HasGuidedWalkStatusMessage => GuidedWalkStatusMessage is not null;
+
+    public string GuidedWalkProgressDisplay => IsGuidedWalkActive && CurrentWalkPoint is { } point
+        ? $"Point {_guidedWalkTotalPoints - _guidedWalkQueue.Count + 1} of {_guidedWalkTotalPoints} — walk to ({point.X:0.0}m, {point.Y:0.0}m) and confirm."
+        : "Not walking.";
 
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
@@ -191,17 +227,8 @@ public partial class WorkspaceViewModel : ObservableObject
                     ScanStatusMessage = result.Networks.Count == 0 ? "No networks found nearby." : null;
                     break;
 
-                case WlanScanStatus.LocationAccessDenied:
-                    ScanStatusMessage = "Windows needs Location access to show WiFi scan results for this app.";
-                    break;
-
-                case WlanScanStatus.NoAdapter:
-                    ScanStatusMessage = "Couldn't reach the WLAN service — is WiFi hardware available and enabled?";
-                    break;
-
-                case WlanScanStatus.Failed:
                 default:
-                    ScanStatusMessage = "The scan didn't complete. Try again.";
+                    ScanStatusMessage = DescribeScanStatus(result.Status);
                     break;
             }
         }
@@ -211,9 +238,102 @@ public partial class WorkspaceViewModel : ObservableObject
         }
     }
 
+    private static string DescribeScanStatus(WlanScanStatus status) => status switch
+    {
+        WlanScanStatus.LocationAccessDenied => "Windows needs Location access to show WiFi scan results for this app.",
+        WlanScanStatus.NoAdapter => "Couldn't reach the WLAN service — is WiFi hardware available and enabled?",
+        _ => "The scan didn't complete. Try again.",
+    };
+
     [RelayCommand]
     private static async Task OpenLocationSettingsAsync() =>
         await Launcher.LaunchUriAsync(new Uri("ms-settings:privacy-location"));
+
+    private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null;
+
+    [RelayCommand(CanExecute = nameof(CanStartGuidedWalk))]
+    private void StartGuidedWalk()
+    {
+        if (Survey is null)
+        {
+            return;
+        }
+
+        var points = MeasurementPointSuggester.SuggestPoints(Survey.Floor);
+        if (points.Count == 0)
+        {
+            GuidedWalkStatusMessage = "No unmeasured points to suggest — draw walls first, or every candidate point already has a nearby test point.";
+            return;
+        }
+
+        _guidedWalkQueue = new Queue<Point2D>(points);
+        _guidedWalkTotalPoints = points.Count;
+        GuidedWalkStatusMessage = null;
+        IsGuidedWalkActive = true;
+        AdvanceGuidedWalk();
+    }
+
+    private bool CanConfirmWalkPoint() => IsGuidedWalkActive && !IsCapturingWalkPoint && SelectedAdapter is not null && CurrentWalkPoint is not null;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmWalkPoint))]
+    private async Task ConfirmWalkPointAsync()
+    {
+        if (Survey is null || SelectedAdapter is null || CurrentWalkPoint is not { } position)
+        {
+            return;
+        }
+
+        IsCapturingWalkPoint = true;
+        GuidedWalkStatusMessage = null;
+        try
+        {
+            var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+            if (scanResult.Status != WlanScanStatus.Success)
+            {
+                GuidedWalkStatusMessage = DescribeScanStatus(scanResult.Status);
+                return;
+            }
+
+            var testPoint = TestPointCapture.BuildTestPoint(position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
+            Survey.Floor.TestPoints.Add(testPoint);
+            await SaveAndRefreshAsync();
+
+            _guidedWalkQueue.Dequeue();
+            AdvanceGuidedWalk();
+        }
+        finally
+        {
+            IsCapturingWalkPoint = false;
+        }
+    }
+
+    private bool CanCancelGuidedWalk() => IsGuidedWalkActive;
+
+    [RelayCommand(CanExecute = nameof(CanCancelGuidedWalk))]
+    private void CancelGuidedWalk()
+    {
+        _guidedWalkQueue.Clear();
+        IsGuidedWalkActive = false;
+        CurrentWalkPoint = null;
+        GuidedWalkStatusMessage = "Guided walk canceled — points captured so far were kept.";
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void AdvanceGuidedWalk()
+    {
+        if (_guidedWalkQueue.Count == 0)
+        {
+            IsGuidedWalkActive = false;
+            CurrentWalkPoint = null;
+            GuidedWalkStatusMessage = "Guided walk complete.";
+        }
+        else
+        {
+            CurrentWalkPoint = _guidedWalkQueue.Peek();
+        }
+
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public async Task AddTestPointAsync(Point2D position)
     {

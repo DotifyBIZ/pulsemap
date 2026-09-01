@@ -21,7 +21,7 @@ public static class CoverageGridCalculator
             return [];
         }
 
-        var gridPoints = BuildGrid(floor, gridSpacingMeters);
+        var gridPoints = FloorGrid.BuildPoints(floor, gridSpacingMeters);
         var samples = new List<CoverageSample>(gridPoints.Count);
 
         foreach (var point in gridPoints)
@@ -49,24 +49,5 @@ public static class CoverageGridCalculator
         }
 
         return samples;
-    }
-
-    private static List<Point2D> BuildGrid(Floor floor, double spacingMeters)
-    {
-        double minX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Min();
-        double maxX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Max();
-        double minY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Min();
-        double maxY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Max();
-
-        var points = new List<Point2D>();
-        for (double x = minX; x <= maxX; x += spacingMeters)
-        {
-            for (double y = minY; y <= maxY; y += spacingMeters)
-            {
-                points.Add(new Point2D(x, y));
-            }
-        }
-
-        return points;
     }
 }

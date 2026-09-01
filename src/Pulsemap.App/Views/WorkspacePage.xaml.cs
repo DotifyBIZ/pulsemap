@@ -43,7 +43,7 @@ public sealed partial class WorkspacePage : Page
             return;
         }
 
-        PlanCanvas.Render(ViewModel.Survey.Floor, ViewModel.Heatmap);
+        PlanCanvas.Render(ViewModel.Survey.Floor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
     }
 
     private void PopulateBandSelector()

@@ -38,7 +38,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
         // shortest-range, hardest-to-cover requested band.
         var drivingBand = bands.Max();
         double drivingPower = ChannelPlan.DefaultTransmitPowerDbm(drivingBand);
-        var gridPoints = BuildGrid(floor);
+        var gridPoints = FloorGrid.BuildPoints(floor, GridSpacingMeters);
 
         if (gridPoints.Count == 0)
         {
@@ -128,28 +128,4 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
 
     private static double CoverageFraction(bool[] covered) =>
         covered.Length == 0 ? 1.0 : covered.Count(c => c) / (double)covered.Length;
-
-    private static List<Point2D> BuildGrid(Floor floor)
-    {
-        if (floor.Walls.Count == 0)
-        {
-            return [];
-        }
-
-        double minX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Min();
-        double maxX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Max();
-        double minY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Min();
-        double maxY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Max();
-
-        var points = new List<Point2D>();
-        for (double x = minX; x <= maxX; x += GridSpacingMeters)
-        {
-            for (double y = minY; y <= maxY; y += GridSpacingMeters)
-            {
-                points.Add(new Point2D(x, y));
-            }
-        }
-
-        return points;
-    }
 }

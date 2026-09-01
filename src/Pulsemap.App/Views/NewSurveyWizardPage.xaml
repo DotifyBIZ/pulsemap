@@ -62,6 +62,11 @@
                                 GroupName="SurveyType"
                                 Checked="SurveyTypeRadio_Checked" />
                         </StackPanel>
+                        <TextBox
+                            Header="Network SSID being audited (optional)"
+                            PlaceholderText="e.g. OfficeNet"
+                            Visibility="{x:Bind ViewModel.IsExistingNetworkAuditSelected, Mode=OneWay}"
+                            Text="{x:Bind ViewModel.TargetNetworkSsid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <!-- Step 2: Floor plan -->

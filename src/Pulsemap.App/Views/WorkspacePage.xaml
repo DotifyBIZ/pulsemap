@@ -106,6 +106,7 @@
                     </PivotItem>
 
                     <PivotItem Header="Adapter">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12">
                             <ComboBox
                                 Header="Adapter"
@@ -147,7 +148,52 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <Rectangle Height="1" Fill="{StaticResource Gray200Brush}" Margin="0,4,0,0" />
+                            <TextBlock Text="Guided measurement walk" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+
+                            <StackPanel Visibility="{x:Bind ViewModel.IsGuidedWalkIdle, Mode=OneWay}" Spacing="8">
+                                <TextBlock
+                                    Text="Pick candidate points across the floor, walk to each one, and capture a real reading — background noise everywhere, plus this network's own signal for an existing-network audit."
+                                    TextWrapping="Wrap"
+                                    FontSize="{StaticResource FontSizeXs}"
+                                    Foreground="{StaticResource Gray500Brush}" />
+                                <Button
+                                    Content="Start Guided Walk"
+                                    Background="{StaticResource Primary600Brush}"
+                                    Foreground="White"
+                                    CornerRadius="6"
+                                    Padding="16,10"
+                                    Command="{x:Bind ViewModel.StartGuidedWalkCommand}" />
+                            </StackPanel>
+
+                            <StackPanel Visibility="{x:Bind ViewModel.IsGuidedWalkActive, Mode=OneWay}" Spacing="8">
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.GuidedWalkProgressDisplay, Mode=OneWay}"
+                                    TextWrapping="Wrap"
+                                    FontSize="{StaticResource FontSizeSm}"
+                                    Foreground="{StaticResource Gray700Brush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button
+                                        Content="Confirm Arrival &amp; Capture"
+                                        Background="{StaticResource Primary600Brush}"
+                                        Foreground="White"
+                                        CornerRadius="6"
+                                        Padding="16,10"
+                                        Command="{x:Bind ViewModel.ConfirmWalkPointCommand}" />
+                                    <Button Content="Cancel Walk" Command="{x:Bind ViewModel.CancelGuidedWalkCommand}" />
+                                    <ProgressRing IsActive="{x:Bind ViewModel.IsCapturingWalkPoint, Mode=OneWay}" Width="20" Height="20" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <TextBlock
+                                Text="{x:Bind ViewModel.GuidedWalkStatusMessage, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.HasGuidedWalkStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray500Brush}" />
                         </StackPanel>
+                        </ScrollViewer>
                     </PivotItem>
                 </Pivot>
             </Border>

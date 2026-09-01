@@ -13,6 +13,11 @@ public sealed class Survey
 
     public required SurveyType Type { get; set; }
 
+    /// <summary>The SSID being audited — set only for <see cref="SurveyType.ExistingNetworkAudit"/>;
+    /// a new-deployment survey has no live network yet, so the guided measurement walk captures
+    /// ambient interference only when this is null.</summary>
+    public string? TargetNetworkSsid { get; set; }
+
     /// <summary>Bands this survey covers — drives which radios get propagation predictions, heatmaps, and AP placement suggestions. At least one required.</summary>
     public required List<Band> TargetBands { get; set; }
 

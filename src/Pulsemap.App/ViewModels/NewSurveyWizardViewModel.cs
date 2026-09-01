@@ -59,7 +59,14 @@ public partial class NewSurveyWizardViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SurveyTypeSummaryDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsExistingNetworkAuditSelected))]
     public partial SurveyType SelectedSurveyType { get; set; } = SurveyType.NewDeployment;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SurveyTypeSummaryDisplay))]
+    public partial string TargetNetworkSsid { get; set; } = string.Empty;
+
+    public bool IsExistingNetworkAuditSelected => SelectedSurveyType == SurveyType.ExistingNetworkAudit;
 
     // Step 2 — Floor plan
     [ObservableProperty]
@@ -125,7 +132,9 @@ public partial class NewSurveyWizardViewModel : ObservableObject
 
     public string SurveyTypeSummaryDisplay => SelectedSurveyType == SurveyType.NewDeployment
         ? "New deployment — no access points yet"
-        : "Existing network audit";
+        : string.IsNullOrWhiteSpace(TargetNetworkSsid)
+            ? "Existing network audit"
+            : $"Existing network audit — \"{TargetNetworkSsid.Trim()}\"";
 
     public string FloorPlanSummaryDisplay => IsImageStyleSelected
         ? $"Image/PDF floor plan ({SelectedImageFileName ?? "no file selected"})"
@@ -301,6 +310,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             Name = SurveyName.Trim(),
             SiteDescription = string.IsNullOrWhiteSpace(SiteDescription) ? null : SiteDescription.Trim(),
             Type = SelectedSurveyType,
+            TargetNetworkSsid = IsExistingNetworkAuditSelected && !string.IsNullOrWhiteSpace(TargetNetworkSsid) ? TargetNetworkSsid.Trim() : null,
             TargetBands = bands,
             Floor = floor,
         };

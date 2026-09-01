@@ -23,6 +23,7 @@ public sealed partial class FloorPlanCanvas : UserControl
     private const double HeatmapCellMeters = 0.5;
     private const double TestPointRadiusPx = 7;
     private const double AccessPointRadiusPx = 10;
+    private const double WalkTargetRadiusPx = 14;
     private const double WallStrokeThicknessPx = 4;
     private const double HeatmapOpacity = 0.55;
 
@@ -42,7 +43,7 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     public event EventHandler<Point2D>? DeleteRequested;
 
-    public void Render(Floor floor, IReadOnlyList<CoverageSample> heatmap)
+    public void Render(Floor floor, IReadOnlyList<CoverageSample> heatmap, Point2D? walkTarget = null)
     {
         ArgumentNullException.ThrowIfNull(floor);
         ArgumentNullException.ThrowIfNull(heatmap);
@@ -73,6 +74,11 @@ public sealed partial class FloorPlanCanvas : UserControl
         foreach (var accessPoint in floor.AccessPoints)
         {
             MarkersLayer.Children.Add(BuildAccessPointMarker(accessPoint));
+        }
+
+        if (walkTarget is { } target)
+        {
+            MarkersLayer.Children.Add(BuildWalkTargetMarker(target));
         }
     }
 
@@ -140,6 +146,23 @@ public sealed partial class FloorPlanCanvas : UserControl
         };
         Canvas.SetLeft(marker, px - AccessPointRadiusPx);
         Canvas.SetTop(marker, py - AccessPointRadiusPx);
+        return marker;
+    }
+
+    private Ellipse BuildWalkTargetMarker(Point2D position)
+    {
+        var (px, py) = ToPixels(position);
+        double diameter = WalkTargetRadiusPx * 2;
+        var marker = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Stroke = new SolidColorBrush(Colors.MediumPurple),
+            StrokeThickness = 3,
+            StrokeDashArray = [4, 2],
+        };
+        Canvas.SetLeft(marker, px - WalkTargetRadiusPx);
+        Canvas.SetTop(marker, py - WalkTargetRadiusPx);
         return marker;
     }
 
