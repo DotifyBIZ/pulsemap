@@ -16,8 +16,20 @@ public sealed class WorkspaceViewModelTests
     private readonly FakeWlanAdapterService _wlanAdapterService = new();
     private readonly FakeLocalizationService _localizationService = new();
     private readonly FakeAppLogger _logger = new();
+    private readonly FakeSurveyDataExporter _surveyDataExporter = new();
+    private readonly FakeReportExporter _reportExporter = new();
+    private readonly FakeSurveyExportFilePickerService _exportFilePickerService = new();
 
-    private WorkspaceViewModel CreateSut() => new(_surveyFileService, _propagationModel, _placementOptimizer, _wlanAdapterService, _localizationService, _logger);
+    private WorkspaceViewModel CreateSut() => new(
+        _surveyFileService,
+        _propagationModel,
+        _placementOptimizer,
+        _wlanAdapterService,
+        _localizationService,
+        _logger,
+        _surveyDataExporter,
+        _reportExporter,
+        _exportFilePickerService);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()
@@ -278,6 +290,92 @@ public sealed class WorkspaceViewModelTests
         Assert.False(sut.IsGuidedWalkActive);
         Assert.Single(sut.Survey!.Floor.TestPoints);
         Assert.True(sut.HasGuidedWalkStatusMessage);
+    }
+
+    [Fact]
+    public async Task ExportTestPointsCsvCommand_UserPicksFile_CallsExporterAndSuggestsFileName()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        using var stream = new MemoryStream();
+        _exportFilePickerService.StreamToReturn = stream;
+
+        await sut.ExportTestPointsCsvCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, _surveyDataExporter.ExportTestPointsCsvCallCount);
+        Assert.Equal("Test Survey-testpoints", _exportFilePickerService.LastSuggestedFileName);
+        Assert.Equal(".csv", _exportFilePickerService.LastExtension);
+    }
+
+    [Fact]
+    public async Task ExportAccessPointsCsvCommand_UserPicksFile_CallsExporter()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        using var stream = new MemoryStream();
+        _exportFilePickerService.StreamToReturn = stream;
+
+        await sut.ExportAccessPointsCsvCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, _surveyDataExporter.ExportAccessPointsCsvCallCount);
+    }
+
+    [Fact]
+    public async Task ExportSurveyJsonCommand_UserPicksFile_CallsExporter()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        using var stream = new MemoryStream();
+        _exportFilePickerService.StreamToReturn = stream;
+
+        await sut.ExportSurveyJsonCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, _surveyDataExporter.ExportJsonCallCount);
+    }
+
+    [Fact]
+    public async Task ExportCoverageReportPdfCommand_UserPicksFile_CallsReportExporter()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        using var stream = new MemoryStream();
+        _exportFilePickerService.StreamToReturn = stream;
+
+        await sut.ExportCoverageReportPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, _reportExporter.ExportPdfCallCount);
+    }
+
+    [Fact]
+    public async Task ExportTestPointsCsvCommand_UserCancelsPicker_DoesNotCallExporter()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        _exportFilePickerService.StreamToReturn = null;
+
+        await sut.ExportTestPointsCsvCommand.ExecuteAsync(null);
+
+        Assert.Equal(0, _surveyDataExporter.ExportTestPointsCsvCallCount);
+    }
+
+    [Fact]
+    public async Task ExportTestPointsCsvCommand_ExporterThrowsIOException_SetsErrorMessage()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        using var stream = new MemoryStream();
+        _exportFilePickerService.StreamToReturn = stream;
+        _surveyDataExporter.ExceptionToThrow = new IOException("disk full");
+
+        await sut.ExportTestPointsCsvCommand.ExecuteAsync(null);
+
+        Assert.NotNull(sut.ErrorMessage);
+        Assert.True(sut.HasError);
+    }
+
+    [Fact]
+    public async Task ExportTestPointsCsvCommand_NoSurveyLoaded_DoesNotCallPickerOrExporter()
+    {
+        var sut = CreateSut();
+
+        await sut.ExportTestPointsCsvCommand.ExecuteAsync(null);
+
+        Assert.Null(_exportFilePickerService.LastSuggestedFileName);
+        Assert.Equal(0, _surveyDataExporter.ExportTestPointsCsvCallCount);
     }
 
     private async Task<WorkspaceViewModel> LoadedViewModelAsync(Floor floor)

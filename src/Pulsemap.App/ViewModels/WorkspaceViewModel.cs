@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Measurement;
@@ -33,6 +34,9 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IWlanAdapterService _wlanAdapterService;
     private readonly ILocalizationService _localizationService;
     private readonly IAppLogger _logger;
+    private readonly ISurveyDataExporter _surveyDataExporter;
+    private readonly IReportExporter _reportExporter;
+    private readonly ISurveyExportFilePickerService _exportFilePickerService;
 
     private string? _filePath;
 
@@ -42,7 +46,10 @@ public partial class WorkspaceViewModel : ObservableObject
         IApPlacementOptimizer placementOptimizer,
         IWlanAdapterService wlanAdapterService,
         ILocalizationService localizationService,
-        IAppLogger logger)
+        IAppLogger logger,
+        ISurveyDataExporter surveyDataExporter,
+        IReportExporter reportExporter,
+        ISurveyExportFilePickerService exportFilePickerService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
@@ -50,6 +57,9 @@ public partial class WorkspaceViewModel : ObservableObject
         _wlanAdapterService = wlanAdapterService;
         _localizationService = localizationService;
         _logger = logger;
+        _surveyDataExporter = surveyDataExporter;
+        _reportExporter = reportExporter;
+        _exportFilePickerService = exportFilePickerService;
     }
 
     public event EventHandler? FloorChanged;
@@ -407,6 +417,54 @@ public partial class WorkspaceViewModel : ObservableObject
         Survey.Floor.AccessPoints.AddRange(suggestions);
         await SaveAndRefreshAsync();
     }
+
+    [RelayCommand]
+    private Task ExportTestPointsCsvAsync() =>
+        ExportAsync("-testpoints", ".csv", _localizationService.GetString("WorkspaceExportCsvFileType"), _surveyDataExporter.ExportTestPointsCsvAsync);
+
+    [RelayCommand]
+    private Task ExportAccessPointsCsvAsync() =>
+        ExportAsync("-accesspoints", ".csv", _localizationService.GetString("WorkspaceExportCsvFileType"), _surveyDataExporter.ExportAccessPointsCsvAsync);
+
+    [RelayCommand]
+    private Task ExportSurveyJsonAsync() =>
+        ExportAsync("-survey", ".json", _localizationService.GetString("WorkspaceExportJsonFileType"), _surveyDataExporter.ExportJsonAsync);
+
+    [RelayCommand]
+    private Task ExportCoverageReportPdfAsync() =>
+        ExportAsync("-coverage-report", ".pdf", _localizationService.GetString("WorkspaceExportPdfFileType"), _reportExporter.ExportPdfAsync);
+
+    private async Task ExportAsync(string fileNameSuffix, string extension, string fileTypeDescription, Func<Survey, Stream, CancellationToken, Task> exportAsync)
+    {
+        if (Survey is null)
+        {
+            return;
+        }
+
+        ErrorMessage = null;
+        string suggestedFileName = SanitizeFileName(Survey.Name) + fileNameSuffix;
+        Stream? stream = await _exportFilePickerService.PickSaveStreamAsync(suggestedFileName, extension, fileTypeDescription);
+        if (stream is null)
+        {
+            return;
+        }
+
+        await using (stream)
+        {
+            try
+            {
+                await exportAsync(Survey, stream, CancellationToken.None);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceExportErrorFormat"), ex.Message);
+                await _logger.LogErrorAsync("Failed to export survey data.", ex);
+            }
+        }
+    }
+
+    private static string SanitizeFileName(string name) =>
+        string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 
     partial void OnSelectedBandChanged(Band value)
     {

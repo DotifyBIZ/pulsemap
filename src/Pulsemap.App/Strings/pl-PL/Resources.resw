@@ -249,6 +249,21 @@
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Wstecz</value>
   </data>
+  <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
+    <value>Eksportuj</value>
+  </data>
+  <data name="WorkspaceExportTestPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Punkty pomiarowe (CSV)</value>
+  </data>
+  <data name="WorkspaceExportAccessPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Punkty dostępowe (CSV)</value>
+  </data>
+  <data name="WorkspaceExportSurveyJsonMenuItem.Text" xml:space="preserve">
+    <value>Dane badania (JSON)</value>
+  </data>
+  <data name="WorkspaceExportCoverageReportPdfMenuItem.Text" xml:space="preserve">
+    <value>Raport zasięgu (PDF)</value>
+  </data>
   <data name="WorkspaceCoverageTab.Header" xml:space="preserve">
     <value>Zasięg</value>
   </data>

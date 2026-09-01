@@ -249,6 +249,21 @@
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="WorkspaceExportTestPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Test points (CSV)</value>
+  </data>
+  <data name="WorkspaceExportAccessPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Access points (CSV)</value>
+  </data>
+  <data name="WorkspaceExportSurveyJsonMenuItem.Text" xml:space="preserve">
+    <value>Survey data (JSON)</value>
+  </data>
+  <data name="WorkspaceExportCoverageReportPdfMenuItem.Text" xml:space="preserve">
+    <value>Coverage report (PDF)</value>
+  </data>
   <data name="WorkspaceCoverageTab.Header" xml:space="preserve">
     <value>Coverage</value>
   </data>

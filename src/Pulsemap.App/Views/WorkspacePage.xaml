@@ -14,6 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -28,10 +29,24 @@
                 <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
-            <Button x:Uid="WorkspaceBackButton" Grid.Column="1" Click="Back_Click" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="WorkspaceExportMenuButton">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutItem x:Uid="WorkspaceExportTestPointsCsvMenuItem" Command="{x:Bind ViewModel.ExportTestPointsCsvCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportAccessPointsCsvMenuItem" Command="{x:Bind ViewModel.ExportAccessPointsCsvCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportSurveyJsonMenuItem" Command="{x:Bind ViewModel.ExportSurveyJsonCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportCoverageReportPdfMenuItem" Command="{x:Bind ViewModel.ExportCoverageReportPdfCommand}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Uid="WorkspaceBackButton" Click="Back_Click" />
+            </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
+        <InfoBar Grid.Row="1" Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Margin="0,12,0,0" />
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
             <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
@@ -42,7 +57,7 @@
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
         </StackPanel>
 
-        <Grid Grid.Row="2" Margin="0,20,0,0">
+        <Grid Grid.Row="3" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="440" />
