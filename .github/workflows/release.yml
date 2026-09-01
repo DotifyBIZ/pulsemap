@@ -54,11 +54,8 @@ jobs:
         with:
           node-version: 22
 
-      # No package-lock.json is committed yet — this machine had no Node.js installed to
-      # generate one. `npm install` works without it; once someone runs `npm install` locally
-      # with Node available and commits the resulting lock file, switch this to `npm ci`.
       - name: Install release tooling
-        run: npm install
+        run: npm ci
 
       - name: Run semantic-release
         env:
