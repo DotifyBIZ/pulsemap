@@ -28,6 +28,8 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
             throw new ArgumentException("At least one sample is required to interpolate.", nameof(samples));
         }
 
+        samples = DeduplicatePositions(samples);
+
         if (samples.Count == 1 || IsConstant(samples))
         {
             double constantValue = samples[0].ValueDbm;
@@ -80,5 +82,19 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
     {
         double first = samples[0].ValueDbm;
         return samples.All(s => Math.Abs(s.ValueDbm - first) < ConstantValueTolerance);
+    }
+
+    // Two samples at the same position make every pairwise variogram term between them 0
+    // (self-distance), which makes the system matrix singular and Solve() returns NaN silently.
+    // Averaging co-located samples up front is the standard kriging fix for duplicate positions.
+    private static IReadOnlyList<CoverageSample> DeduplicatePositions(IReadOnlyList<CoverageSample> samples)
+    {
+        var groups = samples.GroupBy(s => s.Position).ToList();
+        if (groups.Count == samples.Count)
+        {
+            return samples;
+        }
+
+        return groups.Select(g => new CoverageSample(g.Key, g.Average(s => s.ValueDbm))).ToArray();
     }
 }

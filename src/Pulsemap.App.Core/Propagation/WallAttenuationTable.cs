@@ -31,7 +31,10 @@ public static class WallAttenuationTable
         var reference = material is { } knownMaterial ? References[knownMaterial] : GenericFallback;
         double baseDb = BaseAttenuationDb(reference, band);
 
-        if (material is null || thicknessMeters is not { } thickness)
+        // A non-positive or non-finite thickness (corrupt/hand-edited project bundle) would
+        // otherwise scale to zero or negative attenuation — RF-transparent or signal-boosting
+        // through a wall. Treat it the same as "unspecified" rather than propagating garbage.
+        if (material is null || thicknessMeters is not { } thickness || !double.IsFinite(thickness) || thickness <= 0)
         {
             return baseDb;
         }

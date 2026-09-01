@@ -6,5 +6,5 @@ internal sealed class FakeFloorPlanFilePickerService : IFloorPlanFilePickerServi
 {
     public FloorPlanFilePickResult? ResultToReturn { get; set; }
 
-    public Task<FloorPlanFilePickResult?> PickFloorPlanFileAsync() => Task.FromResult(ResultToReturn);
+    public Task<FloorPlanFilePickResult?> PickFloorPlanFileAsync(CancellationToken cancellationToken = default) => Task.FromResult(ResultToReturn);
 }

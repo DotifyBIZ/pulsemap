@@ -13,6 +13,11 @@ public static class FloorGrid
     {
         ArgumentNullException.ThrowIfNull(floor);
 
+        if (spacingMeters <= 0 || !double.IsFinite(spacingMeters))
+        {
+            throw new ArgumentOutOfRangeException(nameof(spacingMeters), spacingMeters, "Grid spacing must be a positive, finite value.");
+        }
+
         if (floor.Walls.Count == 0)
         {
             return [];
