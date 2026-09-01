@@ -14,7 +14,7 @@ public sealed partial class NewSurveyWizardPage : Page
     {
         ViewModel = App.Services.GetRequiredService<NewSurveyWizardViewModel>();
         InitializeComponent();
-        ViewModel.SurveyCreated += (_, _) => Frame.GoBack();
+        ViewModel.SurveyCreated += (_, filePath) => Frame.Navigate(typeof(WorkspacePage), filePath);
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Frame.GoBack();

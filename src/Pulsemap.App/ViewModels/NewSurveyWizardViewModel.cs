@@ -42,7 +42,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         };
     }
 
-    public event EventHandler? SurveyCreated;
+    public event EventHandler<string>? SurveyCreated;
 
     public ObservableCollection<RoomListEntry> Rooms { get; } = [];
 
@@ -251,7 +251,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             Directory.CreateDirectory(_surveyLibraryService.SurveysDirectory);
             string filePath = UniqueFilePath(_surveyLibraryService.SurveysDirectory, survey.Name);
             await _surveyFileService.SaveAsync(survey, filePath);
-            SurveyCreated?.Invoke(this, EventArgs.Empty);
+            SurveyCreated?.Invoke(this, filePath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

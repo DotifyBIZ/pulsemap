@@ -86,6 +86,7 @@ public partial class App : Application
         // ViewModels — transient, recreated per navigation.
         services.AddTransient<HomeViewModel>();
         services.AddTransient<NewSurveyWizardViewModel>();
+        services.AddTransient<WorkspaceViewModel>();
 
         return services.BuildServiceProvider();
     }

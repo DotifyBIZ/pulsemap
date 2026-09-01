@@ -40,7 +40,12 @@
         <Grid Grid.Row="2">
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0" />
 
-            <GridView ItemsSource="{x:Bind ViewModel.Surveys}" SelectionMode="None" HorizontalAlignment="Left">
+            <GridView
+                ItemsSource="{x:Bind ViewModel.Surveys}"
+                SelectionMode="None"
+                IsItemClickEnabled="True"
+                ItemClick="SurveysGridView_ItemClick"
+                HorizontalAlignment="Left">
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="services:SurveySummary">
                         <Border
