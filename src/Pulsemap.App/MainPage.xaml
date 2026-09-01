@@ -8,23 +8,31 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-        <TextBlock
-            Text="{x:Bind ViewModel.Greeting, Mode=OneWay}"
-            Style="{StaticResource TitleTextBlockStyle}" />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-            <Button Command="{x:Bind ViewModel.IncrementCommand}">
-                <FontIcon Glyph="&#xE710;" FontSize="14" />
-            </Button>
-            <TextBlock
-                Text="{x:Bind ViewModel.Counter, Mode=OneWay}"
-                VerticalAlignment="Center"
-                MinWidth="40"
-                TextAlignment="Center"
-                Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <Button Command="{x:Bind ViewModel.DecrementCommand}">
-                <FontIcon Glyph="&#xE738;" FontSize="14" />
-            </Button>
-        </StackPanel>
-    </StackPanel>
+    <NavigationView
+        x:Name="Nav"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        SelectionChanged="Nav_SelectionChanged"
+        PaneDisplayMode="Left">
+
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Home" Tag="Home" IsSelected="True">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Surveys" Tag="Surveys">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8FD;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Settings" Tag="Settings">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
 </Page>
