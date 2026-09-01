@@ -24,18 +24,26 @@
 
             <StackPanel Grid.Column="0">
                 <TextBlock x:Uid="HomeTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock Text="Your surveys, all in one place." FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+                <TextBlock x:Uid="HomeSubtitle" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
-            <Button Grid.Column="1" VerticalAlignment="Top" Background="{StaticResource Primary600Brush}" CornerRadius="6" Padding="16,10" Click="NewSurvey_Click">
+            <Button Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource PrimaryButtonStyle}" Click="NewSurvey_Click">
+                <Button.Resources>
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                </Button.Resources>
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="White" />
-                    <TextBlock Text="New Survey" Foreground="White" FontWeight="SemiBold" />
+                    <TextBlock x:Uid="HomeNewSurveyButtonLabel" Foreground="White" FontWeight="SemiBold" />
                 </StackPanel>
             </Button>
         </Grid>
 
-        <TextBlock Grid.Row="1" Text="Recent surveys" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" Margin="0,32,0,14" />
+        <TextBlock x:Uid="HomeRecentSurveysHeader" Grid.Row="1" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" Margin="0,32,0,14" />
 
         <Grid Grid.Row="2">
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0" />

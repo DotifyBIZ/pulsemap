@@ -51,7 +51,7 @@ public sealed partial class WorkspacePage : Page
         BandSelector.Items.Clear();
         foreach (var band in ViewModel.AvailableBands)
         {
-            BandSelector.Items.Add(new ComboBoxItem { Content = WorkspaceViewModel.BandDisplayName(band), Tag = band });
+            BandSelector.Items.Add(new ComboBoxItem { Content = ViewModel.BandDisplayName(band), Tag = band });
         }
 
         if (BandSelector.Items.Count > 0)

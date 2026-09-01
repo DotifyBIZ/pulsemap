@@ -14,8 +14,9 @@ public sealed class WorkspaceViewModelTests
     private readonly FakePropagationModel _propagationModel = new();
     private readonly FakeApPlacementOptimizer _placementOptimizer = new();
     private readonly FakeWlanAdapterService _wlanAdapterService = new();
+    private readonly FakeLocalizationService _localizationService = new();
 
-    private WorkspaceViewModel CreateSut() => new(_surveyFileService, _propagationModel, _placementOptimizer, _wlanAdapterService);
+    private WorkspaceViewModel CreateSut() => new(_surveyFileService, _propagationModel, _placementOptimizer, _wlanAdapterService, _localizationService);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()
@@ -40,7 +41,7 @@ public sealed class WorkspaceViewModelTests
         await sut.LoadAsync(FilePath);
 
         Assert.Null(sut.Survey);
-        Assert.Contains("disk error", sut.ErrorMessage);
+        Assert.NotNull(sut.ErrorMessage);
     }
 
     [Fact]

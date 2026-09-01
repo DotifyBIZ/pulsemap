@@ -55,6 +55,12 @@ public partial class App : Application
     {
         InitializeComponent();
         Services = ConfigureServices();
+
+        this.UnhandledException += (_, e) =>
+        {
+            string crashLogPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pulsemap-crash.txt");
+            System.IO.File.WriteAllText(crashLogPath, e.Exception.ToString());
+        };
     }
 
     /// <summary>

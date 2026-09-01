@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
@@ -8,6 +9,7 @@ using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Services;
 using Windows.System;
 
 namespace Pulsemap.App.ViewModels;
@@ -28,6 +30,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IPropagationModel _propagationModel;
     private readonly IApPlacementOptimizer _placementOptimizer;
     private readonly IWlanAdapterService _wlanAdapterService;
+    private readonly ILocalizationService _localizationService;
 
     private string? _filePath;
 
@@ -35,12 +38,14 @@ public partial class WorkspaceViewModel : ObservableObject
         ISurveyFileService surveyFileService,
         IPropagationModel propagationModel,
         IApPlacementOptimizer placementOptimizer,
-        IWlanAdapterService wlanAdapterService)
+        IWlanAdapterService wlanAdapterService,
+        ILocalizationService localizationService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
         _placementOptimizer = placementOptimizer;
         _wlanAdapterService = wlanAdapterService;
+        _localizationService = localizationService;
     }
 
     public event EventHandler? FloorChanged;
@@ -67,7 +72,8 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
 
-    public string CoveragePercentDisplay => $"{CoveragePercent:0}% of the floor at -67dBm or better";
+    public string CoveragePercentDisplay =>
+        string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceCoveragePercentFormat"), CoveragePercent);
 
     public string AccessPointSummaryDisplay
     {
@@ -75,24 +81,26 @@ public partial class WorkspaceViewModel : ObservableObject
         {
             if (Survey is null || Survey.Floor.AccessPoints.Count == 0)
             {
-                return "No access points placed yet.";
+                return _localizationService.GetString("WorkspaceNoAccessPointsPlaced");
             }
 
+            string channelAbbreviation = _localizationService.GetString("WorkspaceChannelAbbreviation");
+            string summaryFormat = _localizationService.GetString("WorkspaceAccessPointSummaryFormat");
             return string.Join(
                 Environment.NewLine,
                 Survey.Floor.AccessPoints.Select(ap =>
                 {
-                    string radios = string.Join(", ", ap.Radios.Select(r => $"{BandDisplayName(r.Key)} ch{r.Value.Channel}"));
-                    return $"{ap.Label} — {radios}";
+                    string radios = string.Join(", ", ap.Radios.Select(r => $"{BandDisplayName(r.Key)} {channelAbbreviation}{r.Value.Channel}"));
+                    return string.Format(CultureInfo.CurrentCulture, summaryFormat, ap.Label, radios);
                 }));
         }
     }
 
-    public static string BandDisplayName(Band band) => band switch
+    public string BandDisplayName(Band band) => band switch
     {
-        Band.TwoPointFourGhz => "2.4 GHz",
-        Band.FiveGhz => "5 GHz",
-        Band.SixGhz => "6 GHz",
+        Band.TwoPointFourGhz => _localizationService.GetString("WizardBand24Checkbox.Content"),
+        Band.FiveGhz => _localizationService.GetString("WizardBand5Checkbox.Content"),
+        Band.SixGhz => _localizationService.GetString("WizardBand6Checkbox.Content"),
         _ => band.ToString(),
     };
 
@@ -153,8 +161,14 @@ public partial class WorkspaceViewModel : ObservableObject
     public bool HasGuidedWalkStatusMessage => GuidedWalkStatusMessage is not null;
 
     public string GuidedWalkProgressDisplay => IsGuidedWalkActive && CurrentWalkPoint is { } point
-        ? $"Point {_guidedWalkTotalPoints - _guidedWalkQueue.Count + 1} of {_guidedWalkTotalPoints} — walk to ({point.X:0.0}m, {point.Y:0.0}m) and confirm."
-        : "Not walking.";
+        ? string.Format(
+            CultureInfo.CurrentCulture,
+            _localizationService.GetString("WorkspaceGuidedWalkProgressFormat"),
+            _guidedWalkTotalPoints - _guidedWalkQueue.Count + 1,
+            _guidedWalkTotalPoints,
+            point.X,
+            point.Y)
+        : _localizationService.GetString("WorkspaceGuidedWalkNotWalking");
 
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
@@ -174,7 +188,7 @@ public partial class WorkspaceViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            ErrorMessage = $"Couldn't open this survey: {ex.Message}";
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceLoadErrorFormat"), ex.Message);
         }
         finally
         {
@@ -215,16 +229,20 @@ public partial class WorkspaceViewModel : ObservableObject
             switch (result.Status)
             {
                 case WlanScanStatus.Success:
+                    string channelAbbreviation = _localizationService.GetString("WorkspaceChannelAbbreviation");
+                    string subtitleFormat = _localizationService.GetString("WorkspaceNetworkSubtitleFormat");
+                    string unknownBand = _localizationService.GetString("WorkspaceUnknownBand");
+                    string hiddenNetwork = _localizationService.GetString("WorkspaceHiddenNetwork");
                     foreach (var network in result.Networks.OrderByDescending(n => n.SignalDbm))
                     {
-                        string bandPart = network.Band is { } band ? BandDisplayName(band) : "unknown band";
-                        string ssid = string.IsNullOrEmpty(network.Ssid) ? "(hidden network)" : network.Ssid;
+                        string bandPart = network.Band is { } band ? BandDisplayName(band) : unknownBand;
+                        string ssid = string.IsNullOrEmpty(network.Ssid) ? hiddenNetwork : network.Ssid;
                         ScanResults.Add(new WlanNetworkDisplay(
                             ssid,
-                            $"{network.Bssid} · ch{network.Channel} · {bandPart} · {network.SignalDbm:0} dBm"));
+                            string.Format(CultureInfo.CurrentCulture, subtitleFormat, network.Bssid, channelAbbreviation, network.Channel, bandPart, network.SignalDbm)));
                     }
 
-                    ScanStatusMessage = result.Networks.Count == 0 ? "No networks found nearby." : null;
+                    ScanStatusMessage = result.Networks.Count == 0 ? _localizationService.GetString("WorkspaceNoNetworksFound") : null;
                     break;
 
                 default:
@@ -238,11 +256,11 @@ public partial class WorkspaceViewModel : ObservableObject
         }
     }
 
-    private static string DescribeScanStatus(WlanScanStatus status) => status switch
+    private string DescribeScanStatus(WlanScanStatus status) => status switch
     {
-        WlanScanStatus.LocationAccessDenied => "Windows needs Location access to show WiFi scan results for this app.",
-        WlanScanStatus.NoAdapter => "Couldn't reach the WLAN service — is WiFi hardware available and enabled?",
-        _ => "The scan didn't complete. Try again.",
+        WlanScanStatus.LocationAccessDenied => _localizationService.GetString("WorkspaceScanStatusLocationDenied"),
+        WlanScanStatus.NoAdapter => _localizationService.GetString("WorkspaceScanStatusNoAdapter"),
+        _ => _localizationService.GetString("WorkspaceScanStatusFailed"),
     };
 
     [RelayCommand]
@@ -262,7 +280,7 @@ public partial class WorkspaceViewModel : ObservableObject
         var points = MeasurementPointSuggester.SuggestPoints(Survey.Floor);
         if (points.Count == 0)
         {
-            GuidedWalkStatusMessage = "No unmeasured points to suggest — draw walls first, or every candidate point already has a nearby test point.";
+            GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceNoUnmeasuredPoints");
             return;
         }
 
@@ -315,7 +333,7 @@ public partial class WorkspaceViewModel : ObservableObject
         _guidedWalkQueue.Clear();
         IsGuidedWalkActive = false;
         CurrentWalkPoint = null;
-        GuidedWalkStatusMessage = "Guided walk canceled — points captured so far were kept.";
+        GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkCanceled");
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -325,7 +343,7 @@ public partial class WorkspaceViewModel : ObservableObject
         {
             IsGuidedWalkActive = false;
             CurrentWalkPoint = null;
-            GuidedWalkStatusMessage = "Guided walk complete.";
+            GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkComplete");
         }
         else
         {

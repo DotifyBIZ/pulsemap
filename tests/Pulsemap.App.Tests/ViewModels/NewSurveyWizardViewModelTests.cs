@@ -10,6 +10,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
     private readonly FakeSurveyFileService _surveyFileService = new();
     private readonly FakeSurveyLibraryService _surveyLibraryService = new();
     private readonly FakeFloorPlanFilePickerService _filePickerService = new();
+    private readonly FakeLocalizationService _localizationService = new();
     private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "PulsemapTests", Guid.NewGuid().ToString());
 
     public NewSurveyWizardViewModelTests() => _surveyLibraryService.SurveysDirectory = _tempDirectory;
@@ -22,7 +23,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
         }
     }
 
-    private NewSurveyWizardViewModel CreateSut() => new(_surveyFileService, _surveyLibraryService, _filePickerService);
+    private NewSurveyWizardViewModel CreateSut() => new(_surveyFileService, _surveyLibraryService, _filePickerService, _localizationService);
 
     [Fact]
     public void NextCommand_CanExecute_FalseWhenSurveyNameIsEmpty()
@@ -108,7 +109,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
         sut.AddRoomCommand.Execute(null);
 
         Assert.Single(sut.Rooms);
-        Assert.Equal("Room list — 1 room", sut.FloorPlanSummaryDisplay);
+        Assert.Equal("WizardFloorPlanSummaryRoomListFormat", sut.FloorPlanSummaryDisplay);
     }
 
     [Fact]
@@ -124,30 +125,30 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
     }
 
     [Fact]
-    public void SurveyTypeSummaryDisplay_NewDeployment_ShowsNewDeploymentText()
+    public void SurveyTypeSummaryDisplay_NewDeployment_UsesNewDeploymentKey()
     {
         var sut = CreateSut();
 
-        Assert.Equal("New deployment — no access points yet", sut.SurveyTypeSummaryDisplay);
+        Assert.Equal("WizardSurveyTypeSummaryNewDeployment", sut.SurveyTypeSummaryDisplay);
     }
 
     [Fact]
-    public void SurveyTypeSummaryDisplay_ExistingAuditWithSsid_IncludesSsidInQuotes()
+    public void SurveyTypeSummaryDisplay_ExistingAuditWithSsid_UsesWithSsidFormatKey()
     {
         var sut = CreateSut();
         sut.SelectedSurveyType = SurveyType.ExistingNetworkAudit;
         sut.TargetNetworkSsid = "OfficeNet";
 
-        Assert.Equal("Existing network audit — \"OfficeNet\"", sut.SurveyTypeSummaryDisplay);
+        Assert.Equal("WizardSurveyTypeSummaryExistingAuditWithSsidFormat", sut.SurveyTypeSummaryDisplay);
     }
 
     [Fact]
-    public void SurveyTypeSummaryDisplay_ExistingAuditWithoutSsid_ShowsGenericText()
+    public void SurveyTypeSummaryDisplay_ExistingAuditWithoutSsid_UsesNoSsidKey()
     {
         var sut = CreateSut();
         sut.SelectedSurveyType = SurveyType.ExistingNetworkAudit;
 
-        Assert.Equal("Existing network audit", sut.SurveyTypeSummaryDisplay);
+        Assert.Equal("WizardSurveyTypeSummaryExistingAuditNoSsid", sut.SurveyTypeSummaryDisplay);
     }
 
     [Fact]
