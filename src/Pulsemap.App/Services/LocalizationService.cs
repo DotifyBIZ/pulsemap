@@ -90,6 +90,16 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceGuidedWalkProgressFormat"] = "Point {0} of {1} — walk to ({2:0.0}m, {3:0.0}m) and confirm.",
             ["WorkspaceGuidedWalkNotWalking"] = "Not walking.",
             ["WorkspaceAccessPointSummaryFormat"] = "{0} — {1}",
+
+            ["SurveysRenameDialogTitle"] = "Rename survey",
+            ["SurveysRenameDialogPrimaryButton"] = "Rename",
+            ["SurveysRenameDialogCloseButton"] = "Cancel",
+            ["SurveysDeleteDialogTitle"] = "Delete survey",
+            ["SurveysDeleteDialogContentFormat"] = "Delete \"{0}\"? This can't be undone.",
+            ["SurveysDeleteDialogPrimaryButton"] = "Delete",
+            ["SurveysDeleteDialogCloseButton"] = "Cancel",
+            ["SurveysDeleteErrorFormat"] = "Couldn't delete: {0}",
+            ["SurveysRenameErrorFormat"] = "Couldn't rename: {0}",
         },
         ["pl-PL"] = new Dictionary<string, string>
         {
@@ -138,6 +148,16 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceGuidedWalkProgressFormat"] = "Punkt {0} z {1} — podejdź do ({2:0.0}m, {3:0.0}m) i potwierdź.",
             ["WorkspaceGuidedWalkNotWalking"] = "Brak aktywnego pomiaru.",
             ["WorkspaceAccessPointSummaryFormat"] = "{0} — {1}",
+
+            ["SurveysRenameDialogTitle"] = "Zmień nazwę badania",
+            ["SurveysRenameDialogPrimaryButton"] = "Zmień nazwę",
+            ["SurveysRenameDialogCloseButton"] = "Anuluj",
+            ["SurveysDeleteDialogTitle"] = "Usuń badanie",
+            ["SurveysDeleteDialogContentFormat"] = "Usunąć „{0}”? Tej operacji nie można cofnąć.",
+            ["SurveysDeleteDialogPrimaryButton"] = "Usuń",
+            ["SurveysDeleteDialogCloseButton"] = "Anuluj",
+            ["SurveysDeleteErrorFormat"] = "Nie udało się usunąć: {0}",
+            ["SurveysRenameErrorFormat"] = "Nie udało się zmienić nazwy: {0}",
         },
     };
 }

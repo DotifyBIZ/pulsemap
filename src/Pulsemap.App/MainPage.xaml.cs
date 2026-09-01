@@ -28,7 +28,7 @@ public sealed partial class MainPage : Page
                 ContentFrame.Navigate(typeof(SettingsPage));
                 break;
             case "Surveys":
-                // Not built yet — Phase 1 build order picks this up in a later stage.
+                ContentFrame.Navigate(typeof(SurveysPage));
                 break;
         }
     }

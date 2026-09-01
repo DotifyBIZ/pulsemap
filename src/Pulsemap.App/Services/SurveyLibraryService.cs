@@ -35,4 +35,19 @@ public sealed class SurveyLibraryService(ISurveyFileService surveyFileService, I
 
         return summaries.OrderByDescending(summary => summary.ModifiedAt).ToList();
     }
+
+    public Task DeleteAsync(string filePath, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        File.Delete(filePath);
+        return Task.CompletedTask;
+    }
+
+    public async Task RenameAsync(string filePath, string newName, CancellationToken cancellationToken = default)
+    {
+        var survey = await surveyFileService.LoadAsync(filePath, cancellationToken);
+        survey.Name = newName;
+        survey.ModifiedAt = DateTimeOffset.UtcNow;
+        await surveyFileService.SaveAsync(survey, filePath, cancellationToken);
+    }
 }

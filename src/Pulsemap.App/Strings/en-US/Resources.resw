@@ -38,6 +38,17 @@
     <value>Recent surveys</value>
   </data>
 
+  <!-- Surveys page -->
+  <data name="SurveysTitle.Text" xml:space="preserve">
+    <value>Surveys</value>
+  </data>
+  <data name="SurveysRenameButton.Content" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="SurveysDeleteButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+
   <!-- Settings page -->
   <data name="SettingsTitle.Text" xml:space="preserve">
     <value>Settings</value>
