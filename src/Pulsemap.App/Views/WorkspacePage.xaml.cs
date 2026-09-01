@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Pulsemap.App.Controls;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.ViewModels;
 
@@ -10,6 +11,8 @@ namespace Pulsemap.App.Views;
 
 public sealed partial class WorkspacePage : Page
 {
+    private readonly IAppLogger _logger = App.Services.GetRequiredService<IAppLogger>();
+
     public WorkspaceViewModel ViewModel { get; }
 
     public WorkspacePage()
@@ -17,7 +20,7 @@ public sealed partial class WorkspacePage : Page
         ViewModel = App.Services.GetRequiredService<WorkspaceViewModel>();
         InitializeComponent();
 
-        ViewModel.FloorChanged += (_, _) => RenderCanvas();
+        ViewModel.FloorChanged += async (_, _) => await RenderCanvasAsync();
         PlanCanvas.TestPointRequested += async (_, position) => await ViewModel.AddTestPointAsync(position);
         PlanCanvas.WallRequested += async (_, span) => await ViewModel.AddWallAsync(span.Start, span.End);
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
@@ -32,18 +35,25 @@ public sealed partial class WorkspacePage : Page
         {
             await ViewModel.LoadAsync(filePath);
             PopulateBandSelector();
-            RenderCanvas();
+            await RenderCanvasAsync();
         }
     }
 
-    private void RenderCanvas()
+    private async Task RenderCanvasAsync()
     {
         if (ViewModel.Survey is null)
         {
             return;
         }
 
-        PlanCanvas.Render(ViewModel.Survey.Floor, ViewModel.Heatmap);
+        try
+        {
+            await PlanCanvas.RenderAsync(ViewModel.Survey.Floor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync("Failed to render the floor plan canvas.", ex);
+        }
     }
 
     private void PopulateBandSelector()
@@ -51,7 +61,7 @@ public sealed partial class WorkspacePage : Page
         BandSelector.Items.Clear();
         foreach (var band in ViewModel.AvailableBands)
         {
-            BandSelector.Items.Add(new ComboBoxItem { Content = WorkspaceViewModel.BandDisplayName(band), Tag = band });
+            BandSelector.Items.Add(new ComboBoxItem { Content = ViewModel.BandDisplayName(band), Tag = band });
         }
 
         if (BandSelector.Items.Count > 0)

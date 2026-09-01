@@ -6,7 +6,7 @@ namespace Pulsemap.App.Services;
 /// <summary>Wraps the native file-open picker — unpackaged apps need the owning HWND wired in via InitializeWithWindow before the picker can show.</summary>
 public sealed class FloorPlanFilePickerService : IFloorPlanFilePickerService
 {
-    public async Task<FloorPlanFilePickResult?> PickFloorPlanFileAsync()
+    public async Task<FloorPlanFilePickResult?> PickFloorPlanFileAsync(CancellationToken cancellationToken = default)
     {
         var picker = new FileOpenPicker();
         InitializeWithWindow.Initialize(picker, App.WindowHandle);
@@ -23,7 +23,7 @@ public sealed class FloorPlanFilePickerService : IFloorPlanFilePickerService
             return null;
         }
 
-        byte[] imageData = await File.ReadAllBytesAsync(file.Path);
+        byte[] imageData = await File.ReadAllBytesAsync(file.Path, cancellationToken);
         return new FloorPlanFilePickResult(file.Name, Path.GetExtension(file.Path), imageData);
     }
 }

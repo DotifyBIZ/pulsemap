@@ -20,6 +20,22 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
     // floor, enough margin for real-world fading) — not a hard regulatory figure.
     private const double ReliableCoverageThresholdDbm = -67;
 
+    // Conventional SINR margin for "reliable" 802.11 data rates: a predicted signal must clear
+    // ReliableCoverageThresholdDbm AND stay this many dB above the strongest nearby measured
+    // interference, or a real client would contend with/be degraded by that interferer even
+    // though it's not literally silence. Deliberately keyed on band, not a specific channel —
+    // AP placement runs before channel assignment (BuildAccessPoint), so no channel is known yet
+    // here; this treats "reliable" as robust against the worst plausible nearby interferer on the
+    // band rather than modeling exact per-channel SINR; a real joint position+channel optimizer
+    // would be a much larger redesign than this deserves.
+    private const double SinrMarginDb = 10;
+
+    // A TestPoint's interference readings are only treated as representative of a grid point's RF
+    // environment within this radius — walk data from elsewhere on the floor says nothing about
+    // one specific spot's local noise floor. Wider than the measurement grid's own 3m spacing so
+    // a walked point still counts for its immediate neighborhood.
+    private const double InterferenceInfluenceRadiusMeters = 8.0;
+
     private const double TargetCoverageFraction = 0.95;
     private const int MaxAccessPoints = 8;
 
@@ -38,19 +54,23 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
         // shortest-range, hardest-to-cover requested band.
         var drivingBand = bands.Max();
         double drivingPower = ChannelPlan.DefaultTransmitPowerDbm(drivingBand);
-        var gridPoints = BuildGrid(floor);
+        var gridPoints = FloorGrid.BuildPoints(floor, GridSpacingMeters);
 
         if (gridPoints.Count == 0)
         {
             return [];
         }
 
+        var effectiveThresholds = gridPoints
+            .Select(point => EffectiveReliabilityThresholdDbm(point, drivingBand, floor.TestPoints))
+            .ToArray();
+
         var covered = new bool[gridPoints.Count];
         var placements = new List<Point2D>();
 
         while (placements.Count < MaxAccessPoints && CoverageFraction(covered) < TargetCoverageFraction)
         {
-            var (bestCandidate, bestCoverageMask) = FindBestCandidate(gridPoints, covered, drivingBand, drivingPower, floor.Walls, propagationModel);
+            var (bestCandidate, bestCoverageMask) = FindBestCandidate(gridPoints, covered, drivingBand, drivingPower, floor.Walls, propagationModel, effectiveThresholds);
 
             if (bestCandidate is not { } chosen || bestCoverageMask is null)
             {
@@ -64,11 +84,11 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
             }
         }
 
-        return placements.Select((position, index) => BuildAccessPoint(position, index, bands)).ToList();
+        return placements.Select((position, index) => BuildAccessPoint(position, index, bands, floor.TestPoints)).ToList();
     }
 
     private static (Point2D? Candidate, bool[]? CoverageMask) FindBestCandidate(
-        List<Point2D> gridPoints, bool[] covered, Band drivingBand, double drivingPower, IReadOnlyList<Wall> walls, IPropagationModel propagationModel)
+        List<Point2D> gridPoints, bool[] covered, Band drivingBand, double drivingPower, IReadOnlyList<Wall> walls, IPropagationModel propagationModel, double[] effectiveThresholds)
     {
         Point2D? bestCandidate = null;
         bool[]? bestCoverageMask = null;
@@ -87,7 +107,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
                 }
 
                 double signal = propagationModel.PredictSignalDbm(candidate, drivingPower, gridPoints[i], drivingBand, walls);
-                if (signal >= ReliableCoverageThresholdDbm)
+                if (signal >= effectiveThresholds[i])
                 {
                     candidateCoverage[i] = true;
                     newlyCovered++;
@@ -105,7 +125,36 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
         return (bestCandidate, bestCoverageMask);
     }
 
-    private static AccessPoint BuildAccessPoint(Point2D position, int index, IReadOnlyList<Band> bands)
+    // Falls back to the plain ReliableCoverageThresholdDbm when there's no nearby measurement to
+    // raise it — identical behavior to before any guided walk existed.
+    private static double EffectiveReliabilityThresholdDbm(Point2D point, Band band, IReadOnlyList<TestPoint> testPoints)
+    {
+        TestPoint? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var testPoint in testPoints)
+        {
+            double distance = testPoint.Position.DistanceTo(point);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = testPoint;
+            }
+        }
+
+        if (nearest is null || nearestDistance > InterferenceInfluenceRadiusMeters)
+        {
+            return ReliableCoverageThresholdDbm;
+        }
+
+        double strongestNearbyInterferenceDbm = nearest.InterferenceReadings
+            .Where(r => r.Band == band)
+            .Select(r => (double?)r.SignalDbm)
+            .Max() ?? double.NegativeInfinity;
+
+        return Math.Max(ReliableCoverageThresholdDbm, strongestNearbyInterferenceDbm + SinrMarginDb);
+    }
+
+    private static AccessPoint BuildAccessPoint(Point2D position, int index, IReadOnlyList<Band> bands, IReadOnlyList<TestPoint> testPoints)
     {
         var accessPoint = new AccessPoint
         {
@@ -115,7 +164,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
 
         foreach (var band in bands)
         {
-            var channels = ChannelPlan.ChannelsFor(band);
+            var channels = RankChannelsByMeasuredInterference(ChannelPlan.ChannelsFor(band), band, testPoints);
             accessPoint.Radios[band] = new BandRadioSettings
             {
                 TransmitPowerDbm = ChannelPlan.DefaultTransmitPowerDbm(band),
@@ -126,30 +175,32 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
         return accessPoint;
     }
 
+    // Orders a band's candidate channels least-congested first, using every guided-walk
+    // interference reading captured on the floor. Round-robin assignment across APs still walks
+    // this reordered list, so APs keep getting distinct channels — just biased away from whichever
+    // channels neighboring networks are already using. With no measurements yet (predictive-only
+    // survey), every channel ties at zero and LINQ's stable OrderBy preserves the original order —
+    // identical round-robin behavior to before any walk existed.
+    private static IReadOnlyList<int> RankChannelsByMeasuredInterference(IReadOnlyList<int> channels, Band band, IReadOnlyList<TestPoint> testPoints)
+    {
+        if (testPoints.Count == 0)
+        {
+            return channels;
+        }
+
+        return channels
+            .OrderBy(channel => MeasuredInterferenceScore(channel, band, testPoints))
+            .ToList();
+    }
+
+    // Linear-power sum (not a dBm average) so a single strong nearby network dominates the score
+    // the way it would dominate real co-channel interference.
+    private static double MeasuredInterferenceScore(int channel, Band band, IReadOnlyList<TestPoint> testPoints) =>
+        testPoints
+            .SelectMany(tp => tp.InterferenceReadings)
+            .Where(r => r.Band == band && r.Channel == channel)
+            .Sum(r => Math.Pow(10, r.SignalDbm / 10.0));
+
     private static double CoverageFraction(bool[] covered) =>
         covered.Length == 0 ? 1.0 : covered.Count(c => c) / (double)covered.Length;
-
-    private static List<Point2D> BuildGrid(Floor floor)
-    {
-        if (floor.Walls.Count == 0)
-        {
-            return [];
-        }
-
-        double minX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Min();
-        double maxX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Max();
-        double minY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Min();
-        double maxY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Max();
-
-        var points = new List<Point2D>();
-        for (double x = minX; x <= maxX; x += GridSpacingMeters)
-        {
-            for (double y = minY; y <= maxY; y += GridSpacingMeters)
-            {
-                points.Add(new Point2D(x, y));
-            }
-        }
-
-        return points;
-    }
 }

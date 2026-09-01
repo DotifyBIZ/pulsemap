@@ -1,0 +1,63 @@
+name: Release
+
+# Runs only on main — that's the branch semantic-release is configured for (.releaserc.json).
+# Feature branches and staging never trigger this; the intended flow is feature -> staging ->
+# (tested there) -> main, and landing on main is what cuts a release.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  build-verify:
+    # Re-verify the exact commit being released, independent of whatever CI already reported on
+    # its PR — cheap insurance against a fast-forward or admin-merge that skipped CI.
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore (locked mode)
+        run: dotnet restore Pulsemap.sln --locked-mode
+
+      - name: Build (Release)
+        run: dotnet build Pulsemap.sln --configuration Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test Pulsemap.sln --configuration Release --no-build
+
+  release:
+    needs: build-verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # @semantic-release/git needs to push the CHANGELOG.md commit back to main, which
+          # requires the credential actions/checkout leaves behind by default.
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install release tooling
+        run: npm ci
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

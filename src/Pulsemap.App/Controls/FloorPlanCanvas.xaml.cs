@@ -1,10 +1,14 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Models;
+using Pulsemap.App.Services;
 using Windows.UI;
 
 namespace Pulsemap.App.Controls;
@@ -23,15 +27,23 @@ public sealed partial class FloorPlanCanvas : UserControl
     private const double HeatmapCellMeters = 0.5;
     private const double TestPointRadiusPx = 7;
     private const double AccessPointRadiusPx = 10;
+    private const double WalkTargetRadiusPx = 14;
     private const double WallStrokeThicknessPx = 4;
     private const double HeatmapOpacity = 0.55;
 
+    private readonly FloorPlanImageCache _imageCache;
+
     private Bounds _bounds = new(0, 0, 20, 15);
     private Point2D? _wallAnchor;
+    private byte[]? _renderedBackgroundImageData;
+    private double _backgroundWidthMeters;
+    private double _backgroundHeightMeters;
+    private int _renderVersion;
 
     public FloorPlanCanvas()
     {
         InitializeComponent();
+        _imageCache = App.Services.GetRequiredService<FloorPlanImageCache>();
     }
 
     public WorkspaceTool Tool { get; set; } = WorkspaceTool.Select;
@@ -42,14 +54,96 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     public event EventHandler<Point2D>? DeleteRequested;
 
-    public void Render(Floor floor, IReadOnlyList<CoverageSample> heatmap)
+    /// <summary>
+    /// Renders walls/points/heatmap immediately, plus (for an image-style floor plan) the
+    /// background image/PDF once it's decoded — decoding only happens the first time a given
+    /// <see cref="ImagePlanSource.ImageData"/> is seen, cached thereafter by array reference. If a
+    /// newer <see cref="RenderAsync"/> call starts while this one is still decoding, this call
+    /// abandons itself rather than overwriting the newer render's result.
+    /// </summary>
+    public async Task RenderAsync(Floor floor, IReadOnlyList<CoverageSample> heatmap, Point2D? walkTarget = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(floor);
         ArgumentNullException.ThrowIfNull(heatmap);
 
+        int myRenderVersion = ++_renderVersion;
+
+        if (floor.PlanSource is ImagePlanSource imagePlan)
+        {
+            if (!ReferenceEquals(imagePlan.ImageData, _renderedBackgroundImageData))
+            {
+                string? cachePath = await _imageCache.GetOrCreateAsync(imagePlan, cancellationToken);
+                if (myRenderVersion != _renderVersion)
+                {
+                    return;
+                }
+
+                if (cachePath is not null)
+                {
+                    var bitmap = new BitmapImage();
+                    var (pixelWidth, pixelHeight) = await LoadAndMeasureAsync(bitmap, cachePath);
+                    BackgroundLayer.Source = bitmap;
+                    _backgroundWidthMeters = pixelWidth / imagePlan.PixelsPerMeter;
+                    _backgroundHeightMeters = pixelHeight / imagePlan.PixelsPerMeter;
+                }
+                else
+                {
+                    BackgroundLayer.Source = null;
+                    _backgroundWidthMeters = 0;
+                    _backgroundHeightMeters = 0;
+                }
+
+                _renderedBackgroundImageData = imagePlan.ImageData;
+            }
+        }
+        else if (_renderedBackgroundImageData is not null)
+        {
+            BackgroundLayer.Source = null;
+            _renderedBackgroundImageData = null;
+            _backgroundWidthMeters = 0;
+            _backgroundHeightMeters = 0;
+        }
+
+        RenderCore(floor, heatmap, walkTarget);
+    }
+
+    private static Task<(int PixelWidth, int PixelHeight)> LoadAndMeasureAsync(BitmapImage bitmap, string filePath)
+    {
+        var completion = new TaskCompletionSource<(int, int)>();
+
+        void OnOpened(object sender, RoutedEventArgs e)
+        {
+            bitmap.ImageOpened -= OnOpened;
+            bitmap.ImageFailed -= OnFailed;
+            completion.TrySetResult((bitmap.PixelWidth, bitmap.PixelHeight));
+        }
+
+        void OnFailed(object sender, ExceptionRoutedEventArgs e)
+        {
+            bitmap.ImageOpened -= OnOpened;
+            bitmap.ImageFailed -= OnFailed;
+            completion.TrySetResult((0, 0));
+        }
+
+        bitmap.ImageOpened += OnOpened;
+        bitmap.ImageFailed += OnFailed;
+        bitmap.UriSource = new Uri(filePath);
+
+        return completion.Task;
+    }
+
+    private void RenderCore(Floor floor, IReadOnlyList<CoverageSample> heatmap, Point2D? walkTarget)
+    {
         _bounds = ComputeBounds(floor);
         RootGrid.Width = _bounds.WidthMeters * PixelsPerMeter;
         RootGrid.Height = _bounds.HeightMeters * PixelsPerMeter;
+
+        // The background image's own local (0,0) anchors to the floor's meter-space origin —
+        // there's no calibration/offset UI today, so this is the only sane default.
+        var (originX, originY) = ToPixels(new Point2D(0, 0));
+        BackgroundLayer.Margin = new Thickness(originX, originY, 0, 0);
+        BackgroundLayer.Width = _backgroundWidthMeters * PixelsPerMeter;
+        BackgroundLayer.Height = _backgroundHeightMeters * PixelsPerMeter;
 
         HeatmapLayer.Children.Clear();
         WallsLayer.Children.Clear();
@@ -73,6 +167,11 @@ public sealed partial class FloorPlanCanvas : UserControl
         foreach (var accessPoint in floor.AccessPoints)
         {
             MarkersLayer.Children.Add(BuildAccessPointMarker(accessPoint));
+        }
+
+        if (walkTarget is { } target)
+        {
+            MarkersLayer.Children.Add(BuildWalkTargetMarker(target));
         }
     }
 
@@ -143,6 +242,23 @@ public sealed partial class FloorPlanCanvas : UserControl
         return marker;
     }
 
+    private Ellipse BuildWalkTargetMarker(Point2D position)
+    {
+        var (px, py) = ToPixels(position);
+        double diameter = WalkTargetRadiusPx * 2;
+        var marker = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Stroke = new SolidColorBrush(Colors.MediumPurple),
+            StrokeThickness = 3,
+            StrokeDashArray = [4, 2],
+        };
+        Canvas.SetLeft(marker, px - WalkTargetRadiusPx);
+        Canvas.SetTop(marker, py - WalkTargetRadiusPx);
+        return marker;
+    }
+
     private static Color HeatmapColor(double signalDbm) => signalDbm switch
     {
         >= -50 => Colors.Green,
@@ -192,7 +308,7 @@ public sealed partial class FloorPlanCanvas : UserControl
     private Point2D ToMeters(Windows.Foundation.Point pixels) =>
         new(_bounds.MinX + (pixels.X / PixelsPerMeter), _bounds.MinY + (pixels.Y / PixelsPerMeter));
 
-    private static Bounds ComputeBounds(Floor floor)
+    private Bounds ComputeBounds(Floor floor)
     {
         var xs = new List<double>();
         var ys = new List<double>();
@@ -215,6 +331,16 @@ public sealed partial class FloorPlanCanvas : UserControl
         {
             xs.Add(accessPoint.Position.X);
             ys.Add(accessPoint.Position.Y);
+        }
+
+        // Background image anchors at meter-space (0,0) — include its far corner so the canvas
+        // sizes to fit the whole image even before any walls are drawn on top of it.
+        if (_backgroundWidthMeters > 0 && _backgroundHeightMeters > 0)
+        {
+            xs.Add(0);
+            xs.Add(_backgroundWidthMeters);
+            ys.Add(0);
+            ys.Add(_backgroundHeightMeters);
         }
 
         if (xs.Count == 0)

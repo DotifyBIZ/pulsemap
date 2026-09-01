@@ -25,10 +25,16 @@ TestResults/
 *.trx
 *.coverage
 coverage/
+coverage.json
+coverage.cobertura.xml
 
 ## NuGet
 *.nupkg
 packages/
+
+## npm (semantic-release tooling only — this is not a Node project)
+node_modules/
+npm-debug.log*
 
 ## Editors
 .idea/

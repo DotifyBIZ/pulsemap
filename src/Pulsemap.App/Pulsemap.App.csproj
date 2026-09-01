@@ -20,6 +20,7 @@
     <!-- Unpackaged distribution — see docs/adr/0002-installer-innosetup-over-msix.md -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,6 +62,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.6.1" />
+    <PackageReference Include="PDFtoImage" Version="5.4.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Pulsemap.App.Core\Pulsemap.App.Core.csproj" />
@@ -77,11 +79,17 @@
 
   <!-- Publish Properties -->
   <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <!-- Not trimming: we distribute the self-contained output folder via InnoSetup (ADR-0002),
          not a single trimmed EXE, and Microsoft's own WinRT interop assemblies aren't fully
          trim-clean, which trips TreatWarningsAsErrors. -->
     <PublishTrimmed>False</PublishTrimmed>
+    <!-- Template default was True for Release, which fails CI with NETSDK1094 ("Unable to
+         optimize assemblies for performance: a valid runtime package was not found") — the
+         win-x64 ReadyToRun/crossgen runtime pack isn't in packages.lock.json, and CI's locked
+         mode restore has no local NuGet cache to mask the gap (same failure shape as
+         the Any-CPU/x64 NETSDK1094 already fixed in a23b755). Pure cold-start-perf optimization
+         with no functional effect, and not yet exercised by any real publish in this repo's
+         pipeline (release.yml doesn't attach an installer yet) — turned off rather than chased. -->
+    <PublishReadyToRun>False</PublishReadyToRun>
   </PropertyGroup>
 </Project>

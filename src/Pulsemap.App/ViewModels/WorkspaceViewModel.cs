@@ -1,12 +1,17 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
+using Pulsemap.App.Core.Logging;
+using Pulsemap.App.Core.Measurement;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Services;
 using Windows.System;
 
 namespace Pulsemap.App.ViewModels;
@@ -27,6 +32,11 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IPropagationModel _propagationModel;
     private readonly IApPlacementOptimizer _placementOptimizer;
     private readonly IWlanAdapterService _wlanAdapterService;
+    private readonly ILocalizationService _localizationService;
+    private readonly IAppLogger _logger;
+    private readonly ISurveyDataExporter _surveyDataExporter;
+    private readonly IReportExporter _reportExporter;
+    private readonly ISurveyExportFilePickerService _exportFilePickerService;
 
     private string? _filePath;
 
@@ -34,12 +44,22 @@ public partial class WorkspaceViewModel : ObservableObject
         ISurveyFileService surveyFileService,
         IPropagationModel propagationModel,
         IApPlacementOptimizer placementOptimizer,
-        IWlanAdapterService wlanAdapterService)
+        IWlanAdapterService wlanAdapterService,
+        ILocalizationService localizationService,
+        IAppLogger logger,
+        ISurveyDataExporter surveyDataExporter,
+        IReportExporter reportExporter,
+        ISurveyExportFilePickerService exportFilePickerService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
         _placementOptimizer = placementOptimizer;
         _wlanAdapterService = wlanAdapterService;
+        _localizationService = localizationService;
+        _logger = logger;
+        _surveyDataExporter = surveyDataExporter;
+        _reportExporter = reportExporter;
+        _exportFilePickerService = exportFilePickerService;
     }
 
     public event EventHandler? FloorChanged;
@@ -51,7 +71,10 @@ public partial class WorkspaceViewModel : ObservableObject
     public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorMessage { get; set; }
+
+    public bool HasError => ErrorMessage is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CoveragePercentDisplay))]
@@ -66,7 +89,8 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
 
-    public string CoveragePercentDisplay => $"{CoveragePercent:0}% of the floor at -67dBm or better";
+    public string CoveragePercentDisplay =>
+        string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceCoveragePercentFormat"), CoveragePercent);
 
     public string AccessPointSummaryDisplay
     {
@@ -74,24 +98,26 @@ public partial class WorkspaceViewModel : ObservableObject
         {
             if (Survey is null || Survey.Floor.AccessPoints.Count == 0)
             {
-                return "No access points placed yet.";
+                return _localizationService.GetString("WorkspaceNoAccessPointsPlaced");
             }
 
+            string channelAbbreviation = _localizationService.GetString("WorkspaceChannelAbbreviation");
+            string summaryFormat = _localizationService.GetString("WorkspaceAccessPointSummaryFormat");
             return string.Join(
                 Environment.NewLine,
                 Survey.Floor.AccessPoints.Select(ap =>
                 {
-                    string radios = string.Join(", ", ap.Radios.Select(r => $"{BandDisplayName(r.Key)} ch{r.Value.Channel}"));
-                    return $"{ap.Label} — {radios}";
+                    string radios = string.Join(", ", ap.Radios.Select(r => $"{BandDisplayName(r.Key)} {channelAbbreviation}{r.Value.Channel}"));
+                    return string.Format(CultureInfo.CurrentCulture, summaryFormat, ap.Label, radios);
                 }));
         }
     }
 
-    public static string BandDisplayName(Band band) => band switch
+    public string BandDisplayName(Band band) => band switch
     {
-        Band.TwoPointFourGhz => "2.4 GHz",
-        Band.FiveGhz => "5 GHz",
-        Band.SixGhz => "6 GHz",
+        Band.TwoPointFourGhz => _localizationService.GetString("WizardBand24Checkbox.Content"),
+        Band.FiveGhz => _localizationService.GetString("WizardBand5Checkbox.Content"),
+        Band.SixGhz => _localizationService.GetString("WizardBand6Checkbox.Content"),
         _ => band.ToString(),
     };
 
@@ -102,6 +128,8 @@ public partial class WorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
     public partial NetworkAdapterInfo? SelectedAdapter { get; set; }
 
     [ObservableProperty]
@@ -119,6 +147,45 @@ public partial class WorkspaceViewModel : ObservableObject
     public bool HasScanStatusMessage => ScanStatusMessage is not null;
 
     public bool ShowLocationSettingsLink => LastScanStatus == WlanScanStatus.LocationAccessDenied;
+
+    // Guided measurement walk
+    private Queue<Point2D> _guidedWalkQueue = new();
+    private int _guidedWalkTotalPoints;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGuidedWalkIdle))]
+    [NotifyPropertyChangedFor(nameof(GuidedWalkProgressDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelGuidedWalkCommand))]
+    public partial bool IsGuidedWalkActive { get; set; }
+
+    public bool IsGuidedWalkIdle => !IsGuidedWalkActive;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GuidedWalkProgressDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    public partial Point2D? CurrentWalkPoint { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    public partial bool IsCapturingWalkPoint { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGuidedWalkStatusMessage))]
+    public partial string? GuidedWalkStatusMessage { get; set; }
+
+    public bool HasGuidedWalkStatusMessage => GuidedWalkStatusMessage is not null;
+
+    public string GuidedWalkProgressDisplay => IsGuidedWalkActive && CurrentWalkPoint is { } point
+        ? string.Format(
+            CultureInfo.CurrentCulture,
+            _localizationService.GetString("WorkspaceGuidedWalkProgressFormat"),
+            _guidedWalkTotalPoints - _guidedWalkQueue.Count + 1,
+            _guidedWalkTotalPoints,
+            point.X,
+            point.Y)
+        : _localizationService.GetString("WorkspaceGuidedWalkNotWalking");
 
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
@@ -138,7 +205,8 @@ public partial class WorkspaceViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            ErrorMessage = $"Couldn't open this survey: {ex.Message}";
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceLoadErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync($"Failed to load survey '{filePath}'.", ex, CancellationToken.None);
         }
         finally
         {
@@ -179,29 +247,24 @@ public partial class WorkspaceViewModel : ObservableObject
             switch (result.Status)
             {
                 case WlanScanStatus.Success:
+                    string channelAbbreviation = _localizationService.GetString("WorkspaceChannelAbbreviation");
+                    string subtitleFormat = _localizationService.GetString("WorkspaceNetworkSubtitleFormat");
+                    string unknownBand = _localizationService.GetString("WorkspaceUnknownBand");
+                    string hiddenNetwork = _localizationService.GetString("WorkspaceHiddenNetwork");
                     foreach (var network in result.Networks.OrderByDescending(n => n.SignalDbm))
                     {
-                        string bandPart = network.Band is { } band ? BandDisplayName(band) : "unknown band";
-                        string ssid = string.IsNullOrEmpty(network.Ssid) ? "(hidden network)" : network.Ssid;
+                        string bandPart = network.Band is { } band ? BandDisplayName(band) : unknownBand;
+                        string ssid = string.IsNullOrEmpty(network.Ssid) ? hiddenNetwork : network.Ssid;
                         ScanResults.Add(new WlanNetworkDisplay(
                             ssid,
-                            $"{network.Bssid} · ch{network.Channel} · {bandPart} · {network.SignalDbm:0} dBm"));
+                            string.Format(CultureInfo.CurrentCulture, subtitleFormat, network.Bssid, channelAbbreviation, network.Channel, bandPart, network.SignalDbm)));
                     }
 
-                    ScanStatusMessage = result.Networks.Count == 0 ? "No networks found nearby." : null;
+                    ScanStatusMessage = result.Networks.Count == 0 ? _localizationService.GetString("WorkspaceNoNetworksFound") : null;
                     break;
 
-                case WlanScanStatus.LocationAccessDenied:
-                    ScanStatusMessage = "Windows needs Location access to show WiFi scan results for this app.";
-                    break;
-
-                case WlanScanStatus.NoAdapter:
-                    ScanStatusMessage = "Couldn't reach the WLAN service — is WiFi hardware available and enabled?";
-                    break;
-
-                case WlanScanStatus.Failed:
                 default:
-                    ScanStatusMessage = "The scan didn't complete. Try again.";
+                    ScanStatusMessage = DescribeScanStatus(result.Status);
                     break;
             }
         }
@@ -211,9 +274,102 @@ public partial class WorkspaceViewModel : ObservableObject
         }
     }
 
+    private string DescribeScanStatus(WlanScanStatus status) => status switch
+    {
+        WlanScanStatus.LocationAccessDenied => _localizationService.GetString("WorkspaceScanStatusLocationDenied"),
+        WlanScanStatus.NoAdapter => _localizationService.GetString("WorkspaceScanStatusNoAdapter"),
+        _ => _localizationService.GetString("WorkspaceScanStatusFailed"),
+    };
+
     [RelayCommand]
     private static async Task OpenLocationSettingsAsync() =>
         await Launcher.LaunchUriAsync(new Uri("ms-settings:privacy-location"));
+
+    private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null;
+
+    [RelayCommand(CanExecute = nameof(CanStartGuidedWalk))]
+    private void StartGuidedWalk()
+    {
+        if (Survey is null)
+        {
+            return;
+        }
+
+        var points = MeasurementPointSuggester.SuggestPoints(Survey.Floor);
+        if (points.Count == 0)
+        {
+            GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceNoUnmeasuredPoints");
+            return;
+        }
+
+        _guidedWalkQueue = new Queue<Point2D>(points);
+        _guidedWalkTotalPoints = points.Count;
+        GuidedWalkStatusMessage = null;
+        IsGuidedWalkActive = true;
+        AdvanceGuidedWalk();
+    }
+
+    private bool CanConfirmWalkPoint() => IsGuidedWalkActive && !IsCapturingWalkPoint && SelectedAdapter is not null && CurrentWalkPoint is not null;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmWalkPoint))]
+    private async Task ConfirmWalkPointAsync()
+    {
+        if (Survey is null || SelectedAdapter is null || CurrentWalkPoint is not { } position)
+        {
+            return;
+        }
+
+        IsCapturingWalkPoint = true;
+        GuidedWalkStatusMessage = null;
+        try
+        {
+            var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+            if (scanResult.Status != WlanScanStatus.Success)
+            {
+                GuidedWalkStatusMessage = DescribeScanStatus(scanResult.Status);
+                return;
+            }
+
+            var testPoint = TestPointCapture.BuildTestPoint(position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
+            Survey.Floor.TestPoints.Add(testPoint);
+            await SaveAndRefreshAsync();
+
+            _guidedWalkQueue.Dequeue();
+            AdvanceGuidedWalk();
+        }
+        finally
+        {
+            IsCapturingWalkPoint = false;
+        }
+    }
+
+    private bool CanCancelGuidedWalk() => IsGuidedWalkActive;
+
+    [RelayCommand(CanExecute = nameof(CanCancelGuidedWalk))]
+    private void CancelGuidedWalk()
+    {
+        _guidedWalkQueue.Clear();
+        IsGuidedWalkActive = false;
+        CurrentWalkPoint = null;
+        GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkCanceled");
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void AdvanceGuidedWalk()
+    {
+        if (_guidedWalkQueue.Count == 0)
+        {
+            IsGuidedWalkActive = false;
+            CurrentWalkPoint = null;
+            GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkComplete");
+        }
+        else
+        {
+            CurrentWalkPoint = _guidedWalkQueue.Peek();
+        }
+
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public async Task AddTestPointAsync(Point2D position)
     {
@@ -261,6 +417,54 @@ public partial class WorkspaceViewModel : ObservableObject
         Survey.Floor.AccessPoints.AddRange(suggestions);
         await SaveAndRefreshAsync();
     }
+
+    [RelayCommand]
+    private Task ExportTestPointsCsvAsync() =>
+        ExportAsync("-testpoints", ".csv", _localizationService.GetString("WorkspaceExportCsvFileType"), _surveyDataExporter.ExportTestPointsCsvAsync);
+
+    [RelayCommand]
+    private Task ExportAccessPointsCsvAsync() =>
+        ExportAsync("-accesspoints", ".csv", _localizationService.GetString("WorkspaceExportCsvFileType"), _surveyDataExporter.ExportAccessPointsCsvAsync);
+
+    [RelayCommand]
+    private Task ExportSurveyJsonAsync() =>
+        ExportAsync("-survey", ".json", _localizationService.GetString("WorkspaceExportJsonFileType"), _surveyDataExporter.ExportJsonAsync);
+
+    [RelayCommand]
+    private Task ExportCoverageReportPdfAsync() =>
+        ExportAsync("-coverage-report", ".pdf", _localizationService.GetString("WorkspaceExportPdfFileType"), _reportExporter.ExportPdfAsync);
+
+    private async Task ExportAsync(string fileNameSuffix, string extension, string fileTypeDescription, Func<Survey, Stream, CancellationToken, Task> exportAsync)
+    {
+        if (Survey is null)
+        {
+            return;
+        }
+
+        ErrorMessage = null;
+        string suggestedFileName = SanitizeFileName(Survey.Name) + fileNameSuffix;
+        Stream? stream = await _exportFilePickerService.PickSaveStreamAsync(suggestedFileName, extension, fileTypeDescription);
+        if (stream is null)
+        {
+            return;
+        }
+
+        await using (stream)
+        {
+            try
+            {
+                await exportAsync(Survey, stream, CancellationToken.None);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceExportErrorFormat"), ex.Message);
+                await _logger.LogErrorAsync("Failed to export survey data.", ex);
+            }
+        }
+    }
+
+    private static string SanitizeFileName(string name) =>
+        string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 
     partial void OnSelectedBandChanged(Band value)
     {

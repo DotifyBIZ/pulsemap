@@ -88,6 +88,14 @@ public sealed class SurveyDataExporter : ISurveyDataExporter
 
     private static string EscapeCsvField(string value)
     {
+        // A leading =, +, -, @, or tab is interpreted as a formula by Excel/Sheets — prefix with an
+        // apostrophe to force text interpretation (standard CSV-injection mitigation, CWE-1236).
+        // AccessPoint.Label is free-text and flows here unescaped otherwise.
+        if (value.Length > 0 && (value[0] is '=' or '+' or '-' or '@' or '\t'))
+        {
+            value = "'" + value;
+        }
+
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
             return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";

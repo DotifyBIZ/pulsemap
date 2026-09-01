@@ -14,6 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -28,21 +29,35 @@
                 <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
-            <Button Grid.Column="1" Content="Back" Click="Back_Click" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="WorkspaceExportMenuButton">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutItem x:Uid="WorkspaceExportTestPointsCsvMenuItem" Command="{x:Bind ViewModel.ExportTestPointsCsvCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportAccessPointsCsvMenuItem" Command="{x:Bind ViewModel.ExportAccessPointsCsvCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportSurveyJsonMenuItem" Command="{x:Bind ViewModel.ExportSurveyJsonCommand}" />
+                            <MenuFlyoutItem x:Uid="WorkspaceExportCoverageReportPdfMenuItem" Command="{x:Bind ViewModel.ExportCoverageReportPdfCommand}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Uid="WorkspaceBackButton" Click="Back_Click" />
+            </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
-            <ToggleButton x:Name="SelectToolButton" Content="Select" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Name="AddTestPointToolButton" Content="Add Test Point" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Name="DrawWallToolButton" Content="Draw Wall" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Name="DeleteToolButton" Content="Delete" Checked="ToolToggle_Checked" />
+        <InfoBar Grid.Row="1" Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Margin="0,12,0,0" />
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
+            <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
 
             <ComboBox x:Name="BandSelector" Width="120" Margin="16,0,0,0" SelectionChanged="BandSelector_SelectionChanged" />
 
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
         </StackPanel>
 
-        <Grid Grid.Row="2" Margin="0,20,0,0">
+        <Grid Grid.Row="3" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="440" />
@@ -54,48 +69,54 @@
 
             <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Padding="16">
                 <Pivot>
-                    <PivotItem Header="Coverage">
+                    <PivotItem x:Uid="WorkspaceCoverageTab">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Signal legend" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WorkspaceSignalLegendLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Green" RadiusX="3" RadiusY="3" />
-                                    <TextBlock Text="Excellent (&#8805; -50dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendExcellent" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="YellowGreen" RadiusX="3" RadiusY="3" />
-                                    <TextBlock Text="Good (&#8805; -60dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendGood" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Gold" RadiusX="3" RadiusY="3" />
-                                    <TextBlock Text="Fair (&#8805; -67dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendFair" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Orange" RadiusX="3" RadiusY="3" />
-                                    <TextBlock Text="Weak (&#8805; -75dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendWeak" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Red" RadiusX="3" RadiusY="3" />
-                                    <TextBlock Text="Poor (&lt; -75dBm)" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendPoor" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock
-                                Text="Predictive only, from placed access points — not yet based on real measurements."
+                                x:Uid="WorkspacePredictiveOnlyNote"
                                 TextWrapping="Wrap"
                                 FontSize="{StaticResource FontSizeXs}"
                                 Foreground="{StaticResource Gray400Brush}" />
                         </StackPanel>
                     </PivotItem>
 
-                    <PivotItem Header="Suggestions">
+                    <PivotItem x:Uid="WorkspaceSuggestionsTab">
                         <StackPanel Spacing="12">
                             <Button
-                                Content="Suggest Placements"
-                                Background="{StaticResource Primary600Brush}"
-                                Foreground="White"
-                                CornerRadius="6"
-                                Padding="16,10"
-                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}" />
+                                x:Uid="WorkspaceSuggestPlacementsButton"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}">
+                                <Button.Resources>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                                </Button.Resources>
+                            </Button>
                             <TextBlock
                                 x:Name="AccessPointSummaryText"
                                 Text="{x:Bind ViewModel.AccessPointSummaryDisplay, Mode=OneWay}"
@@ -105,10 +126,11 @@
                         </StackPanel>
                     </PivotItem>
 
-                    <PivotItem Header="Adapter">
+                    <PivotItem x:Uid="WorkspaceAdapterTab">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12">
                             <ComboBox
-                                Header="Adapter"
+                                x:Uid="WorkspaceAdapterField"
                                 ItemsSource="{x:Bind ViewModel.Adapters}"
                                 SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
                                 DisplayMemberPath="Name"
@@ -116,12 +138,18 @@
 
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <Button
-                                    Content="Scan"
-                                    Background="{StaticResource Primary600Brush}"
-                                    Foreground="White"
-                                    CornerRadius="6"
-                                    Padding="16,10"
-                                    Command="{x:Bind ViewModel.ScanCommand}" />
+                                    x:Uid="WorkspaceScanButton"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{x:Bind ViewModel.ScanCommand}">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                                    </Button.Resources>
+                                </Button>
                                 <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
                             </StackPanel>
 
@@ -133,7 +161,7 @@
                                 Foreground="{StaticResource Gray500Brush}" />
 
                             <Button
-                                Content="Open Location Settings"
+                                x:Uid="WorkspaceOpenLocationSettingsButton"
                                 Visibility="{x:Bind ViewModel.ShowLocationSettingsLink, Mode=OneWay}"
                                 Command="{x:Bind ViewModel.OpenLocationSettingsCommand}" />
 
@@ -147,7 +175,64 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <Rectangle Height="1" Fill="{StaticResource Gray200Brush}" Margin="0,4,0,0" />
+                            <TextBlock x:Uid="WorkspaceGuidedWalkHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+
+                            <StackPanel Visibility="{x:Bind ViewModel.IsGuidedWalkIdle, Mode=OneWay}" Spacing="8">
+                                <TextBlock
+                                    x:Uid="WorkspaceGuidedWalkExplanation"
+                                    TextWrapping="Wrap"
+                                    FontSize="{StaticResource FontSizeXs}"
+                                    Foreground="{StaticResource Gray500Brush}" />
+                                <Button
+                                    x:Uid="WorkspaceStartGuidedWalkButton"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{x:Bind ViewModel.StartGuidedWalkCommand}">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Visibility="{x:Bind ViewModel.IsGuidedWalkActive, Mode=OneWay}" Spacing="8">
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.GuidedWalkProgressDisplay, Mode=OneWay}"
+                                    TextWrapping="Wrap"
+                                    FontSize="{StaticResource FontSizeSm}"
+                                    Foreground="{StaticResource Gray700Brush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button
+                                        x:Uid="WorkspaceConfirmWalkPointButton"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{x:Bind ViewModel.ConfirmWalkPointCommand}">
+                                        <Button.Resources>
+                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                                        </Button.Resources>
+                                    </Button>
+                                    <Button x:Uid="WorkspaceCancelWalkButton" Command="{x:Bind ViewModel.CancelGuidedWalkCommand}" />
+                                    <ProgressRing IsActive="{x:Bind ViewModel.IsCapturingWalkPoint, Mode=OneWay}" Width="20" Height="20" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <TextBlock
+                                Text="{x:Bind ViewModel.GuidedWalkStatusMessage, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.HasGuidedWalkStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray500Brush}" />
                         </StackPanel>
+                        </ScrollViewer>
                     </PivotItem>
                 </Pivot>
             </Border>

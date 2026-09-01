@@ -1,3 +1,4 @@
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 
@@ -6,7 +7,7 @@ namespace Pulsemap.App.Core.Tests.Persistence;
 public sealed class ZipSurveyFileServiceTests : IDisposable
 {
     private readonly string _filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pulsemap");
-    private readonly ZipSurveyFileService _sut = new();
+    private readonly ZipSurveyFileService _sut = new(new NoOpAppLogger());
 
     public void Dispose()
     {
@@ -93,5 +94,16 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
         }
 
         await Assert.ThrowsAsync<InvalidDataException>(() => _sut.LoadAsync(_filePath));
+    }
+
+    private sealed class NoOpAppLogger : IAppLogger
+    {
+        public string LogDirectory => string.Empty;
+
+        public Task LogErrorAsync(string message, Exception? exception = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task LogWarningAsync(string message, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task LogInfoAsync(string message, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

@@ -9,6 +9,7 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ZoomMode="Disabled">
         <Grid x:Name="RootGrid" Background="Transparent" PointerPressed="RootGrid_PointerPressed">
+            <Image x:Name="BackgroundLayer" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" />
             <Canvas x:Name="HeatmapLayer" />
             <Canvas x:Name="WallsLayer" />
             <Canvas x:Name="MarkersLayer" />
