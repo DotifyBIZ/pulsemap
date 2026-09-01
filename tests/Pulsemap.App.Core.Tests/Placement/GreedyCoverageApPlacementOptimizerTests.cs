@@ -1,3 +1,4 @@
+using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
@@ -63,6 +64,36 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
         var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Empty(placements);
+    }
+
+    [Fact]
+    public void SuggestPlacements_ChannelWithMeasuredInterference_IsDeprioritized()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 10);
+        floor.TestPoints.Add(new TestPoint
+        {
+            Position = new Point2D(5, 5),
+            InterferenceReadings =
+            [
+                new WlanNetworkReading("NeighborNet", "AA:AA:AA:AA:AA:AA", Band.TwoPointFourGhz, 1, -40),
+            ],
+        });
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+        Assert.NotEqual(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
+    }
+
+    [Fact]
+    public void SuggestPlacements_NoMeasurements_KeepsDefaultChannelOrder()
+    {
+        var floor = SquareRoomFloor(sizeMeters: 10);
+
+        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+        Assert.Equal(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
     }
 
     // Three 10x10m rooms in a row, separated by concrete dividing walls — enough attenuation at

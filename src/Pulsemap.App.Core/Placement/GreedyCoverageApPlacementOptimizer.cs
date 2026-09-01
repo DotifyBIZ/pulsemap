@@ -64,7 +64,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
             }
         }
 
-        return placements.Select((position, index) => BuildAccessPoint(position, index, bands)).ToList();
+        return placements.Select((position, index) => BuildAccessPoint(position, index, bands, floor.TestPoints)).ToList();
     }
 
     private static (Point2D? Candidate, bool[]? CoverageMask) FindBestCandidate(
@@ -105,7 +105,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
         return (bestCandidate, bestCoverageMask);
     }
 
-    private static AccessPoint BuildAccessPoint(Point2D position, int index, IReadOnlyList<Band> bands)
+    private static AccessPoint BuildAccessPoint(Point2D position, int index, IReadOnlyList<Band> bands, IReadOnlyList<TestPoint> testPoints)
     {
         var accessPoint = new AccessPoint
         {
@@ -115,7 +115,7 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
 
         foreach (var band in bands)
         {
-            var channels = ChannelPlan.ChannelsFor(band);
+            var channels = RankChannelsByMeasuredInterference(ChannelPlan.ChannelsFor(band), band, testPoints);
             accessPoint.Radios[band] = new BandRadioSettings
             {
                 TransmitPowerDbm = ChannelPlan.DefaultTransmitPowerDbm(band),
@@ -125,6 +125,32 @@ public sealed class GreedyCoverageApPlacementOptimizer : IApPlacementOptimizer
 
         return accessPoint;
     }
+
+    // Orders a band's candidate channels least-congested first, using every guided-walk
+    // interference reading captured on the floor. Round-robin assignment across APs still walks
+    // this reordered list, so APs keep getting distinct channels — just biased away from whichever
+    // channels neighboring networks are already using. With no measurements yet (predictive-only
+    // survey), every channel ties at zero and LINQ's stable OrderBy preserves the original order —
+    // identical round-robin behavior to before any walk existed.
+    private static IReadOnlyList<int> RankChannelsByMeasuredInterference(IReadOnlyList<int> channels, Band band, IReadOnlyList<TestPoint> testPoints)
+    {
+        if (testPoints.Count == 0)
+        {
+            return channels;
+        }
+
+        return channels
+            .OrderBy(channel => MeasuredInterferenceScore(channel, band, testPoints))
+            .ToList();
+    }
+
+    // Linear-power sum (not a dBm average) so a single strong nearby network dominates the score
+    // the way it would dominate real co-channel interference.
+    private static double MeasuredInterferenceScore(int channel, Band band, IReadOnlyList<TestPoint> testPoints) =>
+        testPoints
+            .SelectMany(tp => tp.InterferenceReadings)
+            .Where(r => r.Band == band && r.Channel == channel)
+            .Sum(r => Math.Pow(10, r.SignalDbm / 10.0));
 
     private static double CoverageFraction(bool[] covered) =>
         covered.Length == 0 ? 1.0 : covered.Count(c => c) / (double)covered.Length;
