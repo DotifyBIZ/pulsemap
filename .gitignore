@@ -1,0 +1,46 @@
+## .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## WinUI / MSIX build output
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.appxsym
+*.msix
+*.msixbundle
+
+## InnoSetup output
+Output/
+*.exe.log
+
+## Test results / coverage
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+## NuGet
+*.nupkg
+packages/
+
+## Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Secrets — never commit
+*.pfx
+*.snk
+secrets.json
+appsettings.*.local.json

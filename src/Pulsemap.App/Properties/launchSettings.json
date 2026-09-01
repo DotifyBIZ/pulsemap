@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Pulsemap.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Pulsemap.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
