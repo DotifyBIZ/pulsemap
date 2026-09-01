@@ -1,0 +1,10 @@
+{
+  "name": "pulsemap-release-tooling",
+  "private": true,
+  "description": "Not a Node package — this file exists only to run semantic-release for versioning/changelog automation. Pulsemap itself is a .NET/WinUI3 app.",
+  "devDependencies": {
+    "semantic-release": "24.2.3",
+    "@semantic-release/changelog": "6.0.3",
+    "@semantic-release/git": "10.0.1"
+  }
+}
