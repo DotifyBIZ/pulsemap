@@ -20,6 +20,7 @@
     <!-- Unpackaged distribution — see docs/adr/0002-installer-innosetup-over-msix.md -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
