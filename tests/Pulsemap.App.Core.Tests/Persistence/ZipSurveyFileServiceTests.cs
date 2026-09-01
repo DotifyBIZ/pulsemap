@@ -23,6 +23,8 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
         {
             Name = "Riverside Distribution Center",
             SiteDescription = "Client site — warehouse",
+            Type = SurveyType.ExistingNetworkAudit,
+            TargetBands = [Band.TwoPointFourGhz, Band.FiveGhz],
             Floor = new Floor
             {
                 PlanSource = new RoomListSource
@@ -59,6 +61,8 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
         var survey = new Survey
         {
             Name = "Dotify HQ",
+            Type = SurveyType.NewDeployment,
+            TargetBands = [Band.FiveGhz],
             Floor = new Floor
             {
                 PlanSource = new ImagePlanSource

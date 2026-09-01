@@ -33,6 +33,13 @@
             </NavigationViewItem>
         </NavigationView.MenuItems>
 
-        <Frame x:Name="ContentFrame" />
+        <!--
+            Content pages (Home, wizard, workspace) are always solid, light cards per
+            docs/design-tokens.md — Mica/system theme only shows through the title bar and this
+            pane, never through content. Forcing Light here keeps native control foregrounds
+            (TextBox, RadioButton, etc.) legible against those explicit white/light backgrounds
+            regardless of the user's system theme.
+        -->
+        <Frame x:Name="ContentFrame" RequestedTheme="Light" />
     </NavigationView>
 </Page>

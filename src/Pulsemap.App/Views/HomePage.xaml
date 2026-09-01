@@ -27,7 +27,7 @@
                 <TextBlock Text="Your surveys, all in one place." FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
-            <Button Grid.Column="1" VerticalAlignment="Top" Background="{StaticResource Primary600Brush}" CornerRadius="6" Padding="16,10">
+            <Button Grid.Column="1" VerticalAlignment="Top" Background="{StaticResource Primary600Brush}" CornerRadius="6" Padding="16,10" Click="NewSurvey_Click">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="White" />
                     <TextBlock Text="New Survey" Foreground="White" FontWeight="SemiBold" />

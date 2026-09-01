@@ -62,6 +62,8 @@ public sealed class SurveyDataExporterTests
         return new Survey
         {
             Name = "Test Survey",
+            Type = SurveyType.ExistingNetworkAudit,
+            TargetBands = [Band.TwoPointFourGhz],
             Floor = new Floor { PlanSource = new RoomListSource(), TestPoints = { testPoint } },
         };
     }
@@ -75,6 +77,8 @@ public sealed class SurveyDataExporterTests
         return new Survey
         {
             Name = "Test Survey",
+            Type = SurveyType.NewDeployment,
+            TargetBands = [Band.TwoPointFourGhz],
             Floor = new Floor { PlanSource = new RoomListSource(), AccessPoints = { accessPoint } },
         };
     }

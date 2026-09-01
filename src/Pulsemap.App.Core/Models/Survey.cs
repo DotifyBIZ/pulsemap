@@ -11,6 +11,11 @@ public sealed class Survey
 
     public string? SiteDescription { get; set; }
 
+    public required SurveyType Type { get; set; }
+
+    /// <summary>Bands this survey covers — drives which radios get propagation predictions, heatmaps, and AP placement suggestions. At least one required.</summary>
+    public required List<Band> TargetBands { get; set; }
+
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset ModifiedAt { get; set; } = DateTimeOffset.UtcNow;

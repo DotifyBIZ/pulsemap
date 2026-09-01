@@ -81,9 +81,11 @@ public partial class App : Application
 
         // App
         services.AddSingleton<ISurveyLibraryService, SurveyLibraryService>();
+        services.AddSingleton<IFloorPlanFilePickerService, FloorPlanFilePickerService>();
 
         // ViewModels — transient, recreated per navigation.
         services.AddTransient<HomeViewModel>();
+        services.AddTransient<NewSurveyWizardViewModel>();
 
         return services.BuildServiceProvider();
     }

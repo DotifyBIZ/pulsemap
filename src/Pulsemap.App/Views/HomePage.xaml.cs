@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Pulsemap.App.ViewModels;
 
@@ -14,4 +15,7 @@ public sealed partial class HomePage : Page
         InitializeComponent();
         Loaded += async (_, _) => await ViewModel.LoadCommand.ExecuteAsync(null);
     }
+
+    private void NewSurvey_Click(object sender, RoutedEventArgs e) =>
+        Frame.Navigate(typeof(NewSurveyWizardPage));
 }
