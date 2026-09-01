@@ -84,11 +84,13 @@ public partial class App : Application
         services.AddSingleton<ISurveyLibraryService, SurveyLibraryService>();
         services.AddSingleton<IFloorPlanFilePickerService, FloorPlanFilePickerService>();
         services.AddSingleton<IWlanAdapterService, WlanAdapterService>();
+        services.AddSingleton<ILocalizationService, LocalizationService>();
 
         // ViewModels — transient, recreated per navigation.
         services.AddTransient<HomeViewModel>();
         services.AddTransient<NewSurveyWizardViewModel>();
         services.AddTransient<WorkspaceViewModel>();
+        services.AddTransient<SettingsViewModel>();
 
         return services.BuildServiceProvider();
     }

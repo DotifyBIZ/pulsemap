@@ -16,17 +16,17 @@
         PaneDisplayMode="Left">
 
         <NavigationView.MenuItems>
-            <NavigationViewItem Content="Home" Tag="Home" IsSelected="True">
+            <NavigationViewItem x:Uid="NavHome" Tag="Home" IsSelected="True">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE80F;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="Surveys" Tag="Surveys">
+            <NavigationViewItem x:Uid="NavSurveys" Tag="Surveys">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE8FD;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="Settings" Tag="Settings">
+            <NavigationViewItem x:Uid="NavSettings" Tag="Settings">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE713;" />
                 </NavigationViewItem.Icon>

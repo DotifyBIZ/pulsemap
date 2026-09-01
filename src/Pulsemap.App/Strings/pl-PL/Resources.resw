@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="NavHome.Content" xml:space="preserve">
+    <value>Strona główna</value>
+  </data>
+  <data name="NavSurveys.Content" xml:space="preserve">
+    <value>Ankiety</value>
+  </data>
+  <data name="NavSettings.Content" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="HomeTitle.Text" xml:space="preserve">
+    <value>Strona główna</value>
+  </data>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="SettingsLanguageLabel.Text" xml:space="preserve">
+    <value>Język</value>
+  </data>
+  <data name="SettingsCurrentLanguageFormat" xml:space="preserve">
+    <value>Bieżący język: {0}</value>
+  </data>
+  <data name="SettingsLanguageExplanation.Text" xml:space="preserve">
+    <value>Pulsemap używa języka wyświetlania ustawionego w systemie Windows. Zmień go tam, aby zmienić również język Pulsemap.</value>
+  </data>
+  <data name="SettingsOpenLanguageSettingsButton.Content" xml:space="preserve">
+    <value>Otwórz ustawienia języka</value>
+  </data>
+</root>
