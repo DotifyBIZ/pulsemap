@@ -15,8 +15,9 @@ public sealed class WorkspaceViewModelTests
     private readonly FakeApPlacementOptimizer _placementOptimizer = new();
     private readonly FakeWlanAdapterService _wlanAdapterService = new();
     private readonly FakeLocalizationService _localizationService = new();
+    private readonly FakeAppLogger _logger = new();
 
-    private WorkspaceViewModel CreateSut() => new(_surveyFileService, _propagationModel, _placementOptimizer, _wlanAdapterService, _localizationService);
+    private WorkspaceViewModel CreateSut() => new(_surveyFileService, _propagationModel, _placementOptimizer, _wlanAdapterService, _localizationService, _logger);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()

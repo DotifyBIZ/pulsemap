@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Services;
@@ -24,6 +25,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     private readonly ISurveyLibraryService _surveyLibraryService;
     private readonly IFloorPlanFilePickerService _filePickerService;
     private readonly ILocalizationService _localizationService;
+    private readonly IAppLogger _logger;
 
     private byte[]? _pickedImageData;
     private string? _pickedImageExtension;
@@ -32,12 +34,14 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         ISurveyFileService surveyFileService,
         ISurveyLibraryService surveyLibraryService,
         IFloorPlanFilePickerService filePickerService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IAppLogger logger)
     {
         _surveyFileService = surveyFileService;
         _surveyLibraryService = surveyLibraryService;
         _filePickerService = filePickerService;
         _localizationService = localizationService;
+        _logger = logger;
 
         Rooms.CollectionChanged += (_, _) =>
         {
@@ -279,6 +283,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSaveSurveyErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync("Failed to create survey.", ex);
         }
         finally
         {

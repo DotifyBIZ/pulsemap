@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 
 namespace Pulsemap.App.Core.Persistence;
@@ -9,7 +10,7 @@ namespace Pulsemap.App.Core.Persistence;
 /// plan is image-based, an assets/floorplan&lt;ext&gt; entry. Keeping the image out of the JSON
 /// avoids base64 bloat and keeps survey.json readable and diffable.
 /// </summary>
-public sealed class ZipSurveyFileService : ISurveyFileService
+public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
 {
     // Ceilings on decompressed entry size — a zip's declared size can't be trusted, so entries are
     // copied through a bounded copy rather than trusting ZipArchiveEntry.Length. Generous for a
@@ -54,9 +55,15 @@ public sealed class ZipSurveyFileService : ISurveyFileService
 
             File.Move(tempFilePath, filePath, overwrite: true);
         }
-        catch
+        catch (Exception ex)
         {
             File.Delete(tempFilePath);
+            if (ex is not OperationCanceledException)
+            {
+                // CancellationToken.None: a caller-cancelled save shouldn't also cancel the log write.
+                await logger.LogErrorAsync($"Failed to save survey to '{filePath}'.", ex, CancellationToken.None);
+            }
+
             throw;
         }
     }
@@ -82,6 +89,7 @@ public sealed class ZipSurveyFileService : ISurveyFileService
         }
         catch (JsonException ex)
         {
+            await logger.LogErrorAsync($"'{filePath}' contains invalid or corrupted survey.json.", ex, CancellationToken.None);
             throw new InvalidDataException($"'{filePath}' contains an invalid or corrupted survey.json.", ex);
         }
 

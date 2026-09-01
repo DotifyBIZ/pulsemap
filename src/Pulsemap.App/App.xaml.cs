@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
@@ -58,8 +59,19 @@ public partial class App : Application
 
         this.UnhandledException += (_, e) =>
         {
+            // Kept as a raw, dependency-free write (can't itself fail) rather than routed only
+            // through IAppLogger below — this is the one handler that must never itself throw.
             string crashLogPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pulsemap-crash.txt");
             System.IO.File.WriteAllText(crashLogPath, e.Exception.ToString());
+
+            try
+            {
+                _ = Services.GetRequiredService<IAppLogger>().LogErrorAsync("Unhandled exception.", e.Exception);
+            }
+            catch
+            {
+                // Best-effort only — the crash file above is the guaranteed fallback.
+            }
         };
     }
 
@@ -79,6 +91,7 @@ public partial class App : Application
         var services = new ServiceCollection();
 
         // Core — stateless, safe as singletons.
+        services.AddSingleton<IAppLogger, FileAppLogger>();
         services.AddSingleton<ISurveyFileService, ZipSurveyFileService>();
         services.AddSingleton<IPropagationModel, LogDistancePropagationModel>();
         services.AddSingleton<IKrigingInterpolator, OrdinaryKrigingInterpolator>();

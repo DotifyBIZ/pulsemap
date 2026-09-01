@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
 using Pulsemap.App.Core.Interpolation;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Measurement;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
@@ -31,6 +32,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IApPlacementOptimizer _placementOptimizer;
     private readonly IWlanAdapterService _wlanAdapterService;
     private readonly ILocalizationService _localizationService;
+    private readonly IAppLogger _logger;
 
     private string? _filePath;
 
@@ -39,13 +41,15 @@ public partial class WorkspaceViewModel : ObservableObject
         IPropagationModel propagationModel,
         IApPlacementOptimizer placementOptimizer,
         IWlanAdapterService wlanAdapterService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IAppLogger logger)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
         _placementOptimizer = placementOptimizer;
         _wlanAdapterService = wlanAdapterService;
         _localizationService = localizationService;
+        _logger = logger;
     }
 
     public event EventHandler? FloorChanged;
@@ -57,7 +61,10 @@ public partial class WorkspaceViewModel : ObservableObject
     public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string? ErrorMessage { get; set; }
+
+    public bool HasError => ErrorMessage is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CoveragePercentDisplay))]
@@ -189,6 +196,7 @@ public partial class WorkspaceViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceLoadErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync($"Failed to load survey '{filePath}'.", ex, CancellationToken.None);
         }
         finally
         {

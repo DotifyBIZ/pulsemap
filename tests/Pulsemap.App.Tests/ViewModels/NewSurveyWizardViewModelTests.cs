@@ -11,6 +11,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
     private readonly FakeSurveyLibraryService _surveyLibraryService = new();
     private readonly FakeFloorPlanFilePickerService _filePickerService = new();
     private readonly FakeLocalizationService _localizationService = new();
+    private readonly FakeAppLogger _logger = new();
     private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "PulsemapTests", Guid.NewGuid().ToString());
 
     public NewSurveyWizardViewModelTests() => _surveyLibraryService.SurveysDirectory = _tempDirectory;
@@ -23,7 +24,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
         }
     }
 
-    private NewSurveyWizardViewModel CreateSut() => new(_surveyFileService, _surveyLibraryService, _filePickerService, _localizationService);
+    private NewSurveyWizardViewModel CreateSut() => new(_surveyFileService, _surveyLibraryService, _filePickerService, _localizationService, _logger);
 
     [Fact]
     public void NextCommand_CanExecute_FalseWhenSurveyNameIsEmpty()
