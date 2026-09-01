@@ -200,7 +200,7 @@
         }
       }
     },
-    "net9.0-windows10.0.19041/win-x86": {
+    "net9.0-windows10.0.19041/win-x64": {
       "Microsoft.Web.WebView2": {
         "type": "Transitive",
         "resolved": "1.0.3719.77",
