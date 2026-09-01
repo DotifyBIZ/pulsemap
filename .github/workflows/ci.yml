@@ -34,13 +34,24 @@ jobs:
       - name: Build (Release)
         run: dotnet build Pulsemap.sln --configuration Release --no-restore
 
-      - name: Test (Release)
-        run: dotnet test Pulsemap.sln --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
+      # CLAUDE.md mandates 80% branch coverage on Pulsemap.App.Core specifically - UI projects are
+      # exempt - so coverage/threshold enforcement is scoped to just this project's test run
+      # rather than applied blanket across the solution.
+      - name: Test Pulsemap.App.Core (Release, 80% branch coverage gate)
+        run: >
+          dotnet test tests/Pulsemap.App.Core.Tests/Pulsemap.App.Core.Tests.csproj
+          --configuration Release --no-build
+          -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
+          -p:CoverletOutput=../../TestResults/
+          -p:Threshold=80 -p:ThresholdType=branch -p:ThresholdStat=total
+
+      - name: Test Pulsemap.App (Release)
+        run: dotnet test tests/Pulsemap.App.Tests/Pulsemap.App.Tests.csproj --configuration Release --no-build
 
       - name: Upload coverage results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-results
-          path: ./TestResults
+          path: TestResults/
           retention-days: 14

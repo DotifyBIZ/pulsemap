@@ -25,6 +25,8 @@ TestResults/
 *.trx
 *.coverage
 coverage/
+coverage.json
+coverage.cobertura.xml
 
 ## NuGet
 *.nupkg
