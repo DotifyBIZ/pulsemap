@@ -4,6 +4,8 @@ namespace Pulsemap.App.Tests.Fakes;
 
 internal sealed class FakeAppLogger : IAppLogger
 {
+    public string LogDirectory { get; set; } = "C:\\FakeLogs";
+
     public List<string> ErrorMessages { get; } = [];
 
     public List<string> WarningMessages { get; } = [];

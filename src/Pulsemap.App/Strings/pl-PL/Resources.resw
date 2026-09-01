@@ -54,6 +54,15 @@
   <data name="SettingsOpenLanguageSettingsButton.Content" xml:space="preserve">
     <value>Otwórz ustawienia języka</value>
   </data>
+  <data name="SettingsDiagnosticsLabel.Text" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
+  <data name="SettingsDiagnosticsExplanation.Text" xml:space="preserve">
+    <value>Pulsemap prowadzi lokalny dziennik błędów na potrzeby rozwiązywania problemów. Nic nie jest wysyłane automatycznie — jeśli napotkasz problem, możesz znaleźć te pliki tutaj i udostępnić je samodzielnie.</value>
+  </data>
+  <data name="SettingsOpenLogsFolderButton.Content" xml:space="preserve">
+    <value>Otwórz folder dzienników</value>
+  </data>
 
   <!-- New Survey wizard -->
   <data name="WizardTitle.Text" xml:space="preserve">

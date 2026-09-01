@@ -6,6 +6,9 @@ namespace Pulsemap.App.Core.Logging;
 /// </summary>
 public interface IAppLogger
 {
+    /// <summary>The folder the log files live in — surfaced in Settings so a user can find and share them.</summary>
+    string LogDirectory { get; }
+
     Task LogErrorAsync(string message, Exception? exception = null, CancellationToken cancellationToken = default);
 
     Task LogWarningAsync(string message, CancellationToken cancellationToken = default);

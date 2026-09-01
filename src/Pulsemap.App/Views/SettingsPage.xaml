@@ -11,6 +11,7 @@
     <Grid Padding="32,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -28,6 +29,21 @@
                 <Button
                     x:Uid="SettingsOpenLanguageSettingsButton"
                     Command="{x:Bind ViewModel.OpenLanguageSettingsCommand}" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Margin="0,16,0,0" Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <StackPanel Spacing="12">
+                <TextBlock x:Uid="SettingsDiagnosticsLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.LogDirectoryDisplay}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <TextBlock
+                    x:Uid="SettingsDiagnosticsExplanation"
+                    TextWrapping="Wrap"
+                    FontSize="{StaticResource FontSizeXs}"
+                    Foreground="{StaticResource Gray500Brush}" />
+                <Button
+                    x:Uid="SettingsOpenLogsFolderButton"
+                    Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
             </StackPanel>
         </Border>
     </Grid>

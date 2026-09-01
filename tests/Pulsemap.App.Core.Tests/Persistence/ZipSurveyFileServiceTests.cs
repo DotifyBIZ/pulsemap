@@ -98,6 +98,8 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
 
     private sealed class NoOpAppLogger : IAppLogger
     {
+        public string LogDirectory => string.Empty;
+
         public Task LogErrorAsync(string message, Exception? exception = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         public Task LogWarningAsync(string message, CancellationToken cancellationToken = default) => Task.CompletedTask;
