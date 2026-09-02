@@ -20,6 +20,7 @@ public sealed class WorkspaceViewModelTests
     private readonly FakeSurveyDataExporter _surveyDataExporter = new();
     private readonly FakeReportExporter _reportExporter = new();
     private readonly FakeSurveyExportFilePickerService _exportFilePickerService = new();
+    private readonly FakeAppSettingsService _appSettingsService = new();
 
     // Real (not faked) — pure/deterministic, no I/O, and every test here loads a floor with zero
     // existing TestPoints, so StartGuidedWalk's adaptive path never actually calls into this (falls
@@ -37,7 +38,8 @@ public sealed class WorkspaceViewModelTests
         _surveyDataExporter,
         _reportExporter,
         _exportFilePickerService,
-        _krigingInterpolator);
+        _krigingInterpolator,
+        _appSettingsService);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()
@@ -51,6 +53,35 @@ public sealed class WorkspaceViewModelTests
         Assert.Equal("Test Survey", sut.SurveyNameDisplay);
         Assert.Equal(Band.TwoPointFourGhz, sut.SelectedBand);
         Assert.Contains(Band.TwoPointFourGhz, sut.AvailableBands);
+    }
+
+    [Fact]
+    public async Task ShouldShowOnboardingAsync_NotSeenBefore_ReturnsTrue()
+    {
+        _appSettingsService.SettingsToReturn = new Core.Settings.AppSettings { HasSeenWorkspaceOnboarding = false };
+        var sut = CreateSut();
+
+        Assert.True(await sut.ShouldShowOnboardingAsync());
+    }
+
+    [Fact]
+    public async Task ShouldShowOnboardingAsync_AlreadySeen_ReturnsFalse()
+    {
+        _appSettingsService.SettingsToReturn = new Core.Settings.AppSettings { HasSeenWorkspaceOnboarding = true };
+        var sut = CreateSut();
+
+        Assert.False(await sut.ShouldShowOnboardingAsync());
+    }
+
+    [Fact]
+    public async Task MarkOnboardingSeenAsync_PersistsFlagAndFutureCheckReturnsFalse()
+    {
+        var sut = CreateSut();
+
+        await sut.MarkOnboardingSeenAsync();
+
+        Assert.True(_appSettingsService.LastSaved?.HasSeenWorkspaceOnboarding);
+        Assert.False(await sut.ShouldShowOnboardingAsync());
     }
 
     [Fact]

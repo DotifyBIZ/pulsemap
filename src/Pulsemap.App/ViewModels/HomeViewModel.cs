@@ -18,9 +18,30 @@ public partial class HomeViewModel(
     // Home is a dashboard, not the library — the Surveys nav tab shows the full, unlimited list.
     private const int RecentSurveysLimit = 3;
 
+    // A quiet, non-interactive touch — no reply expected or possible, just a small sign the app
+    // isn't purely transactional. Picked once per Home visit (HomeViewModel is transient, so a
+    // fresh navigation gets a fresh pick) rather than rotated on a timer or tracked across visits.
+    private static readonly string[] WellbeingMessageKeys =
+    [
+        "HomeWellbeingMessage1",
+        "HomeWellbeingMessage2",
+        "HomeWellbeingMessage3",
+        "HomeWellbeingMessage4",
+    ];
+
     private string? _releaseUrl;
 
     public ObservableCollection<SurveySummary> Surveys { get; } = [];
+
+    public string GreetingDisplay => DateTime.Now.Hour switch
+    {
+        >= 5 and < 12 => localizationService.GetString("HomeGreetingMorning"),
+        >= 12 and < 17 => localizationService.GetString("HomeGreetingAfternoon"),
+        >= 17 and < 22 => localizationService.GetString("HomeGreetingEvening"),
+        _ => localizationService.GetString("HomeGreetingNight"),
+    };
+
+    public string WellbeingMessageDisplay { get; } = localizationService.GetString(WellbeingMessageKeys[Random.Shared.Next(WellbeingMessageKeys.Length)]);
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }

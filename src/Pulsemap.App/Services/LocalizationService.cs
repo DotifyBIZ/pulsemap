@@ -117,6 +117,14 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogCloseButton"] = "Cancel",
 
             ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
+            ["HomeGreetingMorning"] = "Good morning",
+            ["HomeGreetingAfternoon"] = "Good afternoon",
+            ["HomeGreetingEvening"] = "Good evening",
+            ["HomeGreetingNight"] = "Hello",
+            ["HomeWellbeingMessage1"] = "Hope you're doing well today.",
+            ["HomeWellbeingMessage2"] = "Take a moment for yourself if you need one.",
+            ["HomeWellbeingMessage3"] = "However today's going, we hope it gets a little easier.",
+            ["HomeWellbeingMessage4"] = "Glad you're here. Take care of yourself out there.",
         },
         ["pl-PL"] = new Dictionary<string, string>
         {
@@ -192,6 +200,14 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogCloseButton"] = "Anuluj",
 
             ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
+            ["HomeGreetingMorning"] = "Dzień dobry",
+            ["HomeGreetingAfternoon"] = "Dzień dobry",
+            ["HomeGreetingEvening"] = "Dobry wieczór",
+            ["HomeGreetingNight"] = "Witaj",
+            ["HomeWellbeingMessage1"] = "Mamy nadzieję, że wszystko u Ciebie dobrze.",
+            ["HomeWellbeingMessage2"] = "Jeśli potrzebujesz chwili dla siebie, zrób sobie przerwę.",
+            ["HomeWellbeingMessage3"] = "Niezależnie od tego, jak mija dzisiejszy dzień, mamy nadzieję, że będzie choć trochę lżej.",
+            ["HomeWellbeingMessage4"] = "Miło, że tu jesteś. Zadbaj o siebie.",
         },
     };
 }

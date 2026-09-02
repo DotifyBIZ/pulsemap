@@ -25,9 +25,6 @@
   </data>
 
   <!-- Home page -->
-  <data name="HomeTitle.Text" xml:space="preserve">
-    <value>Strona główna</value>
-  </data>
   <data name="HomeSubtitle.Text" xml:space="preserve">
     <value>Wszystkie Twoje badania w jednym miejscu.</value>
   </data>
@@ -277,6 +274,84 @@
   </data>
   <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
     <value>Usuń</value>
+  </data>
+  <data name="WorkspaceToolLegendButton.Content" xml:space="preserve">
+    <value>Pomoc dot. narzędzi</value>
+  </data>
+  <data name="WorkspaceToolLegendTitle.Text" xml:space="preserve">
+    <value>Co robi każde narzędzie</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectHeader.Text" xml:space="preserve">
+    <value>Zaznacz</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectBody.Text" xml:space="preserve">
+    <value>Kliknij ścianę, aby dodać ją do zaznaczenia wielokrotnego w celu zbiorczej edycji materiału/grubości. Kliknij punkt pomiarowy, aby ponownie zeskanować i zastąpić jego odczyt. W obszarze zewnętrznym przeciągnij krawędź, aby zmienić rozmiar, lub przeciągnij wnętrze, aby przesunąć cały obszar.</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointHeader.Text" xml:space="preserve">
+    <value>Dodaj punkt pomiarowy</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointBody.Text" xml:space="preserve">
+    <value>Kliknij dowolne miejsce na płótnie, aby ręcznie umieścić punkt pomiarowy bez pełnego pomiaru terenowego.</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallHeader.Text" xml:space="preserve">
+    <value>Rysuj ścianę</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallBody.Text" xml:space="preserve">
+    <value>Kliknij jeden koniec, a następnie drugi, aby narysować między nimi ścianę.</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteHeader.Text" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteBody.Text" xml:space="preserve">
+    <value>Kliknij w pobliżu ściany, punktu pomiarowego lub punktu dostępowego, aby go usunąć. Zaraz potem pojawi się opcja cofnięcia, ważna do kolejnego usunięcia.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Title" xml:space="preserve">
+    <value>Witaj w Obszarze roboczym</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Subtitle" xml:space="preserve">
+    <value>Narzędzie Zaznacz robi różne rzeczy w zależności od tego, co klikniesz: ścianę, punkt pomiarowy lub krawędź obszaru zewnętrznego. Przycisk Pomoc dot. narzędzi zawsze to wyjaśni, gdybyś zapomniał.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.ActionButtonContent" xml:space="preserve">
+    <value>Dalej</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.CloseButtonContent" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Title" xml:space="preserve">
+    <value>Dodaj punkt pomiarowy</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Subtitle" xml:space="preserve">
+    <value>Kliknij dowolne miejsce, aby umieścić ręczny punkt pomiarowy — albo skorzystaj z pomiaru terenowego w zakładce Adapter, aby zostać poprowadzonym przez sugerowane punkty.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.ActionButtonContent" xml:space="preserve">
+    <value>Dalej</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.CloseButtonContent" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Title" xml:space="preserve">
+    <value>Rysuj ścianę</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Subtitle" xml:space="preserve">
+    <value>Kliknij jeden koniec, a potem drugi, aby narysować ścianę. Nadaj jej materiał później za pomocą Zaznacz, aby uzyskać dokładniejszą prognozę pokrycia.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.ActionButtonContent" xml:space="preserve">
+    <value>Dalej</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.CloseButtonContent" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Title" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Subtitle" xml:space="preserve">
+    <value>Kliknij w pobliżu dowolnego elementu, aby go usunąć — zaraz potem pojawi się opcja cofnięcia, więc pomyłka nie jest trwała.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.ActionButtonContent" xml:space="preserve">
+    <value>Rozumiem</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.CloseButtonContent" xml:space="preserve">
+    <value>Pomiń</value>
   </data>
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Wstecz</value>

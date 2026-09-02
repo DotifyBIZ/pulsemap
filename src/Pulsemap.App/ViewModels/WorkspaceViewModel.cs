@@ -11,6 +11,7 @@ using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Core.Settings;
 using Pulsemap.App.Services;
 using Windows.System;
 
@@ -42,6 +43,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IReportExporter _reportExporter;
     private readonly ISurveyExportFilePickerService _exportFilePickerService;
     private readonly IKrigingInterpolator _krigingInterpolator;
+    private readonly IAppSettingsService _appSettingsService;
 
     private string? _filePath;
 
@@ -55,7 +57,8 @@ public partial class WorkspaceViewModel : ObservableObject
         ISurveyDataExporter surveyDataExporter,
         IReportExporter reportExporter,
         ISurveyExportFilePickerService exportFilePickerService,
-        IKrigingInterpolator krigingInterpolator)
+        IKrigingInterpolator krigingInterpolator,
+        IAppSettingsService appSettingsService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
@@ -67,6 +70,7 @@ public partial class WorkspaceViewModel : ObservableObject
         _reportExporter = reportExporter;
         _exportFilePickerService = exportFilePickerService;
         _krigingInterpolator = krigingInterpolator;
+        _appSettingsService = appSettingsService;
     }
 
     public event EventHandler? FloorChanged;
@@ -225,6 +229,19 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public string WallSelectionCountDisplay =>
         string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceWallSelectionCountFormat"), SelectedWallCount);
+
+    public async Task<bool> ShouldShowOnboardingAsync()
+    {
+        var settings = await _appSettingsService.LoadAsync();
+        return !settings.HasSeenWorkspaceOnboarding;
+    }
+
+    public async Task MarkOnboardingSeenAsync()
+    {
+        var settings = await _appSettingsService.LoadAsync();
+        settings.HasSeenWorkspaceOnboarding = true;
+        await _appSettingsService.SaveAsync(settings);
+    }
 
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {

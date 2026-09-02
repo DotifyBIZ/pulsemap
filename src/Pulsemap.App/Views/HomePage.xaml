@@ -35,8 +35,9 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock x:Uid="HomeTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.GreetingDisplay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
                 <TextBlock x:Uid="HomeSubtitle" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+                <TextBlock Text="{x:Bind ViewModel.WellbeingMessageDisplay}" FontSize="{StaticResource FontSizeXs}" FontStyle="Italic" Foreground="{StaticResource Gray400Brush}" Margin="0,6,0,0" />
             </StackPanel>
 
             <Button Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource PrimaryButtonStyle}" Click="NewSurvey_Click">

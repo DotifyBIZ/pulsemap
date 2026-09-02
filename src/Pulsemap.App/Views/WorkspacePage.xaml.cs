@@ -40,7 +40,42 @@ public sealed partial class WorkspacePage : Page
             await ViewModel.LoadAsync(filePath);
             PopulateBandSelector();
             await RenderCanvasAsync();
+
+            if (await ViewModel.ShouldShowOnboardingAsync())
+            {
+                OnboardingStep1.IsOpen = true;
+            }
         }
+    }
+
+    private void OnboardingNext_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+
+        if (ReferenceEquals(sender, OnboardingStep1))
+        {
+            OnboardingStep2.IsOpen = true;
+        }
+        else if (ReferenceEquals(sender, OnboardingStep2))
+        {
+            OnboardingStep3.IsOpen = true;
+        }
+        else if (ReferenceEquals(sender, OnboardingStep3))
+        {
+            OnboardingStep4.IsOpen = true;
+        }
+    }
+
+    private async void OnboardingFinish_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+        await ViewModel.MarkOnboardingSeenAsync();
+    }
+
+    private async void OnboardingSkip_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+        await ViewModel.MarkOnboardingSeenAsync();
     }
 
     private async Task RenderCanvasAsync()

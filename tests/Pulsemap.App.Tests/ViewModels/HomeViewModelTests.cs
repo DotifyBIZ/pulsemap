@@ -98,4 +98,22 @@ public sealed class HomeViewModelTests
         Assert.False(sut.HasUpdateAvailable);
         Assert.Null(sut.UpdateBannerMessage);
     }
+
+    [Fact]
+    public void GreetingDisplay_IsNeverEmpty()
+    {
+        // Depends on the real current hour, so this asserts the switch always resolves to
+        // something rather than pinning an exact greeting string.
+        var sut = CreateSut();
+
+        Assert.False(string.IsNullOrWhiteSpace(sut.GreetingDisplay));
+    }
+
+    [Fact]
+    public void WellbeingMessageDisplay_PicksOneOfTheKnownMessages()
+    {
+        var sut = CreateSut();
+
+        Assert.StartsWith("HomeWellbeingMessage", sut.WellbeingMessageDisplay);
+    }
 }

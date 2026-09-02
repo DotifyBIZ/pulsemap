@@ -54,6 +54,32 @@
             <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
 
+            <Button x:Name="ToolLegendButton" x:Uid="WorkspaceToolLegendButton" Margin="8,0,0,0">
+                <Button.Flyout>
+                    <Flyout Placement="Bottom">
+                        <StackPanel Spacing="10" MaxWidth="320">
+                            <TextBlock x:Uid="WorkspaceToolLegendTitle" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+
             <ComboBox x:Name="BandSelector" Width="120" Margin="16,0,0,0" SelectionChanged="BandSelector_SelectionChanged" />
 
             <ComboBox
@@ -265,5 +291,14 @@
                 </Pivot>
             </Border>
         </Grid>
+
+        <!-- First-run coach-mark tour (skippable) — see WorkspacePage.xaml.cs's onboarding
+             sequencing. Content lives here (x:Uid) rather than the always-available Tool Help
+             flyout above, since a short guided blurb and a full reference description read
+             differently even for the same tool. -->
+        <TeachingTip x:Name="OnboardingStep1" x:Uid="WorkspaceOnboardingStep1" Target="{x:Bind SelectToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep2" x:Uid="WorkspaceOnboardingStep2" Target="{x:Bind AddTestPointToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep3" x:Uid="WorkspaceOnboardingStep3" Target="{x:Bind DrawWallToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep4" x:Uid="WorkspaceOnboardingStep4" Target="{x:Bind DeleteToolButton}" ActionButtonClick="OnboardingFinish_Click" CloseButtonClick="OnboardingSkip_Click" />
     </Grid>
 </Page>
