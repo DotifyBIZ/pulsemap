@@ -2,7 +2,7 @@
 
 - **Date:** 2026-08-31
 - **Status:** Accepted
-- **Deciders:** dmiesopust@pm.me (Product Manager)
+- **Deciders:** Product Manager
 - **Affected systems:** Application shell (`Pulsemap.App`), packaging/distribution
 
 ## Context
