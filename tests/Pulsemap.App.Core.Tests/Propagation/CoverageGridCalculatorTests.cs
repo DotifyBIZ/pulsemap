@@ -138,6 +138,28 @@ public sealed class CoverageGridCalculatorTests
         Assert.NotEmpty(samples);
     }
 
+    [Fact]
+    public void StrongestSignalDbm_MatchesComputeGridAtSamePoint()
+    {
+        var floor = SquareRoomFloor(20);
+        floor.AccessPoints.Add(SingleBandAccessPoint(new Point2D(0, 0)));
+
+        var samples = CoverageGridCalculator.ComputeGrid(floor, [floor], Band.TwoPointFourGhz, gridSpacingMeters: 2, _propagationModel);
+        double? singlePoint = CoverageGridCalculator.StrongestSignalDbm(new Point2D(2, 0), floor, [floor], Band.TwoPointFourGhz, _propagationModel);
+
+        Assert.Equal(samples.Single(s => s.Position == new Point2D(2, 0)).ValueDbm, singlePoint);
+    }
+
+    [Fact]
+    public void StrongestSignalDbm_NoApsInRange_ReturnsNull()
+    {
+        var floor = SquareRoomFloor(10);
+
+        double? result = CoverageGridCalculator.StrongestSignalDbm(new Point2D(5, 5), floor, [floor], Band.TwoPointFourGhz, _propagationModel);
+
+        Assert.Null(result);
+    }
+
     private static AccessPoint SingleBandAccessPoint(Point2D position)
     {
         var accessPoint = new AccessPoint { Position = position, Label = "AP" };

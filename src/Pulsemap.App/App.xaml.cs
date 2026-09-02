@@ -106,6 +106,8 @@ public partial class App : Application
         services.AddSingleton<ISurveyExportFilePickerService, SurveyExportFilePickerService>();
         services.AddSingleton<FloorPlanImageCache>();
         services.AddSingleton<IWlanAdapterService, WlanAdapterService>();
+        services.AddSingleton<ILinkDiagnosticsService, WlanLinkDiagnosticsService>();
+        services.AddSingleton<INetworkHealthService, NetworkHealthService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
         services.AddSingleton<IAppSettingsService, FileAppSettingsService>();
         services.AddHttpClient();
@@ -118,6 +120,7 @@ public partial class App : Application
         services.AddTransient<WorkspaceViewModel>();
         services.AddTransient<SnapshotComparisonViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<DiagnosticsViewModel>();
 
         return services.BuildServiceProvider();
     }

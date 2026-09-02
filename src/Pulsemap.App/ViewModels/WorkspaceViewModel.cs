@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Diagnostics;
 using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Logging;
@@ -44,8 +45,12 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly ISurveyExportFilePickerService _exportFilePickerService;
     private readonly IKrigingInterpolator _krigingInterpolator;
     private readonly IAppSettingsService _appSettingsService;
+    private readonly ILinkDiagnosticsService _linkDiagnosticsService;
+    private readonly INetworkHealthService _networkHealthService;
 
     private string? _filePath;
+
+    public string? FilePath => _filePath;
 
     public WorkspaceViewModel(
         ISurveyFileService surveyFileService,
@@ -58,7 +63,9 @@ public partial class WorkspaceViewModel : ObservableObject
         IReportExporter reportExporter,
         ISurveyExportFilePickerService exportFilePickerService,
         IKrigingInterpolator krigingInterpolator,
-        IAppSettingsService appSettingsService)
+        IAppSettingsService appSettingsService,
+        ILinkDiagnosticsService linkDiagnosticsService,
+        INetworkHealthService networkHealthService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
@@ -71,6 +78,8 @@ public partial class WorkspaceViewModel : ObservableObject
         _exportFilePickerService = exportFilePickerService;
         _krigingInterpolator = krigingInterpolator;
         _appSettingsService = appSettingsService;
+        _linkDiagnosticsService = linkDiagnosticsService;
+        _networkHealthService = networkHealthService;
     }
 
     public event EventHandler? FloorChanged;
@@ -109,6 +118,17 @@ public partial class WorkspaceViewModel : ObservableObject
     public IReadOnlyList<CoverageSample> Heatmap { get; private set; } = [];
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
+
+    /// <summary>Same survey-type summary the wizard shows on its final step — repeated here since
+    /// nothing in Workspace otherwise reminds a user which mode ("new deployment" vs. "existing
+    /// network audit") their survey is in once they've left the wizard.</summary>
+    public string SurveyTypeDisplay => Survey switch
+    {
+        null => string.Empty,
+        { Type: SurveyType.NewDeployment } => _localizationService.GetString("WizardSurveyTypeSummaryNewDeployment"),
+        { TargetNetworkSsid: null or "" } => _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditNoSsid"),
+        _ => string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditWithSsidFormat"), Survey.TargetNetworkSsid),
+    };
 
     public string CoveragePercentDisplay =>
         string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceCoveragePercentFormat"), CoveragePercent);
@@ -255,6 +275,7 @@ public partial class WorkspaceViewModel : ObservableObject
             SelectedBand = AvailableBands.Count > 0 ? AvailableBands[0] : Band.TwoPointFourGhz;
             SelectedFloor = Survey.Floors.Count > 0 ? Survey.Floors[0] : null;
             OnPropertyChanged(nameof(SurveyNameDisplay));
+            OnPropertyChanged(nameof(SurveyTypeDisplay));
             OnPropertyChanged(nameof(AvailableBands));
             OnPropertyChanged(nameof(Floors));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
@@ -635,6 +656,47 @@ public partial class WorkspaceViewModel : ObservableObject
         SelectedFloor.TestPoints.Add(rebuilt);
         await SaveAndRefreshAsync();
     }
+
+    public ObservableCollection<DiagnosticFindingDisplay> DiagnoseFindings { get; } = [];
+
+    [ObservableProperty]
+    public partial string? DiagnoseSummaryDisplay { get; set; }
+
+    /// <summary>Compares this machine's live link against what the survey's own propagation model
+    /// predicted at the clicked point — the Workspace-only half of diagnostics that the standalone
+    /// Diagnose page can't offer, since it has no survey/floor to predict against. Reuses the exact
+    /// same cross-floor/outdoor skip rules as the coverage heatmap via
+    /// <see cref="CoverageGridCalculator.StrongestSignalDbm"/>, so the two never disagree.</summary>
+    public async Task DiagnoseAtPointAsync(Point2D position)
+    {
+        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        {
+            return;
+        }
+
+        double? predicted = CoverageGridCalculator.StrongestSignalDbm(position, SelectedFloor, Survey.Floors, SelectedBand, _propagationModel);
+
+        var link = await _linkDiagnosticsService.GetCurrentLinkAsync(SelectedAdapter.Id);
+        var health = link.IsConnected ? await _networkHealthService.CheckHealthAsync(SelectedAdapter.Id) : NetworkHealthSnapshot.Unavailable;
+
+        DiagnoseSummaryDisplay = predicted is { } predictedDbm
+            ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceDiagnosePredictedFormat"), predictedDbm)
+            : _localizationService.GetString("WorkspaceDiagnoseNoPredictionDisplay");
+
+        var findings = LinkDiagnosticsAnalyzer.Analyze(link, health, predicted);
+        DiagnoseFindings.Clear();
+        foreach (var finding in findings)
+        {
+            string template = _localizationService.GetString(finding.MessageKey);
+            string message = finding.FormatArgs is null ? template : string.Format(CultureInfo.CurrentCulture, template, [.. finding.FormatArgs]);
+            DiagnoseFindings.Add(new DiagnosticFindingDisplay(finding.Severity, message));
+        }
+    }
+
+    /// <summary>Whether running Suggest Placements again would discard previously suggested (not
+    /// user-placed) access points on this floor — lets the page ask for confirmation only when
+    /// there's actually something to lose, rather than always or never.</summary>
+    public bool HasReplaceableSuggestions => SelectedFloor?.AccessPoints.Any(ap => !ap.IsUserOverride) == true;
 
     [RelayCommand]
     private async Task SuggestPlacementsAsync()

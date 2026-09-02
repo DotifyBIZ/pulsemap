@@ -36,50 +36,60 @@ public static class CoverageGridCalculator
 
         foreach (var point in gridPoints)
         {
-            double? strongest = null;
-
-            foreach (var otherFloor in allFloors)
-            {
-                bool sameFloor = otherFloor.Id == floor.Id;
-                int levelDifference = Math.Abs(floor.Level - otherFloor.Level);
-                if (!sameFloor && (levelDifference == 0 || floor.IsOutdoor || otherFloor.IsOutdoor))
-                {
-                    // Skip cross-floor contribution when: a different floor shares this one's
-                    // Level (Level is the only signal we have for floor-above/below relationships,
-                    // so an unrelated same-level area shouldn't silently leak in), or either side is
-                    // outdoor — the flat "stacked at the same origin" model this constant represents
-                    // doesn't meaningfully describe an open-air area's relationship to an indoor
-                    // floor, so outdoor areas' coverage stays isolated to their own access points.
-                    continue;
-                }
-
-                foreach (var accessPoint in otherFloor.AccessPoints)
-                {
-                    if (!accessPoint.Radios.TryGetValue(band, out var radio))
-                    {
-                        continue;
-                    }
-
-                    // Cross-floor: the other floor's walls aren't in this floor's horizontal path,
-                    // so free-space-only plus a flat per-level penalty stands in for the ceiling/
-                    // floor slab loss a real building would add.
-                    double signal = sameFloor
-                        ? propagationModel.PredictSignalDbm(accessPoint.Position, radio.TransmitPowerDbm, point, band, floor.Walls)
-                        : propagationModel.PredictSignalDbm(accessPoint.Position, radio.TransmitPowerDbm, point, band, NoWalls) - (InterFloorAttenuationDbPerLevel * levelDifference);
-
-                    if (strongest is null || signal > strongest)
-                    {
-                        strongest = signal;
-                    }
-                }
-            }
-
-            if (strongest is { } value)
+            if (StrongestSignalDbm(point, floor, allFloors, band, propagationModel) is { } value)
             {
                 samples.Add(new CoverageSample(point, value));
             }
         }
 
         return samples;
+    }
+
+    /// <summary>The strongest predicted signal at a single point, across every access point on
+    /// <paramref name="floor"/> and (subject to the same skip rules <see cref="ComputeGrid"/> uses)
+    /// every other floor in <paramref name="allFloors"/>. Shared by the coverage grid (one call per
+    /// grid point) and by Workspace's single-point diagnostics comparison, so the two never diverge
+    /// on cross-floor/outdoor skip rules or the per-level attenuation figure.</summary>
+    public static double? StrongestSignalDbm(Point2D point, Floor floor, IReadOnlyList<Floor> allFloors, Band band, IPropagationModel propagationModel)
+    {
+        double? strongest = null;
+
+        foreach (var otherFloor in allFloors)
+        {
+            bool sameFloor = otherFloor.Id == floor.Id;
+            int levelDifference = Math.Abs(floor.Level - otherFloor.Level);
+            if (!sameFloor && (levelDifference == 0 || floor.IsOutdoor || otherFloor.IsOutdoor))
+            {
+                // Skip cross-floor contribution when: a different floor shares this one's
+                // Level (Level is the only signal we have for floor-above/below relationships,
+                // so an unrelated same-level area shouldn't silently leak in), or either side is
+                // outdoor — the flat "stacked at the same origin" model this constant represents
+                // doesn't meaningfully describe an open-air area's relationship to an indoor
+                // floor, so outdoor areas' coverage stays isolated to their own access points.
+                continue;
+            }
+
+            foreach (var accessPoint in otherFloor.AccessPoints)
+            {
+                if (!accessPoint.Radios.TryGetValue(band, out var radio))
+                {
+                    continue;
+                }
+
+                // Cross-floor: the other floor's walls aren't in this floor's horizontal path,
+                // so free-space-only plus a flat per-level penalty stands in for the ceiling/
+                // floor slab loss a real building would add.
+                double signal = sameFloor
+                    ? propagationModel.PredictSignalDbm(accessPoint.Position, radio.TransmitPowerDbm, point, band, floor.Walls)
+                    : propagationModel.PredictSignalDbm(accessPoint.Position, radio.TransmitPowerDbm, point, band, NoWalls) - (InterFloorAttenuationDbPerLevel * levelDifference);
+
+                if (strongest is null || signal > strongest)
+                {
+                    strongest = signal;
+                }
+            }
+        }
+
+        return strongest;
     }
 }

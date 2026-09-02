@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Pulsemap.App.Views.DiagnosticsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Pulsemap.App.ViewModels"
+    xmlns:converters="using:Pulsemap.App.Converters"
+    mc:Ignorable="d"
+    Background="{StaticResource Gray50Brush}">
+
+    <Page.Resources>
+        <converters:DiagnosticSeverityToBrushConverter x:Key="SeverityToBrushConverter" />
+    </Page.Resources>
+
+    <ScrollViewer Padding="32,24">
+        <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="DiagnosticsTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock x:Uid="DiagnosticsSubtitle" TextWrapping="Wrap" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" />
+            </StackPanel>
+
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24">
+                <StackPanel Spacing="16">
+                    <ComboBox
+                        x:Uid="DiagnosticsAdapterField"
+                        ItemsSource="{x:Bind ViewModel.Adapters}"
+                        SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
+                        DisplayMemberPath="Name"
+                        HorizontalAlignment="Stretch" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Uid="DiagnosticsRunButton" Command="{x:Bind ViewModel.RunDiagnosticsCommand}" />
+                        <ProgressRing IsActive="{x:Bind ViewModel.IsRunning, Mode=OneWay}" Width="20" Height="20" />
+                        <Button Content="{x:Bind ViewModel.ToggleMonitoringButtonText, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleMonitoringCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Uid="DiagnosticsLinkSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                    <TextBlock Text="{x:Bind ViewModel.SsidDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                    <TextBlock Text="{x:Bind ViewModel.BandAndChannelDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                    <TextBlock Text="{x:Bind ViewModel.LinkSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                    <TextBlock Text="{x:Bind ViewModel.NetworkHealthSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Uid="DiagnosticsFindingsSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Findings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DiagnosticFindingDisplay">
+                                <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Foreground="{x:Bind Severity, Converter={StaticResource SeverityToBrushConverter}}" FontSize="{StaticResource FontSizeSm}" Margin="0,4" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.IsMonitoring, Mode=OneWay}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Uid="DiagnosticsMonitoringSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                    <ListView ItemsSource="{x:Bind ViewModel.MonitoringSamples}" SelectionMode="None" MaxHeight="300">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MonitoringSampleDisplay">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind TimestampDisplay}" FontSize="{StaticResource FontSizeXs}" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind SignalPercentDisplay}" FontSize="{StaticResource FontSizeXs}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind RxLinkSpeedDisplay}" FontSize="{StaticResource FontSizeXs}" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind GatewayPingDisplay}" FontSize="{StaticResource FontSizeXs}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

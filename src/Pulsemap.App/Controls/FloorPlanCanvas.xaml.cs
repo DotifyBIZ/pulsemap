@@ -81,6 +81,8 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     public event EventHandler<Point2D>? WallSelectRequested;
 
+    public event EventHandler<Point2D>? DiagnosePositionRequested;
+
     public event EventHandler<(Point2D Min, Point2D Max)>? OutdoorBoundsChanged;
 
     /// <summary>
@@ -417,6 +419,10 @@ public sealed partial class FloorPlanCanvas : UserControl
                 WallSelectRequested?.Invoke(this, meters);
                 break;
 
+            case WorkspaceTool.Diagnose:
+                DiagnosePositionRequested?.Invoke(this, meters);
+                break;
+
             default:
                 break;
         }
@@ -459,12 +465,19 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
+        var pointerPosition = e.GetCurrentPoint(RootGrid).Position;
+
+        if (_outdoorDragMode == OutdoorDragMode.None)
+        {
+            UpdateHeatmapTooltip(ToMeters(pointerPosition), pointerPosition);
+        }
+
         if (_outdoorDragMode == OutdoorDragMode.None || _lastFloor is null)
         {
             return;
         }
 
-        var meters = ToMeters(e.GetCurrentPoint(RootGrid).Position);
+        var meters = ToMeters(pointerPosition);
         double deltaX = meters.X - _dragStartPointerMeters.X;
         double deltaY = meters.Y - _dragStartPointerMeters.Y;
 
@@ -483,6 +496,8 @@ public sealed partial class FloorPlanCanvas : UserControl
 
         RenderCore(_lastFloor, _lastHeatmap, _lastWalkTarget, _lastSelectedWalls, _lastRemainingWalkPoints);
     }
+
+    private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e) => HeatmapTooltip.Visibility = Visibility.Collapsed;
 
     private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e) => EndOutdoorBoundsDrag(raiseChanged: true);
 
@@ -504,6 +519,45 @@ public sealed partial class FloorPlanCanvas : UserControl
 
         _previewBoundsMin = null;
         _previewBoundsMax = null;
+    }
+
+    // Half the heatmap grid spacing — a pointer within this distance of a sample's center is
+    // considered "over" that cell for tooltip purposes.
+    private const double HeatmapTooltipToleranceMeters = HeatmapCellMeters * 0.75;
+
+    private void UpdateHeatmapTooltip(Point2D meters, Windows.Foundation.Point pointerPosition)
+    {
+        CoverageSample? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var sample in _lastHeatmap)
+        {
+            double distance = sample.Position.DistanceTo(meters);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = sample;
+            }
+        }
+
+        if (nearest is not { } sampleFound || nearestDistance > HeatmapTooltipToleranceMeters)
+        {
+            HeatmapTooltip.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        HeatmapTooltipText.Text = string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:0} dBm", sampleFound.ValueDbm);
+        Canvas.SetLeft(HeatmapTooltip, pointerPosition.X + 12);
+        Canvas.SetTop(HeatmapTooltip, pointerPosition.Y + 12);
+        HeatmapTooltip.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Converts a floor-plan point to this control's own pixel space — used by
+    /// WorkspacePage to anchor the diagnostics flyout at the point the user actually clicked,
+    /// rather than at the control's default position.</summary>
+    public Windows.Foundation.Point ToScreenPoint(Point2D meters)
+    {
+        var (x, y) = ToPixels(meters);
+        return new Windows.Foundation.Point(x, y);
     }
 
     private (double X, double Y) ToPixels(Point2D meters) =>

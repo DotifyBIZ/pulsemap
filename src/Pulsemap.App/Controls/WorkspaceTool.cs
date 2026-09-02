@@ -7,4 +7,5 @@ public enum WorkspaceTool
     AddTestPoint,
     DrawWall,
     DeleteElement,
+    Diagnose,
 }

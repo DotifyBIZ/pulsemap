@@ -20,6 +20,9 @@
   <data name="NavSurveys.Content" xml:space="preserve">
     <value>Surveys</value>
   </data>
+  <data name="NavDiagnose.Content" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
   <data name="NavSettings.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -275,6 +278,9 @@
   <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="WorkspaceDiagnoseToolButton.Content" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
   <data name="WorkspaceToolLegendButton.Content" xml:space="preserve">
     <value>Tool Help</value>
   </data>
@@ -304,6 +310,12 @@
   </data>
   <data name="WorkspaceToolLegendDeleteBody.Text" xml:space="preserve">
     <value>Click near a wall, test point, or access point to remove it. An Undo option appears right after, until your next delete.</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseHeader.Text" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseBody.Text" xml:space="preserve">
+    <value>Click any point on the plan to compare this machine's live WiFi signal there against what the survey predicted.</value>
   </data>
   <data name="WorkspaceOnboardingStep1.Title" xml:space="preserve">
     <value>Welcome to the Workspace</value>
@@ -472,6 +484,9 @@
   <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
     <value>Band</value>
   </data>
+  <data name="SnapshotComparisonDeleteButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->
   <data name="WorkspaceCoveragePercentFormat" xml:space="preserve">
@@ -524,5 +539,26 @@
   </data>
   <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
     <value>{0} — {1}</value>
+  </data>
+  <data name="DiagnosticsTitle" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="DiagnosticsSubtitle" xml:space="preserve">
+    <value>Check this machine's live WiFi link and local network health — no survey needed.</value>
+  </data>
+  <data name="DiagnosticsAdapterField.Header" xml:space="preserve">
+    <value>Adapter</value>
+  </data>
+  <data name="DiagnosticsRunButton.Content" xml:space="preserve">
+    <value>Run diagnostics</value>
+  </data>
+  <data name="DiagnosticsLinkSectionLabel" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="DiagnosticsFindingsSectionLabel" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="DiagnosticsMonitoringSectionLabel" xml:space="preserve">
+    <value>Monitoring</value>
   </data>
 </root>

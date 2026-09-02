@@ -26,6 +26,7 @@
 
             <StackPanel Grid.Column="0">
                 <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
@@ -64,6 +65,7 @@
             <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceDiagnoseToolButton" x:Name="DiagnoseToolButton" Checked="ToolToggle_Checked" />
 
             <Button x:Name="ToolLegendButton" x:Uid="WorkspaceToolLegendButton" Margin="8,0,0,0">
                 <Button.Flyout>
@@ -85,6 +87,10 @@
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
                                 <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
                             </StackPanel>
                         </StackPanel>
                     </Flyout>
@@ -175,7 +181,7 @@
                             <Button
                                 x:Uid="WorkspaceSuggestPlacementsButton"
                                 Style="{StaticResource PrimaryButtonStyle}"
-                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}">
+                                Click="SuggestPlacements_Click">
                                 <Button.Resources>
                                     <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
                                     <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
