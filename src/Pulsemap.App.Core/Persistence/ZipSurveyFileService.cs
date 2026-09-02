@@ -6,8 +6,8 @@ using Pulsemap.App.Core.Models;
 namespace Pulsemap.App.Core.Persistence;
 
 /// <summary>
-/// Saves/loads a Survey as a .pulsemap file — a zip containing survey.json plus, when the floor
-/// plan is image-based, an assets/floorplan&lt;ext&gt; entry. Keeping the image out of the JSON
+/// Saves/loads a Survey as a .pulsemap file — a zip containing survey.json plus, for every floor
+/// whose plan is image-based, an assets/floor-&lt;id&gt;&lt;ext&gt; entry. Keeping images out of the JSON
 /// avoids base64 bloat and keeps survey.json readable and diffable.
 /// </summary>
 public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
@@ -17,6 +17,8 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
     // real survey.json or floor plan image/PDF, tight enough to stop a decompression-bomb entry.
     private const long MaxSurveyJsonBytes = 50_000_000;
     private const long MaxAssetBytes = 200_000_000;
+
+    private const int CurrentSchemaVersion = 2;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -45,11 +47,14 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
                     await JsonSerializer.SerializeAsync(entryStream, survey, SerializerOptions, cancellationToken);
                 }
 
-                if (survey.Floor.PlanSource is ImagePlanSource imagePlan)
+                foreach (var floor in survey.Floors)
                 {
-                    var assetEntry = archive.CreateEntry(AssetEntryName(imagePlan), CompressionLevel.Optimal);
-                    await using var assetStream = assetEntry.Open();
-                    await assetStream.WriteAsync(imagePlan.ImageData, cancellationToken);
+                    if (floor.PlanSource is ImagePlanSource imagePlan)
+                    {
+                        var assetEntry = archive.CreateEntry(AssetEntryName(floor, imagePlan), CompressionLevel.Optimal);
+                        await using var assetStream = assetEntry.Open();
+                        await assetStream.WriteAsync(imagePlan.ImageData, cancellationToken);
+                    }
                 }
             }
 
@@ -76,7 +81,8 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
         var surveyEntry = archive.GetEntry("survey.json")
             ?? throw new InvalidDataException($"'{filePath}' is not a valid Pulsemap survey file — missing survey.json.");
 
-        Survey? survey;
+        Survey survey;
+        bool wasMigratedFromV1;
         try
         {
             await using (var entryStream = surveyEntry.Open())
@@ -84,23 +90,39 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
             {
                 await CopyWithLimitAsync(entryStream, boundedStream, MaxSurveyJsonBytes, cancellationToken);
                 boundedStream.Position = 0;
-                survey = await JsonSerializer.DeserializeAsync<Survey>(boundedStream, SerializerOptions, cancellationToken);
+
+                using var document = await JsonDocument.ParseAsync(boundedStream, cancellationToken: cancellationToken);
+                int schemaVersion = document.RootElement.TryGetProperty(nameof(Survey.SchemaVersion), out var versionElement)
+                    ? versionElement.GetInt32()
+                    : 1;
+
+                wasMigratedFromV1 = schemaVersion < CurrentSchemaVersion;
+                survey = wasMigratedFromV1
+                    ? MigrateFromV1(document.RootElement)
+                    : document.RootElement.Deserialize<Survey>(SerializerOptions)
+                        ?? throw new InvalidDataException($"'{filePath}' contains an empty or invalid survey.json.");
             }
         }
-        catch (JsonException ex)
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException or FormatException)
         {
+            // KeyNotFoundException/InvalidOperationException/FormatException: MigrateFromV1's
+            // JsonElement property lookups and typed getters throw these (not JsonException) for a
+            // legacy document that's missing an expected property or has one of an unexpected kind.
             await logger.LogErrorAsync($"'{filePath}' contains invalid or corrupted survey.json.", ex, CancellationToken.None);
             throw new InvalidDataException($"'{filePath}' contains an invalid or corrupted survey.json.", ex);
         }
 
-        if (survey is null)
+        foreach (var floor in survey.Floors)
         {
-            throw new InvalidDataException($"'{filePath}' contains an empty or invalid survey.json.");
-        }
+            if (floor.PlanSource is not ImagePlanSource imagePlan)
+            {
+                continue;
+            }
 
-        if (survey.Floor.PlanSource is ImagePlanSource imagePlan)
-        {
-            var assetEntry = archive.GetEntry(AssetEntryName(imagePlan))
+            // A migrated v1 file was saved under the old single-floor, no-id asset name; it'll move
+            // to the new per-floor name on its next save through SaveAsync above.
+            string assetEntryName = wasMigratedFromV1 ? LegacyAssetEntryName(imagePlan) : AssetEntryName(floor, imagePlan);
+            var assetEntry = archive.GetEntry(assetEntryName)
                 ?? throw new InvalidDataException($"'{filePath}' references a floor plan image but is missing its asset entry.");
 
             using var memoryStream = new MemoryStream();
@@ -113,6 +135,31 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
         }
 
         return survey;
+    }
+
+    // Schema v1 had a single, unnamed `"Floor"` object instead of a `"Floors"` array, and Floor had
+    // none of its current Id/Name/IsOutdoor/Level/OutdoorBounds properties. None of those are
+    // required, so deserializing the old object straight into the current Floor type works as-is —
+    // only Name needs a value, since v1 floors were never named.
+    private static Survey MigrateFromV1(JsonElement root)
+    {
+        var floor = root.GetProperty("Floor").Deserialize<Floor>(SerializerOptions)
+            ?? throw new InvalidDataException("Legacy survey.json has a null Floor.");
+        floor.Name = "Floor 1";
+
+        return new Survey
+        {
+            SchemaVersion = CurrentSchemaVersion,
+            Id = root.GetProperty("Id").Deserialize<Guid>(SerializerOptions),
+            Name = root.GetProperty("Name").GetString() ?? string.Empty,
+            SiteDescription = root.TryGetProperty("SiteDescription", out var siteDescription) ? siteDescription.GetString() : null,
+            Type = root.GetProperty("Type").Deserialize<SurveyType>(SerializerOptions),
+            TargetNetworkSsid = root.TryGetProperty("TargetNetworkSsid", out var ssid) ? ssid.GetString() : null,
+            TargetBands = root.GetProperty("TargetBands").Deserialize<List<Band>>(SerializerOptions) ?? [],
+            CreatedAt = root.GetProperty("CreatedAt").Deserialize<DateTimeOffset>(SerializerOptions),
+            ModifiedAt = root.GetProperty("ModifiedAt").Deserialize<DateTimeOffset>(SerializerOptions),
+            Floors = [floor],
+        };
     }
 
     private static async Task CopyWithLimitAsync(Stream source, Stream destination, long maxBytes, CancellationToken cancellationToken)
@@ -132,5 +179,7 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
         }
     }
 
-    private static string AssetEntryName(ImagePlanSource imagePlan) => $"assets/floorplan{imagePlan.FileExtension}";
+    private static string AssetEntryName(Floor floor, ImagePlanSource imagePlan) => $"assets/floor-{floor.Id}{imagePlan.FileExtension}";
+
+    private static string LegacyAssetEntryName(ImagePlanSource imagePlan) => $"assets/floorplan{imagePlan.FileExtension}";
 }

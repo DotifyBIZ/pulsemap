@@ -20,7 +20,12 @@ public static class FloorGrid
 
         if (floor.Walls.Count == 0)
         {
-            return [];
+            // No walls to derive a bounding box from — an outdoor area supplies its extent
+            // explicitly instead, since it has no walls by definition. An indoor floor with no
+            // walls drawn yet still has no candidate grid.
+            return floor.IsOutdoor && floor.OutdoorBoundsMin is { } outdoorMin && floor.OutdoorBoundsMax is { } outdoorMax
+                ? BuildGrid(outdoorMin.X, outdoorMax.X, outdoorMin.Y, outdoorMax.Y, spacingMeters)
+                : [];
         }
 
         double minX = floor.Walls.SelectMany(w => new[] { w.Start.X, w.End.X }).Min();
@@ -28,6 +33,11 @@ public static class FloorGrid
         double minY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Min();
         double maxY = floor.Walls.SelectMany(w => new[] { w.Start.Y, w.End.Y }).Max();
 
+        return BuildGrid(minX, maxX, minY, maxY, spacingMeters);
+    }
+
+    private static List<Point2D> BuildGrid(double minX, double maxX, double minY, double maxY, double spacingMeters)
+    {
         var points = new List<Point2D>();
         for (double x = minX; x <= maxX; x += spacingMeters)
         {

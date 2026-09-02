@@ -17,7 +17,7 @@ public sealed class PdfReportExporterTests
             SiteDescription = "Client site — warehouse",
             Type = SurveyType.ExistingNetworkAudit,
             TargetBands = [Band.TwoPointFourGhz],
-            Floor = new Floor { PlanSource = new RoomListSource() },
+            Floors = [new Floor { PlanSource = new RoomListSource() }],
         };
 
         using var stream = new MemoryStream();
@@ -40,7 +40,7 @@ public sealed class PdfReportExporterTests
             floor.AccessPoints.Add(accessPoint);
         }
 
-        var survey = new Survey { Name = "Large Survey", Type = SurveyType.NewDeployment, TargetBands = [Band.TwoPointFourGhz], Floor = floor };
+        var survey = new Survey { Name = "Large Survey", Type = SurveyType.NewDeployment, TargetBands = [Band.TwoPointFourGhz], Floors = [floor] };
 
         using var stream = new MemoryStream();
         await _sut.ExportPdfAsync(survey, stream);

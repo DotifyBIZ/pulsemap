@@ -2,8 +2,9 @@ namespace Pulsemap.App.Core.Models;
 
 public sealed class Survey
 {
-    /// <summary>Bumped whenever a breaking change is made to the survey.json shape, so ZipSurveyFileService can migrate older files.</summary>
-    public int SchemaVersion { get; init; } = 1;
+    /// <summary>Bumped whenever a breaking change is made to the survey.json shape, so ZipSurveyFileService can migrate older files.
+    /// 2: <see cref="Floor"/> (singular) became <see cref="Floors"/> (a list).</summary>
+    public int SchemaVersion { get; init; } = 2;
 
     public Guid Id { get; init; } = Guid.NewGuid();
 
@@ -25,5 +26,7 @@ public sealed class Survey
 
     public DateTimeOffset ModifiedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public required Floor Floor { get; set; }
+    public required List<Floor> Floors { get; set; }
+
+    public List<SurveySnapshot> Snapshots { get; init; } = [];
 }

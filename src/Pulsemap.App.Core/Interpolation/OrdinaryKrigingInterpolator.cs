@@ -18,7 +18,15 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
 {
     private const double ConstantValueTolerance = 1e-9;
 
-    public IReadOnlyList<double> Interpolate(IReadOnlyList<CoverageSample> samples, IReadOnlyList<Point2D> queryPositions)
+    public IReadOnlyList<double> Interpolate(IReadOnlyList<CoverageSample> samples, IReadOnlyList<Point2D> queryPositions) =>
+        [.. InterpolateCore(samples, queryPositions).Select(r => r.Estimate)];
+
+    public IReadOnlyList<double> InterpolateVariance(IReadOnlyList<CoverageSample> samples, IReadOnlyList<Point2D> queryPositions) =>
+        [.. InterpolateCore(samples, queryPositions).Select(r => r.Variance)];
+
+    // Shared by Interpolate/InterpolateVariance so both reuse the same one-time LU factorization —
+    // the estimate and its variance fall out of the exact same per-query solve, not a second pass.
+    private static IReadOnlyList<(double Estimate, double Variance)> InterpolateCore(IReadOnlyList<CoverageSample> samples, IReadOnlyList<Point2D> queryPositions)
     {
         ArgumentNullException.ThrowIfNull(samples);
         ArgumentNullException.ThrowIfNull(queryPositions);
@@ -33,7 +41,7 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
         if (samples.Count == 1 || IsConstant(samples))
         {
             double constantValue = samples[0].ValueDbm;
-            return queryPositions.Select(_ => constantValue).ToArray();
+            return queryPositions.Select(_ => (constantValue, 0.0)).ToArray();
         }
 
         var variogram = Variogram.FitFromSamples(samples);
@@ -53,7 +61,7 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
 
         var factorized = systemMatrix.LU();
 
-        var results = new double[queryPositions.Count];
+        var results = new (double Estimate, double Variance)[queryPositions.Count];
         for (int q = 0; q < queryPositions.Count; q++)
         {
             var rhs = Vector<double>.Build.Dense(n + 1);
@@ -72,7 +80,15 @@ public sealed class OrdinaryKrigingInterpolator : IKrigingInterpolator
                 estimate += weights[i] * samples[i].ValueDbm;
             }
 
-            results[q] = estimate;
+            // Ordinary kriging variance: sum(lambda_i * gamma_0_i) + mu, where mu is the Lagrange
+            // multiplier — the same weights vector's last entry — from the system solved above.
+            double variance = weights[n];
+            for (int i = 0; i < n; i++)
+            {
+                variance += weights[i] * rhs[i];
+            }
+
+            results[q] = (estimate, variance);
         }
 
         return results;
