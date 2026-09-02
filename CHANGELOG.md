@@ -1,3 +1,22 @@
+# [1.1.0](https://github.com/DotifyBIZ/pulsemap/compare/v1.0.0...v1.1.0) (2026-09-02)
+
+
+### Bug Fixes
+
+* **app:** close out remaining UX-review polish items ([15f96c7](https://github.com/DotifyBIZ/pulsemap/commit/15f96c77838be3c222b9580e6d1c72fb7b51c140))
+* **workspace:** add single-level undo for the Delete tool ([60c23df](https://github.com/DotifyBIZ/pulsemap/commit/60c23df28923dc881eaac3ea12ea53650e65e57e))
+* **workspace:** replace Pivot with TabView to fix tab-header clipping ([2fc361f](https://github.com/DotifyBIZ/pulsemap/commit/2fc361f753829e5532303fa020ab983cfd45dc72))
+
+
+### Features
+
+* **app:** in-app update check against GitHub Releases ([d2242ad](https://github.com/DotifyBIZ/pulsemap/commit/d2242adddbfdb3d73f68c91a4aa39f08efc15328))
+* **app:** Workspace onboarding/tool help, and a warmer Home greeting ([d308432](https://github.com/DotifyBIZ/pulsemap/commit/d3084323bcb4462deed104cb92e74c73292a129d))
+* **core:** coordinate AP channel assignment across floors ([0f93258](https://github.com/DotifyBIZ/pulsemap/commit/0f93258623c09346d9bc176e4a4e6070cbc32431))
+* WLAN link diagnostics, warmer Home messages, and a warmer Home ([8a1bf00](https://github.com/DotifyBIZ/pulsemap/commit/8a1bf0096242350c2a9316ab8c77fa63abcae260))
+* **workspace:** drag-to-resize/reposition outdoor area bounds ([9cfcc65](https://github.com/DotifyBIZ/pulsemap/commit/9cfcc65bdc61521d1da432035d40ede001c37fdb))
+* **workspace:** per-wall material editing and guided-walk improvements ([9875403](https://github.com/DotifyBIZ/pulsemap/commit/98754037da54c34197bb751bf934cacc03a262d1))
+
 # 1.0.0 (2026-09-02)
 
 
