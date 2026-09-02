@@ -569,7 +569,7 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         SelectedFloor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
-        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.TargetBands, _propagationModel);
+        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.Floors, Survey.TargetBands, _propagationModel);
         SelectedFloor.AccessPoints.AddRange(suggestions);
         await SaveAndRefreshAsync();
     }
