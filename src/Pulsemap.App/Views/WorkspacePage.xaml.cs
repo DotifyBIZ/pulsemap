@@ -27,6 +27,7 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.WallRequested += async (_, span) => await ViewModel.AddWallAsync(span.Start, span.End);
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
         PlanCanvas.WallSelectRequested += async (_, position) => await OnSelectClickAsync(position);
+        PlanCanvas.OutdoorBoundsChanged += async (_, bounds) => await ViewModel.UpdateOutdoorBoundsAsync(bounds.Min, bounds.Max);
         SelectToolButton.IsChecked = true;
     }
 
