@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Pulsemap.App.Controls;
 using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
+using Pulsemap.App.Services;
 using Pulsemap.App.ViewModels;
 
 namespace Pulsemap.App.Views;
@@ -12,6 +13,7 @@ namespace Pulsemap.App.Views;
 public sealed partial class WorkspacePage : Page
 {
     private readonly IAppLogger _logger = App.Services.GetRequiredService<IAppLogger>();
+    private readonly ILocalizationService _localizationService = App.Services.GetRequiredService<ILocalizationService>();
 
     public WorkspaceViewModel ViewModel { get; }
 
@@ -41,14 +43,14 @@ public sealed partial class WorkspacePage : Page
 
     private async Task RenderCanvasAsync()
     {
-        if (ViewModel.Survey is null)
+        if (ViewModel.Survey is null || ViewModel.SelectedFloor is null)
         {
             return;
         }
 
         try
         {
-            await PlanCanvas.RenderAsync(ViewModel.Survey.Floor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
+            await PlanCanvas.RenderAsync(ViewModel.SelectedFloor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
         }
         catch (Exception ex)
         {
@@ -79,6 +81,53 @@ public sealed partial class WorkspacePage : Page
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => Frame.GoBack();
+
+    private async void AddFloor_Click(object sender, RoutedEventArgs e)
+    {
+        var nameBox = new TextBox { Header = _localizationService.GetString("WorkspaceAddFloorDialogNameLabel") };
+        var outdoorCheckBox = new CheckBox { Content = _localizationService.GetString("WorkspaceAddFloorDialogOutdoorLabel") };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceAddFloorDialogTitle"),
+            Content = new StackPanel { Spacing = 12, Children = { nameBox, outdoorCheckBox } },
+            PrimaryButtonText = _localizationService.GetString("WorkspaceAddFloorDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceAddFloorDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(nameBox.Text))
+        {
+            await ViewModel.AddFloorCommand.ExecuteAsync((nameBox.Text.Trim(), outdoorCheckBox.IsChecked == true));
+        }
+    }
+
+    private async void SaveSnapshot_Click(object sender, RoutedEventArgs e)
+    {
+        var labelBox = new TextBox { Header = _localizationService.GetString("WorkspaceSaveSnapshotDialogLabelHeader") };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceSaveSnapshotDialogTitle"),
+            Content = labelBox,
+            PrimaryButtonText = _localizationService.GetString("WorkspaceSaveSnapshotDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceSaveSnapshotDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(labelBox.Text))
+        {
+            await ViewModel.SaveSnapshotCommand.ExecuteAsync(labelBox.Text.Trim());
+        }
+    }
+
+    private void CompareSnapshots_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.Survey is not null)
+        {
+            Frame.Navigate(typeof(SnapshotComparisonPage), ViewModel.Survey);
+        }
+    }
 
     private void ToolToggle_Checked(object sender, RoutedEventArgs e)
     {

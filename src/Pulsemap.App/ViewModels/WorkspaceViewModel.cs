@@ -28,6 +28,11 @@ public partial class WorkspaceViewModel : ObservableObject
     private const double HeatmapGridSpacingMeters = 0.5;
     private const double DeleteHitToleranceMeters = 0.5;
 
+    // A new outdoor area's extent, since there's no dedicated bounds-editing UI yet — the user can
+    // redraw/relocate what it covers by editing OutdoorBoundsMin/Max later if this default doesn't
+    // fit (e.g. via re-export/re-import), a known limitation of this first pass at outdoor areas.
+    private const double DefaultOutdoorBoundsSizeMeters = 40;
+
     private readonly ISurveyFileService _surveyFileService;
     private readonly IPropagationModel _propagationModel;
     private readonly IApPlacementOptimizer _placementOptimizer;
@@ -37,6 +42,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly ISurveyDataExporter _surveyDataExporter;
     private readonly IReportExporter _reportExporter;
     private readonly ISurveyExportFilePickerService _exportFilePickerService;
+    private readonly IKrigingInterpolator _krigingInterpolator;
 
     private string? _filePath;
 
@@ -49,7 +55,8 @@ public partial class WorkspaceViewModel : ObservableObject
         IAppLogger logger,
         ISurveyDataExporter surveyDataExporter,
         IReportExporter reportExporter,
-        ISurveyExportFilePickerService exportFilePickerService)
+        ISurveyExportFilePickerService exportFilePickerService,
+        IKrigingInterpolator krigingInterpolator)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
@@ -60,12 +67,18 @@ public partial class WorkspaceViewModel : ObservableObject
         _surveyDataExporter = surveyDataExporter;
         _reportExporter = reportExporter;
         _exportFilePickerService = exportFilePickerService;
+        _krigingInterpolator = krigingInterpolator;
     }
 
     public event EventHandler? FloorChanged;
 
     [ObservableProperty]
     public partial Survey? Survey { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AccessPointSummaryDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    public partial Floor? SelectedFloor { get; set; }
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -85,6 +98,11 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public IReadOnlyList<Band> AvailableBands { get; private set; } = [];
 
+    // Survey.Floors is a plain List<Floor>, not an ObservableCollection — it wouldn't be a Core-
+    // layer concern to make it one, so this computed projection is re-signaled manually (see
+    // OnPropertyChanged(nameof(Floors)) below) whenever a floor is added.
+    public IReadOnlyList<Floor> Floors => Survey?.Floors ?? [];
+
     public IReadOnlyList<CoverageSample> Heatmap { get; private set; } = [];
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
@@ -96,7 +114,7 @@ public partial class WorkspaceViewModel : ObservableObject
     {
         get
         {
-            if (Survey is null || Survey.Floor.AccessPoints.Count == 0)
+            if (SelectedFloor is null || SelectedFloor.AccessPoints.Count == 0)
             {
                 return _localizationService.GetString("WorkspaceNoAccessPointsPlaced");
             }
@@ -105,7 +123,7 @@ public partial class WorkspaceViewModel : ObservableObject
             string summaryFormat = _localizationService.GetString("WorkspaceAccessPointSummaryFormat");
             return string.Join(
                 Environment.NewLine,
-                Survey.Floor.AccessPoints.Select(ap =>
+                SelectedFloor.AccessPoints.Select(ap =>
                 {
                     string radios = string.Join(", ", ap.Radios.Select(r => $"{BandDisplayName(r.Key)} {channelAbbreviation}{r.Value.Channel}"));
                     return string.Format(CultureInfo.CurrentCulture, summaryFormat, ap.Label, radios);
@@ -197,8 +215,10 @@ public partial class WorkspaceViewModel : ObservableObject
             Survey = await _surveyFileService.LoadAsync(filePath, cancellationToken);
             AvailableBands = Survey.TargetBands;
             SelectedBand = AvailableBands.Count > 0 ? AvailableBands[0] : Band.TwoPointFourGhz;
+            SelectedFloor = Survey.Floors.Count > 0 ? Survey.Floors[0] : null;
             OnPropertyChanged(nameof(SurveyNameDisplay));
             OnPropertyChanged(nameof(AvailableBands));
+            OnPropertyChanged(nameof(Floors));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
             Recompute();
             await LoadAdaptersAsync(cancellationToken);
@@ -285,17 +305,17 @@ public partial class WorkspaceViewModel : ObservableObject
     private static async Task OpenLocationSettingsAsync() =>
         await Launcher.LaunchUriAsync(new Uri("ms-settings:privacy-location"));
 
-    private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null;
+    private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null && SelectedFloor is not null;
 
     [RelayCommand(CanExecute = nameof(CanStartGuidedWalk))]
     private void StartGuidedWalk()
     {
-        if (Survey is null)
+        if (Survey is null || SelectedFloor is null)
         {
             return;
         }
 
-        var points = MeasurementPointSuggester.SuggestPoints(Survey.Floor);
+        var points = MeasurementPointSuggester.SuggestPoints(SelectedFloor, SelectedBand, _krigingInterpolator);
         if (points.Count == 0)
         {
             GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceNoUnmeasuredPoints");
@@ -314,7 +334,7 @@ public partial class WorkspaceViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanConfirmWalkPoint))]
     private async Task ConfirmWalkPointAsync()
     {
-        if (Survey is null || SelectedAdapter is null || CurrentWalkPoint is not { } position)
+        if (Survey is null || SelectedFloor is null || SelectedAdapter is null || CurrentWalkPoint is not { } position)
         {
             return;
         }
@@ -331,7 +351,7 @@ public partial class WorkspaceViewModel : ObservableObject
             }
 
             var testPoint = TestPointCapture.BuildTestPoint(position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
-            Survey.Floor.TestPoints.Add(testPoint);
+            SelectedFloor.TestPoints.Add(testPoint);
             await SaveAndRefreshAsync();
 
             _guidedWalkQueue.Dequeue();
@@ -373,29 +393,29 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public async Task AddTestPointAsync(Point2D position)
     {
-        if (Survey is null)
+        if (SelectedFloor is null)
         {
             return;
         }
 
-        Survey.Floor.TestPoints.Add(new TestPoint { Position = position });
+        SelectedFloor.TestPoints.Add(new TestPoint { Position = position });
         await SaveAndRefreshAsync();
     }
 
     public async Task AddWallAsync(Point2D start, Point2D end)
     {
-        if (Survey is null)
+        if (SelectedFloor is null)
         {
             return;
         }
 
-        Survey.Floor.Walls.Add(new Wall { Start = start, End = end });
+        SelectedFloor.Walls.Add(new Wall { Start = start, End = end });
         await SaveAndRefreshAsync();
     }
 
     public async Task DeleteNearestElementAsync(Point2D at)
     {
-        if (Survey is null || !TryFindNearestElement(Survey.Floor, at, out var remove))
+        if (SelectedFloor is null || !TryFindNearestElement(SelectedFloor, at, out var remove))
         {
             return;
         }
@@ -407,16 +427,89 @@ public partial class WorkspaceViewModel : ObservableObject
     [RelayCommand]
     private async Task SuggestPlacementsAsync()
     {
+        if (Survey is null || SelectedFloor is null)
+        {
+            return;
+        }
+
+        SelectedFloor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
+        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.TargetBands, _propagationModel);
+        SelectedFloor.AccessPoints.AddRange(suggestions);
+        await SaveAndRefreshAsync();
+    }
+
+    private bool CanAddFloor() => Survey is not null;
+
+    [RelayCommand(CanExecute = nameof(CanAddFloor))]
+    private async Task AddFloorAsync((string Name, bool IsOutdoor) args)
+    {
         if (Survey is null)
         {
             return;
         }
 
-        Survey.Floor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
-        var suggestions = _placementOptimizer.SuggestPlacements(Survey.Floor, Survey.TargetBands, _propagationModel);
-        Survey.Floor.AccessPoints.AddRange(suggestions);
+        var floor = new Floor
+        {
+            Name = args.Name,
+            IsOutdoor = args.IsOutdoor,
+            Level = Survey.Floors.Count(f => !f.IsOutdoor),
+            OutdoorBoundsMin = args.IsOutdoor ? new Point2D(0, 0) : null,
+            OutdoorBoundsMax = args.IsOutdoor ? new Point2D(DefaultOutdoorBoundsSizeMeters, DefaultOutdoorBoundsSizeMeters) : null,
+            PlanSource = new RoomListSource(),
+        };
+
+        Survey.Floors.Add(floor);
+        OnPropertyChanged(nameof(Floors));
+        SelectedFloor = floor;
         await SaveAndRefreshAsync();
     }
+
+    private bool CanSaveSnapshot() => Survey is not null;
+
+    [RelayCommand(CanExecute = nameof(CanSaveSnapshot))]
+    private async Task SaveSnapshotAsync(string label)
+    {
+        if (Survey is null)
+        {
+            return;
+        }
+
+        Survey.Snapshots.Add(new SurveySnapshot { Label = label, Floors = CloneFloorsForSnapshot(Survey.Floors) });
+        await SaveAndRefreshAsync();
+    }
+
+    // A snapshot freezes geometry/measurements only — sharing Wall/TestPoint/AccessPoint object
+    // references with the live floor would mean editing the live floor also (invisibly) edits the
+    // "frozen" snapshot, since those are mutable classes, not records. PlanSource is intentionally
+    // *not* deep-copied: a snapshot always renders over the current floor's live background image,
+    // not a duplicated one, per this feature's design (see the plan).
+    private static List<Floor> CloneFloorsForSnapshot(IEnumerable<Floor> floors) =>
+        [.. floors.Select(floor => new Floor
+        {
+            Id = floor.Id,
+            Name = floor.Name,
+            IsOutdoor = floor.IsOutdoor,
+            Level = floor.Level,
+            OutdoorBoundsMin = floor.OutdoorBoundsMin,
+            OutdoorBoundsMax = floor.OutdoorBoundsMax,
+            PlanSource = floor.PlanSource,
+            Walls = [.. floor.Walls.Select(w => new Wall { Start = w.Start, End = w.End, Material = w.Material, ThicknessMeters = w.ThicknessMeters })],
+            TestPoints = [.. floor.TestPoints.Select(tp => new TestPoint
+            {
+                Id = tp.Id,
+                Position = tp.Position,
+                Measurements = new Dictionary<Band, BandMeasurement>(tp.Measurements),
+                InterferenceReadings = [.. tp.InterferenceReadings],
+            })],
+            AccessPoints = [.. floor.AccessPoints.Select(ap => new AccessPoint
+            {
+                Id = ap.Id,
+                Position = ap.Position,
+                Label = ap.Label,
+                IsUserOverride = ap.IsUserOverride,
+                Radios = new Dictionary<Band, BandRadioSettings>(ap.Radios),
+            })],
+        })];
 
     [RelayCommand]
     private Task ExportTestPointsCsvAsync() =>
@@ -472,6 +565,12 @@ public partial class WorkspaceViewModel : ObservableObject
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    partial void OnSelectedFloorChanged(Floor? value)
+    {
+        Recompute();
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private async Task SaveAndRefreshAsync()
     {
         if (Survey is null || _filePath is null)
@@ -487,14 +586,14 @@ public partial class WorkspaceViewModel : ObservableObject
 
     private void Recompute()
     {
-        if (Survey is null)
+        if (Survey is null || SelectedFloor is null)
         {
             Heatmap = [];
             CoveragePercent = 0;
             return;
         }
 
-        Heatmap = CoverageGridCalculator.ComputeGrid(Survey.Floor, SelectedBand, HeatmapGridSpacingMeters, _propagationModel);
+        Heatmap = CoverageGridCalculator.ComputeGrid(SelectedFloor, Survey.Floors, SelectedBand, HeatmapGridSpacingMeters, _propagationModel);
         CoveragePercent = Heatmap.Count == 0
             ? 0
             : Heatmap.Count(s => s.ValueDbm >= ReliableCoverageThresholdDbm) / (double)Heatmap.Count * 100;

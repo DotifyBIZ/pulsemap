@@ -1,4 +1,5 @@
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Measurement;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Tests.Fakes;
@@ -20,6 +21,12 @@ public sealed class WorkspaceViewModelTests
     private readonly FakeReportExporter _reportExporter = new();
     private readonly FakeSurveyExportFilePickerService _exportFilePickerService = new();
 
+    // Real (not faked) — pure/deterministic, no I/O, and every test here loads a floor with zero
+    // existing TestPoints, so StartGuidedWalk's adaptive path never actually calls into this (falls
+    // back to the plain grid, per MeasurementPointSuggester's own MinimumMeasurementsForAdaptiveOrdering
+    // guard) — nothing here exercises its real behavior, so a fake would just be unused boilerplate.
+    private readonly OrdinaryKrigingInterpolator _krigingInterpolator = new();
+
     private WorkspaceViewModel CreateSut() => new(
         _surveyFileService,
         _propagationModel,
@@ -29,7 +36,8 @@ public sealed class WorkspaceViewModelTests
         _logger,
         _surveyDataExporter,
         _reportExporter,
-        _exportFilePickerService);
+        _exportFilePickerService,
+        _krigingInterpolator);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()
@@ -78,7 +86,7 @@ public sealed class WorkspaceViewModelTests
 
         await sut.AddTestPointAsync(new Point2D(1, 1));
 
-        Assert.Single(sut.Survey!.Floor.TestPoints);
+        Assert.Single(sut.SelectedFloor!.TestPoints);
         Assert.Single(_surveyFileService.SaveCalls);
     }
 
@@ -89,7 +97,7 @@ public sealed class WorkspaceViewModelTests
 
         await sut.AddWallAsync(new Point2D(0, 0), new Point2D(1, 0));
 
-        Assert.Single(sut.Survey!.Floor.Walls);
+        Assert.Single(sut.SelectedFloor!.Walls);
         Assert.Single(_surveyFileService.SaveCalls);
     }
 
@@ -102,7 +110,7 @@ public sealed class WorkspaceViewModelTests
 
         await sut.DeleteNearestElementAsync(new Point2D(5.1, 5.1));
 
-        Assert.Empty(sut.Survey!.Floor.TestPoints);
+        Assert.Empty(sut.SelectedFloor!.TestPoints);
     }
 
     [Fact]
@@ -114,7 +122,7 @@ public sealed class WorkspaceViewModelTests
 
         await sut.DeleteNearestElementAsync(new Point2D(9, 9));
 
-        Assert.Single(sut.Survey!.Floor.TestPoints);
+        Assert.Single(sut.SelectedFloor!.TestPoints);
     }
 
     [Fact]
@@ -132,9 +140,9 @@ public sealed class WorkspaceViewModelTests
 
         await sut.SuggestPlacementsCommand.ExecuteAsync(null);
 
-        Assert.Contains(overrideAp, sut.Survey!.Floor.AccessPoints);
-        Assert.DoesNotContain(suggestedAp, sut.Survey.Floor.AccessPoints);
-        Assert.Contains(newSuggestion, sut.Survey.Floor.AccessPoints);
+        Assert.Contains(overrideAp, sut.SelectedFloor!.AccessPoints);
+        Assert.DoesNotContain(suggestedAp, sut.SelectedFloor.AccessPoints);
+        Assert.Contains(newSuggestion, sut.SelectedFloor.AccessPoints);
     }
 
     [Fact]
@@ -237,9 +245,9 @@ public sealed class WorkspaceViewModelTests
 
         await sut.ConfirmWalkPointCommand.ExecuteAsync(null);
 
-        Assert.Single(sut.Survey!.Floor.TestPoints);
-        Assert.Equal(expectedPoints[0], sut.Survey.Floor.TestPoints[0].Position);
-        Assert.Single(sut.Survey.Floor.TestPoints[0].InterferenceReadings);
+        Assert.Single(sut.SelectedFloor!.TestPoints);
+        Assert.Equal(expectedPoints[0], sut.SelectedFloor.TestPoints[0].Position);
+        Assert.Single(sut.SelectedFloor.TestPoints[0].InterferenceReadings);
         Assert.NotEmpty(_surveyFileService.SaveCalls);
         Assert.True(sut.IsGuidedWalkActive);
         Assert.Equal(expectedPoints[1], sut.CurrentWalkPoint);
@@ -256,7 +264,7 @@ public sealed class WorkspaceViewModelTests
 
         await sut.ConfirmWalkPointCommand.ExecuteAsync(null);
 
-        Assert.Empty(sut.Survey!.Floor.TestPoints);
+        Assert.Empty(sut.SelectedFloor!.TestPoints);
         Assert.True(sut.IsGuidedWalkActive);
         Assert.Equal(expectedPoints[0], sut.CurrentWalkPoint);
         Assert.True(sut.HasGuidedWalkStatusMessage);
@@ -274,7 +282,7 @@ public sealed class WorkspaceViewModelTests
 
         Assert.False(sut.IsGuidedWalkActive);
         Assert.Null(sut.CurrentWalkPoint);
-        Assert.Single(sut.Survey!.Floor.TestPoints);
+        Assert.Single(sut.SelectedFloor!.TestPoints);
     }
 
     [Fact]
@@ -288,7 +296,7 @@ public sealed class WorkspaceViewModelTests
         sut.CancelGuidedWalkCommand.Execute(null);
 
         Assert.False(sut.IsGuidedWalkActive);
-        Assert.Single(sut.Survey!.Floor.TestPoints);
+        Assert.Single(sut.SelectedFloor!.TestPoints);
         Assert.True(sut.HasGuidedWalkStatusMessage);
     }
 
@@ -378,6 +386,51 @@ public sealed class WorkspaceViewModelTests
         Assert.Equal(0, _surveyDataExporter.ExportTestPointsCsvCallCount);
     }
 
+    [Fact]
+    public async Task AddFloorCommand_AppendsFloorAndSelectsIt()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        int floorCountBefore = sut.Floors.Count;
+
+        await sut.AddFloorCommand.ExecuteAsync(("Second Floor", false));
+
+        Assert.Equal(floorCountBefore + 1, sut.Floors.Count);
+        Assert.Equal("Second Floor", sut.SelectedFloor!.Name);
+        Assert.False(sut.SelectedFloor.IsOutdoor);
+        Assert.Same(sut.SelectedFloor, sut.Survey!.Floors[^1]);
+    }
+
+    [Fact]
+    public async Task AddFloorCommand_Outdoor_SetsOutdoorBounds()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        await sut.AddFloorCommand.ExecuteAsync(("Parking Lot", true));
+
+        Assert.True(sut.SelectedFloor!.IsOutdoor);
+        Assert.NotNull(sut.SelectedFloor.OutdoorBoundsMin);
+        Assert.NotNull(sut.SelectedFloor.OutdoorBoundsMax);
+    }
+
+    [Fact]
+    public async Task SaveSnapshotCommand_AppendsAFrozenCopyOfCurrentFloors()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.TestPoints.Add(new TestPoint { Position = new Point2D(1, 1) });
+        var sut = await LoadedViewModelAsync(floor);
+
+        await sut.SaveSnapshotCommand.ExecuteAsync("Before upgrade");
+
+        var snapshot = Assert.Single(sut.Survey!.Snapshots);
+        Assert.Equal("Before upgrade", snapshot.Label);
+        Assert.Single(snapshot.Floors[0].TestPoints);
+
+        // The snapshot must be a real copy, not a shared reference — a later edit to the live
+        // floor should never retroactively change what the snapshot recorded.
+        sut.SelectedFloor!.TestPoints.Add(new TestPoint { Position = new Point2D(2, 2) });
+        Assert.Single(snapshot.Floors[0].TestPoints);
+    }
+
     private async Task<WorkspaceViewModel> LoadedViewModelAsync(Floor floor)
     {
         _surveyFileService.SurveyToReturn = BuildSurvey(floor);
@@ -397,7 +450,7 @@ public sealed class WorkspaceViewModelTests
         Name = "Test Survey",
         Type = SurveyType.NewDeployment,
         TargetBands = [Band.TwoPointFourGhz],
-        Floor = floor,
+        Floors = [floor],
     };
 
     private static Floor SquareRoomFloor(double sizeMeters) => new()

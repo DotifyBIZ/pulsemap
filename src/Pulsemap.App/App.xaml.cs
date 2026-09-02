@@ -112,6 +112,7 @@ public partial class App : Application
         services.AddTransient<SurveysViewModel>();
         services.AddTransient<NewSurveyWizardViewModel>();
         services.AddTransient<WorkspaceViewModel>();
+        services.AddTransient<SnapshotComparisonViewModel>();
         services.AddTransient<SettingsViewModel>();
 
         return services.BuildServiceProvider();

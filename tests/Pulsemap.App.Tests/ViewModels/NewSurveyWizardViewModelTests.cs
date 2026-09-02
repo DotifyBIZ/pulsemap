@@ -164,7 +164,7 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
         Assert.Single(_surveyFileService.SaveCalls);
         var savedSurvey = _surveyFileService.SaveCalls[0].Survey;
         Assert.Equal("Riverside Site", savedSurvey.Name);
-        Assert.Equal(4, savedSurvey.Floor.Walls.Count);
+        Assert.Equal(4, savedSurvey.Floors[0].Walls.Count);
     }
 
     [Fact]

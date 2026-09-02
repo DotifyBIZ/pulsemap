@@ -100,6 +100,16 @@ public sealed class LocalizationService : ILocalizationService
             ["SurveysDeleteDialogCloseButton"] = "Cancel",
             ["SurveysDeleteErrorFormat"] = "Couldn't delete: {0}",
             ["SurveysRenameErrorFormat"] = "Couldn't rename: {0}",
+
+            ["WorkspaceAddFloorDialogTitle"] = "Add floor or area",
+            ["WorkspaceAddFloorDialogNameLabel"] = "Name",
+            ["WorkspaceAddFloorDialogOutdoorLabel"] = "Outdoor area (no walls)",
+            ["WorkspaceAddFloorDialogPrimaryButton"] = "Add",
+            ["WorkspaceAddFloorDialogCloseButton"] = "Cancel",
+            ["WorkspaceSaveSnapshotDialogTitle"] = "Save snapshot",
+            ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Label",
+            ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Save",
+            ["WorkspaceSaveSnapshotDialogCloseButton"] = "Cancel",
         },
         ["pl-PL"] = new Dictionary<string, string>
         {
@@ -158,6 +168,16 @@ public sealed class LocalizationService : ILocalizationService
             ["SurveysDeleteDialogCloseButton"] = "Anuluj",
             ["SurveysDeleteErrorFormat"] = "Nie udało się usunąć: {0}",
             ["SurveysRenameErrorFormat"] = "Nie udało się zmienić nazwy: {0}",
+
+            ["WorkspaceAddFloorDialogTitle"] = "Dodaj piętro lub obszar",
+            ["WorkspaceAddFloorDialogNameLabel"] = "Nazwa",
+            ["WorkspaceAddFloorDialogOutdoorLabel"] = "Obszar zewnętrzny (bez ścian)",
+            ["WorkspaceAddFloorDialogPrimaryButton"] = "Dodaj",
+            ["WorkspaceAddFloorDialogCloseButton"] = "Anuluj",
+            ["WorkspaceSaveSnapshotDialogTitle"] = "Zapisz migawkę",
+            ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Etykieta",
+            ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Zapisz",
+            ["WorkspaceSaveSnapshotDialogCloseButton"] = "Anuluj",
         },
     };
 }

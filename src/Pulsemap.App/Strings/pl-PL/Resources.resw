@@ -269,6 +269,15 @@
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Wstecz</value>
   </data>
+  <data name="WorkspaceSaveSnapshotButton.Content" xml:space="preserve">
+    <value>Zapisz migawkę</value>
+  </data>
+  <data name="WorkspaceCompareSnapshotsButton.Content" xml:space="preserve">
+    <value>Porównaj</value>
+  </data>
+  <data name="WorkspaceAddFloorButton.Content" xml:space="preserve">
+    <value>+ Dodaj piętro</value>
+  </data>
   <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
     <value>Eksportuj</value>
   </data>
@@ -340,6 +349,26 @@
   </data>
   <data name="WorkspaceCancelWalkButton.Content" xml:space="preserve">
     <value>Anuluj pomiar</value>
+  </data>
+
+  <!-- Snapshot comparison page -->
+  <data name="SnapshotComparisonTitle.Text" xml:space="preserve">
+    <value>Porównanie migawek</value>
+  </data>
+  <data name="SnapshotComparisonBackButton.Content" xml:space="preserve">
+    <value>Wstecz</value>
+  </data>
+  <data name="SnapshotComparisonLeftField.Header" xml:space="preserve">
+    <value>Pokaż</value>
+  </data>
+  <data name="SnapshotComparisonRightField.Header" xml:space="preserve">
+    <value>Porównaj z</value>
+  </data>
+  <data name="SnapshotComparisonFloorField.Header" xml:space="preserve">
+    <value>Piętro</value>
+  </data>
+  <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
+    <value>Pasmo</value>
   </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->

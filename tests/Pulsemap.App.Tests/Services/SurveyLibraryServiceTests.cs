@@ -33,10 +33,13 @@ public sealed class SurveyLibraryServiceTests : IDisposable
             Name = name,
             Type = SurveyType.NewDeployment,
             TargetBands = [Band.FiveGhz],
-            Floor = new Floor
-            {
-                PlanSource = new ImagePlanSource { ImageData = [], FileExtension = ".png", PixelsPerMeter = 10 },
-            },
+            Floors =
+            [
+                new Floor
+                {
+                    PlanSource = new ImagePlanSource { ImageData = [], FileExtension = ".png", PixelsPerMeter = 10 },
+                },
+            ],
         };
         await _surveyFileService.SaveAsync(survey, filePath);
         return filePath;

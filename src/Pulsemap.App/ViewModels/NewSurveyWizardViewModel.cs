@@ -331,7 +331,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             Type = SelectedSurveyType,
             TargetNetworkSsid = IsExistingNetworkAuditSelected && !string.IsNullOrWhiteSpace(TargetNetworkSsid) ? TargetNetworkSsid.Trim() : null,
             TargetBands = bands,
-            Floor = floor,
+            Floors = [floor],
         };
     }
 

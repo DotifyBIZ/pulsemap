@@ -343,6 +343,16 @@ public sealed partial class FloorPlanCanvas : UserControl
             ys.Add(_backgroundHeightMeters);
         }
 
+        // An outdoor area has no walls to size the canvas from — same explicit-bounds fallback
+        // FloorGrid uses for its candidate grid.
+        if (floor.IsOutdoor && floor.OutdoorBoundsMin is { } outdoorMin && floor.OutdoorBoundsMax is { } outdoorMax)
+        {
+            xs.Add(outdoorMin.X);
+            xs.Add(outdoorMax.X);
+            ys.Add(outdoorMin.Y);
+            ys.Add(outdoorMax.Y);
+        }
+
         if (xs.Count == 0)
         {
             return new Bounds(0, 0, 20, 15);
