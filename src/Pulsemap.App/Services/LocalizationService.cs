@@ -115,6 +115,9 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogContent"] = "This replaces its existing reading with a new scan from here.",
             ["WorkspaceRecaptureDialogPrimaryButton"] = "Recapture",
             ["WorkspaceRecaptureDialogCloseButton"] = "Cancel",
+            ["WorkspaceUndoDeleteWallMessage"] = "Wall deleted.",
+            ["WorkspaceUndoDeleteTestPointMessage"] = "Test point deleted.",
+            ["WorkspaceUndoDeleteAccessPointMessage"] = "Access point deleted.",
 
             ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
             ["HomeGreetingMorning"] = "Good morning",
@@ -198,6 +201,9 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogContent"] = "Zastąpi to jego dotychczasowy odczyt nowym skanem z tego miejsca.",
             ["WorkspaceRecaptureDialogPrimaryButton"] = "Zarejestruj ponownie",
             ["WorkspaceRecaptureDialogCloseButton"] = "Anuluj",
+            ["WorkspaceUndoDeleteWallMessage"] = "Usunięto ścianę.",
+            ["WorkspaceUndoDeleteTestPointMessage"] = "Usunięto punkt pomiarowy.",
+            ["WorkspaceUndoDeleteAccessPointMessage"] = "Usunięto punkt dostępowy.",
 
             ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
             ["HomeGreetingMorning"] = "Dzień dobry",

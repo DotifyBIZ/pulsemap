@@ -182,6 +182,90 @@ public sealed class WorkspaceViewModelTests
     }
 
     [Fact]
+    public async Task DeleteNearestElementAsync_RemovesElement_CanUndoDeleteBecomesTrue()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.TestPoints.Add(new TestPoint { Position = new Point2D(5, 5) });
+        var sut = await LoadedViewModelAsync(floor);
+
+        await sut.DeleteNearestElementAsync(new Point2D(5.1, 5.1));
+
+        Assert.True(sut.CanUndoDelete);
+        Assert.True(sut.UndoDeleteCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task UndoDeleteCommand_AfterDeletingTestPoint_RestoresIt()
+    {
+        var floor = SquareRoomFloor(10);
+        var testPoint = new TestPoint { Position = new Point2D(5, 5) };
+        floor.TestPoints.Add(testPoint);
+        var sut = await LoadedViewModelAsync(floor);
+        await sut.DeleteNearestElementAsync(new Point2D(5.1, 5.1));
+
+        await sut.UndoDeleteCommand.ExecuteAsync(null);
+
+        Assert.Same(testPoint, Assert.Single(sut.SelectedFloor!.TestPoints));
+        Assert.False(sut.CanUndoDelete);
+    }
+
+    [Fact]
+    public async Task UndoDeleteCommand_AfterDeletingWall_RestoresIt()
+    {
+        var floor = SquareRoomFloor(10);
+        var wallToDelete = floor.Walls[0];
+        var midpoint = new Point2D((wallToDelete.Start.X + wallToDelete.End.X) / 2, (wallToDelete.Start.Y + wallToDelete.End.Y) / 2);
+        var sut = await LoadedViewModelAsync(floor);
+        await sut.DeleteNearestElementAsync(midpoint);
+        Assert.DoesNotContain(wallToDelete, sut.SelectedFloor!.Walls);
+
+        await sut.UndoDeleteCommand.ExecuteAsync(null);
+
+        Assert.Contains(wallToDelete, sut.SelectedFloor!.Walls);
+    }
+
+    [Fact]
+    public async Task DeleteNearestElementAsync_SecondDelete_OverwritesUndoWithTheNewerOne()
+    {
+        var floor = SquareRoomFloor(10);
+        var firstPoint = new TestPoint { Position = new Point2D(5, 5) };
+        var secondPoint = new TestPoint { Position = new Point2D(6, 6) };
+        floor.TestPoints.Add(firstPoint);
+        floor.TestPoints.Add(secondPoint);
+        var sut = await LoadedViewModelAsync(floor);
+        await sut.DeleteNearestElementAsync(new Point2D(5.1, 5.1));
+
+        await sut.DeleteNearestElementAsync(new Point2D(6.1, 6.1));
+        await sut.UndoDeleteCommand.ExecuteAsync(null);
+
+        var remaining = Assert.Single(sut.SelectedFloor!.TestPoints);
+        Assert.Same(secondPoint, remaining);
+    }
+
+    [Fact]
+    public async Task SwitchingFloor_ClearsUndoDeleteState()
+    {
+        var floorA = SquareRoomFloor(10);
+        floorA.TestPoints.Add(new TestPoint { Position = new Point2D(5, 5) });
+        var floorB = new Floor { PlanSource = new RoomListSource() };
+        _surveyFileService.SurveyToReturn = new Survey
+        {
+            Name = "Test Survey",
+            Type = SurveyType.NewDeployment,
+            TargetBands = [Band.TwoPointFourGhz],
+            Floors = [floorA, floorB],
+        };
+        var sut = CreateSut();
+        await sut.LoadAsync(FilePath);
+        await sut.DeleteNearestElementAsync(new Point2D(5.1, 5.1));
+        Assert.True(sut.CanUndoDelete);
+
+        sut.SelectedFloor = floorB;
+
+        Assert.False(sut.CanUndoDelete);
+    }
+
+    [Fact]
     public async Task ToggleWallSelection_TogglesMembershipAndCount()
     {
         var floor = SquareRoomFloor(10);

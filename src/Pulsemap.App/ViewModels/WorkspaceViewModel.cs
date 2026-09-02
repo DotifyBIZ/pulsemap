@@ -494,9 +494,25 @@ public partial class WorkspaceViewModel : ObservableObject
         await SaveAndRefreshAsync();
     }
 
+    // Single-level undo, scoped to the Delete tool only — the highest-risk edit in the app since
+    // it's the one permanent, unconfirmed action on the canvas. Not a general undo/redo stack:
+    // overwritten by the next delete, and cleared on floor switch so it never applies somewhere
+    // other than where the deletion actually happened.
+    private (Floor Floor, object Item)? _lastDeletedElement;
+
+    public bool CanUndoDelete => _lastDeletedElement is not null;
+
+    public string LastDeletedItemDisplay => _lastDeletedElement?.Item switch
+    {
+        Wall => _localizationService.GetString("WorkspaceUndoDeleteWallMessage"),
+        TestPoint => _localizationService.GetString("WorkspaceUndoDeleteTestPointMessage"),
+        AccessPoint => _localizationService.GetString("WorkspaceUndoDeleteAccessPointMessage"),
+        _ => string.Empty,
+    };
+
     public async Task DeleteNearestElementAsync(Point2D at)
     {
-        if (SelectedFloor is null || !TryFindNearestElement(SelectedFloor, at, out var remove))
+        if (SelectedFloor is null || !TryFindNearestElement(SelectedFloor, at, out var remove, out var removedItem))
         {
             return;
         }
@@ -504,6 +520,38 @@ public partial class WorkspaceViewModel : ObservableObject
         remove();
         _selectedWalls.RemoveAll(wall => !SelectedFloor.Walls.Contains(wall));
         SelectedWallCount = _selectedWalls.Count;
+        _lastDeletedElement = removedItem is not null ? (SelectedFloor, removedItem) : null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        OnPropertyChanged(nameof(LastDeletedItemDisplay));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
+        await SaveAndRefreshAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUndoDelete))]
+    private async Task UndoDeleteAsync()
+    {
+        if (_lastDeletedElement is not { } deleted)
+        {
+            return;
+        }
+
+        switch (deleted.Item)
+        {
+            case Wall wall:
+                deleted.Floor.Walls.Add(wall);
+                break;
+            case TestPoint testPoint:
+                deleted.Floor.TestPoints.Add(testPoint);
+                break;
+            case AccessPoint accessPoint:
+                deleted.Floor.AccessPoints.Add(accessPoint);
+                break;
+        }
+
+        _lastDeletedElement = null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        OnPropertyChanged(nameof(LastDeletedItemDisplay));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
         await SaveAndRefreshAsync();
     }
 
@@ -733,6 +781,10 @@ public partial class WorkspaceViewModel : ObservableObject
     {
         ClearWallSelection();
 
+        _lastDeletedElement = null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
+
         _guidedWalkQueue.Clear();
         IsGuidedWalkActive = false;
         CurrentWalkPoint = null;
@@ -778,7 +830,7 @@ public partial class WorkspaceViewModel : ObservableObject
             : Heatmap.Count(s => s.ValueDbm >= ReliableCoverageThresholdDbm) / (double)Heatmap.Count * 100;
     }
 
-    private static bool TryFindNearestElement(Floor floor, Point2D at, out Action remove)
+    private static bool TryFindNearestElement(Floor floor, Point2D at, out Action remove, out object? removedItem)
     {
         var (nearestTestPoint, nearestTestPointDist) = NearestTestPoint(floor, at);
         var (nearestAccessPoint, nearestAccessPointDist) = NearestAccessPoint(floor, at);
@@ -788,24 +840,29 @@ public partial class WorkspaceViewModel : ObservableObject
         if (best > DeleteHitToleranceMeters)
         {
             remove = static () => { };
+            removedItem = null;
             return false;
         }
 
         if (best == nearestTestPointDist && nearestTestPoint is not null)
         {
             remove = () => floor.TestPoints.Remove(nearestTestPoint);
+            removedItem = nearestTestPoint;
         }
         else if (best == nearestAccessPointDist && nearestAccessPoint is not null)
         {
             remove = () => floor.AccessPoints.Remove(nearestAccessPoint);
+            removedItem = nearestAccessPoint;
         }
         else if (nearestWall is not null)
         {
             remove = () => floor.Walls.Remove(nearestWall);
+            removedItem = nearestWall;
         }
         else
         {
             remove = static () => { };
+            removedItem = null;
             return false;
         }
 
