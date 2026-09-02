@@ -37,6 +37,9 @@
   <data name="HomeRecentSurveysHeader.Text" xml:space="preserve">
     <value>Ostatnie badania</value>
   </data>
+  <data name="HomeUpdateAvailableActionButton.Content" xml:space="preserve">
+    <value>Zobacz wydanie</value>
+  </data>
 
   <!-- Surveys page -->
   <data name="SurveysTitle.Text" xml:space="preserve">
@@ -73,6 +76,15 @@
   </data>
   <data name="SettingsOpenLogsFolderButton.Content" xml:space="preserve">
     <value>Otwórz folder dzienników</value>
+  </data>
+  <data name="SettingsUpdatesLabel.Text" xml:space="preserve">
+    <value>Aktualizacje</value>
+  </data>
+  <data name="SettingsUpdatesExplanation.Text" xml:space="preserve">
+    <value>Przy uruchomieniu Pulsemap sprawdza publiczną listę wydań na GitHubie w poszukiwaniu nowszej wersji — pojedyncze żądanie bez żadnych danych o Tobie ani Twoich badaniach. Możesz to wyłączyć.</value>
+  </data>
+  <data name="SettingsCheckForUpdatesToggle.Header" xml:space="preserve">
+    <value>Sprawdzaj aktualizacje przy uruchomieniu</value>
   </data>
 
   <!-- New Survey wizard -->

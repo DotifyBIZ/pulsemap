@@ -16,14 +16,16 @@
 
 ## Contents
 
-- [What it does](#what-it-does)
-- [What it deliberately doesn't do](#what-it-deliberately-doesnt-do)
-- [Status](#status)
-- [Building from source](#building-from-source)
-- [Architecture](#architecture)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+- [Pulsemap](#pulsemap)
+  - [Contents](#contents)
+  - [What it does](#what-it-does)
+  - [What it deliberately doesn't do](#what-it-deliberately-doesnt-do)
+  - [Status](#status)
+  - [Building from source](#building-from-source)
+  - [Architecture](#architecture)
+  - [Roadmap](#roadmap)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## What it does
 
@@ -42,7 +44,7 @@ Pulsemap is a local-first WiFi site survey and planning tool covering the full l
 
 - Read live data from AP controllers (UniFi, Omada, ...) — this is survey/measurement tooling, not a controller integration
 - Ship a built-in vendor hardware database — recommendations stay generic (power, channel, position)
-- Phone home. No account, no server, no telemetry. Projects are local files; diagnostics are a local log file you choose whether to share (see [ADR-0003](docs/adr/0003-local-diagnostic-logging.md))
+- Send telemetry, require an account, or use a server for your data. Projects are local files; diagnostics are a local log file you choose whether to share (see [ADR-0003](docs/adr/0003-local-diagnostic-logging.md)). The one exception: an optional, on-by-default check against GitHub's public release list looks for newer versions on launch — nothing about you or your surveys is sent, and it's a toggle in Settings (see [ADR-0004](docs/adr/0004-update-check-network-call.md))
 
 ## Status
 
@@ -90,5 +92,5 @@ This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
 ---
 
 <div align="center">
-  <sub>Built by <a href="https://dotify.biz">Dotify</a></sub>
+  <sub>Crafted with ❤️ by <a href="https://dotify.biz">Dotify</a></sub>
 </div>
