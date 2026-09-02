@@ -17,25 +17,29 @@ public sealed class SurveyDataExporter : ISurveyDataExporter
         var writer = new StreamWriter(destination, leaveOpen: true);
         await using (writer.ConfigureAwait(false))
         {
-            await writer.WriteLineAsync("TestPointId,X,Y,Band,SignalDbm,MeasuredAt,AdapterName");
+            await writer.WriteLineAsync("FloorName,TestPointId,X,Y,Band,SignalDbm,MeasuredAt,AdapterName");
 
-            foreach (var point in survey.Floor.TestPoints)
+            foreach (var floor in survey.Floors)
             {
-                foreach (var (band, measurement) in point.Measurements)
+                foreach (var point in floor.TestPoints)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (var (band, measurement) in point.Measurements)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    string[] fields =
-                    [
-                        point.Id.ToString(),
-                        point.Position.X.ToString(CultureInfo.InvariantCulture),
-                        point.Position.Y.ToString(CultureInfo.InvariantCulture),
-                        band.ToString(),
-                        measurement.SignalDbm.ToString(CultureInfo.InvariantCulture),
-                        measurement.MeasuredAt.ToString("O", CultureInfo.InvariantCulture),
-                        measurement.AdapterName ?? string.Empty,
-                    ];
-                    await writer.WriteLineAsync(string.Join(',', fields.Select(EscapeCsvField)));
+                        string[] fields =
+                        [
+                            floor.Name,
+                            point.Id.ToString(),
+                            point.Position.X.ToString(CultureInfo.InvariantCulture),
+                            point.Position.Y.ToString(CultureInfo.InvariantCulture),
+                            band.ToString(),
+                            measurement.SignalDbm.ToString(CultureInfo.InvariantCulture),
+                            measurement.MeasuredAt.ToString("O", CultureInfo.InvariantCulture),
+                            measurement.AdapterName ?? string.Empty,
+                        ];
+                        await writer.WriteLineAsync(string.Join(',', fields.Select(EscapeCsvField)));
+                    }
                 }
             }
 
@@ -51,26 +55,30 @@ public sealed class SurveyDataExporter : ISurveyDataExporter
         var writer = new StreamWriter(destination, leaveOpen: true);
         await using (writer.ConfigureAwait(false))
         {
-            await writer.WriteLineAsync("AccessPointId,Label,X,Y,Band,TransmitPowerDbm,Channel,IsUserOverride");
+            await writer.WriteLineAsync("FloorName,AccessPointId,Label,X,Y,Band,TransmitPowerDbm,Channel,IsUserOverride");
 
-            foreach (var accessPoint in survey.Floor.AccessPoints)
+            foreach (var floor in survey.Floors)
             {
-                foreach (var (band, radio) in accessPoint.Radios)
+                foreach (var accessPoint in floor.AccessPoints)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (var (band, radio) in accessPoint.Radios)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    string[] fields =
-                    [
-                        accessPoint.Id.ToString(),
-                        accessPoint.Label,
-                        accessPoint.Position.X.ToString(CultureInfo.InvariantCulture),
-                        accessPoint.Position.Y.ToString(CultureInfo.InvariantCulture),
-                        band.ToString(),
-                        radio.TransmitPowerDbm.ToString(CultureInfo.InvariantCulture),
-                        radio.Channel.ToString(CultureInfo.InvariantCulture),
-                        accessPoint.IsUserOverride.ToString(CultureInfo.InvariantCulture),
-                    ];
-                    await writer.WriteLineAsync(string.Join(',', fields.Select(EscapeCsvField)));
+                        string[] fields =
+                        [
+                            floor.Name,
+                            accessPoint.Id.ToString(),
+                            accessPoint.Label,
+                            accessPoint.Position.X.ToString(CultureInfo.InvariantCulture),
+                            accessPoint.Position.Y.ToString(CultureInfo.InvariantCulture),
+                            band.ToString(),
+                            radio.TransmitPowerDbm.ToString(CultureInfo.InvariantCulture),
+                            radio.Channel.ToString(CultureInfo.InvariantCulture),
+                            accessPoint.IsUserOverride.ToString(CultureInfo.InvariantCulture),
+                        ];
+                        await writer.WriteLineAsync(string.Join(',', fields.Select(EscapeCsvField)));
+                    }
                 }
             }
 
@@ -88,6 +96,14 @@ public sealed class SurveyDataExporter : ISurveyDataExporter
 
     private static string EscapeCsvField(string value)
     {
+        // A leading =, +, -, @, or tab is interpreted as a formula by Excel/Sheets — prefix with an
+        // apostrophe to force text interpretation (standard CSV-injection mitigation, CWE-1236).
+        // AccessPoint.Label is free-text and flows here unescaped otherwise.
+        if (value.Length > 0 && (value[0] is '=' or '+' or '-' or '@' or '\t'))
+        {
+            value = "'" + value;
+        }
+
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
             return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";

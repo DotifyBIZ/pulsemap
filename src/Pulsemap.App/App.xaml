@@ -62,6 +62,25 @@
             <x:Double x:Key="FontSizeLg">18</x:Double>
             <x:Double x:Key="FontSizeXl">20</x:Double>
             <x:Double x:Key="FontSize2xl">24</x:Double>
+
+            <!--
+                Every primary (red, call-to-action) button across the app repeated the same four
+                inline attributes, and none of them overrode the default Button template's
+                PointerOver/Pressed visual states — those fall back to the theme's light-gray hover
+                brush while the icon/label inside stay explicitly White, so hovering any primary
+                button turned it white-on-white (reported directly against the Home page's New
+                Survey button, but the same template applies everywhere this style is used).
+                A Style can't set FrameworkElement.Resources via a Setter (WMC0095 — it isn't a
+                DependencyProperty), so the PointerOver/Pressed brush overrides below have to be
+                repeated as a Button.Resources block on each primary button instance instead; this
+                style only covers the resting-state Setters that a Style setter can actually reach.
+            -->
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource Primary600Brush}" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="16,10" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

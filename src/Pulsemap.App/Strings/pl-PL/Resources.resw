@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Nav shell -->
+  <data name="NavHome.Content" xml:space="preserve">
+    <value>Strona główna</value>
+  </data>
+  <data name="NavSurveys.Content" xml:space="preserve">
+    <value>Badania</value>
+  </data>
+  <data name="NavSettings.Content" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+
+  <!-- Home page -->
+  <data name="HomeTitle.Text" xml:space="preserve">
+    <value>Strona główna</value>
+  </data>
+  <data name="HomeSubtitle.Text" xml:space="preserve">
+    <value>Wszystkie Twoje badania w jednym miejscu.</value>
+  </data>
+  <data name="HomeNewSurveyButtonLabel.Text" xml:space="preserve">
+    <value>Nowe badanie</value>
+  </data>
+  <data name="HomeRecentSurveysHeader.Text" xml:space="preserve">
+    <value>Ostatnie badania</value>
+  </data>
+
+  <!-- Surveys page -->
+  <data name="SurveysTitle.Text" xml:space="preserve">
+    <value>Badania</value>
+  </data>
+  <data name="SurveysRenameButton.Content" xml:space="preserve">
+    <value>Zmień nazwę</value>
+  </data>
+  <data name="SurveysDeleteButton.Content" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+
+  <!-- Settings page -->
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="SettingsLanguageLabel.Text" xml:space="preserve">
+    <value>Język</value>
+  </data>
+  <data name="SettingsCurrentLanguageFormat" xml:space="preserve">
+    <value>Bieżący język: {0}</value>
+  </data>
+  <data name="SettingsLanguageExplanation.Text" xml:space="preserve">
+    <value>Pulsemap używa języka wyświetlania ustawionego w systemie Windows. Zmień go tam, aby zmienić również język Pulsemap.</value>
+  </data>
+  <data name="SettingsOpenLanguageSettingsButton.Content" xml:space="preserve">
+    <value>Otwórz ustawienia języka</value>
+  </data>
+  <data name="SettingsDiagnosticsLabel.Text" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
+  <data name="SettingsDiagnosticsExplanation.Text" xml:space="preserve">
+    <value>Pulsemap prowadzi lokalny dziennik błędów na potrzeby rozwiązywania problemów. Nic nie jest wysyłane automatycznie — jeśli napotkasz problem, możesz znaleźć te pliki tutaj i udostępnić je samodzielnie.</value>
+  </data>
+  <data name="SettingsOpenLogsFolderButton.Content" xml:space="preserve">
+    <value>Otwórz folder dzienników</value>
+  </data>
+
+  <!-- New Survey wizard -->
+  <data name="WizardTitle.Text" xml:space="preserve">
+    <value>Nowe badanie</value>
+  </data>
+  <data name="WizardSubtitle.Text" xml:space="preserve">
+    <value>Skonfiguruj badanie — ściany i pomiary uzupełnisz w przestrzeni roboczej.</value>
+  </data>
+  <data name="WizardCancelButton.Content" xml:space="preserve">
+    <value>Anuluj</value>
+  </data>
+  <data name="WizardStep1Title.Text" xml:space="preserve">
+    <value>1. Podstawy</value>
+  </data>
+  <data name="WizardSurveyNameField.Header" xml:space="preserve">
+    <value>Nazwa badania</value>
+  </data>
+  <data name="WizardSurveyNameField.PlaceholderText" xml:space="preserve">
+    <value>np. Centrum Dystrybucyjne Riverside</value>
+  </data>
+  <data name="WizardSiteDescriptionField.Header" xml:space="preserve">
+    <value>Opis lokalizacji (opcjonalnie)</value>
+  </data>
+  <data name="WizardSiteDescriptionField.PlaceholderText" xml:space="preserve">
+    <value>Krótka notatka o tej lokalizacji</value>
+  </data>
+  <data name="WizardSurveyTypeLabel.Text" xml:space="preserve">
+    <value>Co badasz?</value>
+  </data>
+  <data name="WizardNewDeploymentRadio.Content" xml:space="preserve">
+    <value>Nowe wdrożenie — brak punktów dostępowych</value>
+  </data>
+  <data name="WizardExistingAuditRadio.Content" xml:space="preserve">
+    <value>Istniejąca sieć — audyt tego, co już działa</value>
+  </data>
+  <data name="WizardTargetSsidField.Header" xml:space="preserve">
+    <value>SSID audytowanej sieci (opcjonalnie)</value>
+  </data>
+  <data name="WizardTargetSsidField.PlaceholderText" xml:space="preserve">
+    <value>np. SiecBiurowa</value>
+  </data>
+  <data name="WizardStep2Title.Text" xml:space="preserve">
+    <value>2. Plan pomieszczeń</value>
+  </data>
+  <data name="WizardRoomListRadio.Content" xml:space="preserve">
+    <value>Lista pomieszczeń — opisz pomieszczenia nazwą i rozmiarem</value>
+  </data>
+  <data name="WizardImageRadio.Content" xml:space="preserve">
+    <value>Obraz lub PDF — prześlij istniejący plan</value>
+  </data>
+  <data name="WizardRoomNameField.PlaceholderText" xml:space="preserve">
+    <value>Nazwa pomieszczenia</value>
+  </data>
+  <data name="WizardRoomWidthField.PlaceholderText" xml:space="preserve">
+    <value>Szerokość (m)</value>
+  </data>
+  <data name="WizardRoomLengthField.PlaceholderText" xml:space="preserve">
+    <value>Długość (m)</value>
+  </data>
+  <data name="WizardRemoveRoomButton.Content" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="WizardAddRoomButton.Content" xml:space="preserve">
+    <value>+ Dodaj pomieszczenie</value>
+  </data>
+  <data name="WizardChooseFileButton.Content" xml:space="preserve">
+    <value>Wybierz plik…</value>
+  </data>
+  <data name="WizardPixelsPerMeterField.Header" xml:space="preserve">
+    <value>Pikseli na metr</value>
+  </data>
+  <data name="WizardStep3Title.Text" xml:space="preserve">
+    <value>3. Szczegóły budynku</value>
+  </data>
+  <data name="WizardWallMaterialExplanation.Text" xml:space="preserve">
+    <value>Domyślny materiał ścian dla automatycznie generowanych pomieszczeń. Poszczególne ściany możesz później zmienić w przestrzeni roboczej.</value>
+  </data>
+  <data name="WizardWallMaterialField.Header" xml:space="preserve">
+    <value>Domyślny materiał ścian</value>
+  </data>
+  <data name="WizardWallMaterialDrywall.Content" xml:space="preserve">
+    <value>Płyta gipsowo-kartonowa</value>
+  </data>
+  <data name="WizardWallMaterialGlassStandard.Content" xml:space="preserve">
+    <value>Szkło (standardowe)</value>
+  </data>
+  <data name="WizardWallMaterialGlassLowE.Content" xml:space="preserve">
+    <value>Szkło (niskoemisyjne)</value>
+  </data>
+  <data name="WizardWallMaterialWood.Content" xml:space="preserve">
+    <value>Drewno</value>
+  </data>
+  <data name="WizardWallMaterialBrick.Content" xml:space="preserve">
+    <value>Cegła</value>
+  </data>
+  <data name="WizardWallMaterialConcrete.Content" xml:space="preserve">
+    <value>Beton</value>
+  </data>
+  <data name="WizardWallMaterialReinforcedConcrete.Content" xml:space="preserve">
+    <value>Żelbet</value>
+  </data>
+  <data name="WizardStep4Title.Text" xml:space="preserve">
+    <value>4. Adapter i pasma</value>
+  </data>
+  <data name="WizardBandsExplanation.Text" xml:space="preserve">
+    <value>Jakie pasma powinno obejmować to badanie? Wykrywanie na żywo odbywa się w przestrzeni roboczej.</value>
+  </data>
+  <data name="WizardBand24Checkbox.Content" xml:space="preserve">
+    <value>2,4 GHz</value>
+  </data>
+  <data name="WizardBand5Checkbox.Content" xml:space="preserve">
+    <value>5 GHz</value>
+  </data>
+  <data name="WizardBand6Checkbox.Content" xml:space="preserve">
+    <value>6 GHz</value>
+  </data>
+  <data name="WizardStep5Title.Text" xml:space="preserve">
+    <value>5. Podsumowanie</value>
+  </data>
+  <data name="WizardReviewNameLabel.Text" xml:space="preserve">
+    <value>Nazwa</value>
+  </data>
+  <data name="WizardReviewSurveyTypeLabel.Text" xml:space="preserve">
+    <value>Typ badania</value>
+  </data>
+  <data name="WizardReviewFloorPlanLabel.Text" xml:space="preserve">
+    <value>Plan pomieszczeń</value>
+  </data>
+  <data name="WizardReviewWallMaterialLabel.Text" xml:space="preserve">
+    <value>Domyślny materiał ścian</value>
+  </data>
+  <data name="WizardReviewBandsLabel.Text" xml:space="preserve">
+    <value>Pasma</value>
+  </data>
+  <data name="WizardBackButton.Content" xml:space="preserve">
+    <value>Wstecz</value>
+  </data>
+  <data name="WizardNextButton.Content" xml:space="preserve">
+    <value>Dalej</value>
+  </data>
+  <data name="WizardCreateSurveyButton.Content" xml:space="preserve">
+    <value>Utwórz badanie</value>
+  </data>
+
+  <!-- Wizard: dynamic (ViewModel-built) strings -->
+  <data name="WizardSurveyTypeSummaryNewDeployment" xml:space="preserve">
+    <value>Nowe wdrożenie — brak punktów dostępowych</value>
+  </data>
+  <data name="WizardSurveyTypeSummaryExistingAuditNoSsid" xml:space="preserve">
+    <value>Audyt istniejącej sieci</value>
+  </data>
+  <data name="WizardSurveyTypeSummaryExistingAuditWithSsidFormat" xml:space="preserve">
+    <value>Audyt istniejącej sieci — „{0}”</value>
+  </data>
+  <data name="WizardFloorPlanSummaryImageFormat" xml:space="preserve">
+    <value>Plan w postaci obrazu/PDF ({0})</value>
+  </data>
+  <data name="WizardFloorPlanSummaryNoFileSelected" xml:space="preserve">
+    <value>nie wybrano pliku</value>
+  </data>
+  <data name="WizardFloorPlanSummaryRoomListFormat" xml:space="preserve">
+    <value>Lista pomieszczeń — {0} {1}</value>
+  </data>
+  <data name="WizardRoomWordSingular" xml:space="preserve">
+    <value>pomieszczenie</value>
+  </data>
+  <data name="WizardRoomWordFew" xml:space="preserve">
+    <value>pomieszczenia</value>
+  </data>
+  <data name="WizardRoomWordMany" xml:space="preserve">
+    <value>pomieszczeń</value>
+  </data>
+  <data name="WizardBandsSummaryNoneSelected" xml:space="preserve">
+    <value>Brak wybranych</value>
+  </data>
+  <data name="WizardSaveSurveyErrorFormat" xml:space="preserve">
+    <value>Nie udało się zapisać badania: {0}</value>
+  </data>
+
+  <!-- Workspace page -->
+  <data name="WorkspaceSelectToolButton.Content" xml:space="preserve">
+    <value>Zaznacz</value>
+  </data>
+  <data name="WorkspaceAddTestPointToolButton.Content" xml:space="preserve">
+    <value>Dodaj punkt pomiarowy</value>
+  </data>
+  <data name="WorkspaceDrawWallToolButton.Content" xml:space="preserve">
+    <value>Rysuj ścianę</value>
+  </data>
+  <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="WorkspaceBackButton.Content" xml:space="preserve">
+    <value>Wstecz</value>
+  </data>
+  <data name="WorkspaceSaveSnapshotButton.Content" xml:space="preserve">
+    <value>Zapisz migawkę</value>
+  </data>
+  <data name="WorkspaceCompareSnapshotsButton.Content" xml:space="preserve">
+    <value>Porównaj</value>
+  </data>
+  <data name="WorkspaceAddFloorButton.Content" xml:space="preserve">
+    <value>+ Dodaj piętro</value>
+  </data>
+  <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
+    <value>Eksportuj</value>
+  </data>
+  <data name="WorkspaceExportTestPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Punkty pomiarowe (CSV)</value>
+  </data>
+  <data name="WorkspaceExportAccessPointsCsvMenuItem.Text" xml:space="preserve">
+    <value>Punkty dostępowe (CSV)</value>
+  </data>
+  <data name="WorkspaceExportSurveyJsonMenuItem.Text" xml:space="preserve">
+    <value>Dane badania (JSON)</value>
+  </data>
+  <data name="WorkspaceExportCoverageReportPdfMenuItem.Text" xml:space="preserve">
+    <value>Raport zasięgu (PDF)</value>
+  </data>
+  <data name="WorkspaceCoverageTab.Header" xml:space="preserve">
+    <value>Zasięg</value>
+  </data>
+  <data name="WorkspaceSignalLegendLabel.Text" xml:space="preserve">
+    <value>Legenda sygnału</value>
+  </data>
+  <data name="WorkspaceLegendExcellent.Text" xml:space="preserve">
+    <value>Doskonały (&#8805; -50dBm)</value>
+  </data>
+  <data name="WorkspaceLegendGood.Text" xml:space="preserve">
+    <value>Dobry (&#8805; -60dBm)</value>
+  </data>
+  <data name="WorkspaceLegendFair.Text" xml:space="preserve">
+    <value>Wystarczający (&#8805; -67dBm)</value>
+  </data>
+  <data name="WorkspaceLegendWeak.Text" xml:space="preserve">
+    <value>Słaby (&#8805; -75dBm)</value>
+  </data>
+  <data name="WorkspaceLegendPoor.Text" xml:space="preserve">
+    <value>Bardzo słaby (&lt; -75dBm)</value>
+  </data>
+  <data name="WorkspacePredictiveOnlyNote.Text" xml:space="preserve">
+    <value>Tylko prognoza na podstawie rozmieszczonych punktów dostępowych — jeszcze bez rzeczywistych pomiarów.</value>
+  </data>
+  <data name="WorkspaceSuggestionsTab.Header" xml:space="preserve">
+    <value>Sugestie</value>
+  </data>
+  <data name="WorkspaceSuggestPlacementsButton.Content" xml:space="preserve">
+    <value>Zaproponuj rozmieszczenie</value>
+  </data>
+  <data name="WorkspaceAdapterTab.Header" xml:space="preserve">
+    <value>Adapter</value>
+  </data>
+  <data name="WorkspaceAdapterField.Header" xml:space="preserve">
+    <value>Adapter</value>
+  </data>
+  <data name="WorkspaceScanButton.Content" xml:space="preserve">
+    <value>Skanuj</value>
+  </data>
+  <data name="WorkspaceOpenLocationSettingsButton.Content" xml:space="preserve">
+    <value>Otwórz ustawienia lokalizacji</value>
+  </data>
+  <data name="WorkspaceGuidedWalkHeader.Text" xml:space="preserve">
+    <value>Prowadzony pomiar terenowy</value>
+  </data>
+  <data name="WorkspaceGuidedWalkExplanation.Text" xml:space="preserve">
+    <value>Wybierz punkty pomiarowe na planie, podejdź do każdego z nich i zarejestruj rzeczywisty odczyt — szum tła wszędzie, a przy audycie istniejącej sieci również sygnał tej sieci.</value>
+  </data>
+  <data name="WorkspaceStartGuidedWalkButton.Content" xml:space="preserve">
+    <value>Rozpocznij pomiar terenowy</value>
+  </data>
+  <data name="WorkspaceConfirmWalkPointButton.Content" xml:space="preserve">
+    <value>Potwierdź przybycie i zarejestruj</value>
+  </data>
+  <data name="WorkspaceCancelWalkButton.Content" xml:space="preserve">
+    <value>Anuluj pomiar</value>
+  </data>
+
+  <!-- Snapshot comparison page -->
+  <data name="SnapshotComparisonTitle.Text" xml:space="preserve">
+    <value>Porównanie migawek</value>
+  </data>
+  <data name="SnapshotComparisonBackButton.Content" xml:space="preserve">
+    <value>Wstecz</value>
+  </data>
+  <data name="SnapshotComparisonLeftField.Header" xml:space="preserve">
+    <value>Pokaż</value>
+  </data>
+  <data name="SnapshotComparisonRightField.Header" xml:space="preserve">
+    <value>Porównaj z</value>
+  </data>
+  <data name="SnapshotComparisonFloorField.Header" xml:space="preserve">
+    <value>Piętro</value>
+  </data>
+  <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
+    <value>Pasmo</value>
+  </data>
+
+  <!-- Workspace: dynamic (ViewModel-built) strings -->
+  <data name="WorkspaceCoveragePercentFormat" xml:space="preserve">
+    <value>{0:0}% powierzchni przy poziomie -67dBm lub lepszym</value>
+  </data>
+  <data name="WorkspaceNoAccessPointsPlaced" xml:space="preserve">
+    <value>Nie rozmieszczono jeszcze żadnych punktów dostępowych.</value>
+  </data>
+  <data name="WorkspaceChannelAbbreviation" xml:space="preserve">
+    <value>kan.</value>
+  </data>
+  <data name="WorkspaceScanStatusLocationDenied" xml:space="preserve">
+    <value>Windows wymaga dostępu do lokalizacji, aby wyświetlić wyniki skanowania WiFi dla tej aplikacji.</value>
+  </data>
+  <data name="WorkspaceScanStatusNoAdapter" xml:space="preserve">
+    <value>Nie można połączyć się z usługą WLAN — czy sprzęt WiFi jest dostępny i włączony?</value>
+  </data>
+  <data name="WorkspaceScanStatusFailed" xml:space="preserve">
+    <value>Skanowanie się nie powiodło. Spróbuj ponownie.</value>
+  </data>
+  <data name="WorkspaceNoNetworksFound" xml:space="preserve">
+    <value>Nie znaleziono pobliskich sieci.</value>
+  </data>
+  <data name="WorkspaceHiddenNetwork" xml:space="preserve">
+    <value>(sieć ukryta)</value>
+  </data>
+  <data name="WorkspaceUnknownBand" xml:space="preserve">
+    <value>nieznane pasmo</value>
+  </data>
+  <data name="WorkspaceNetworkSubtitleFormat" xml:space="preserve">
+    <value>{0} · {1}{2} · {3} · {4:0} dBm</value>
+  </data>
+  <data name="WorkspaceLoadErrorFormat" xml:space="preserve">
+    <value>Nie udało się otworzyć badania: {0}</value>
+  </data>
+  <data name="WorkspaceNoUnmeasuredPoints" xml:space="preserve">
+    <value>Brak punktów do zasugerowania — najpierw narysuj ściany, albo każdy kandydujący punkt ma już pobliski punkt pomiarowy.</value>
+  </data>
+  <data name="WorkspaceGuidedWalkCanceled" xml:space="preserve">
+    <value>Pomiar terenowy anulowany — zarejestrowane dotychczas punkty zostały zachowane.</value>
+  </data>
+  <data name="WorkspaceGuidedWalkComplete" xml:space="preserve">
+    <value>Pomiar terenowy zakończony.</value>
+  </data>
+  <data name="WorkspaceGuidedWalkProgressFormat" xml:space="preserve">
+    <value>Punkt {0} z {1} — podejdź do ({2:0.0}m, {3:0.0}m) i potwierdź.</value>
+  </data>
+  <data name="WorkspaceGuidedWalkNotWalking" xml:space="preserve">
+    <value>Brak aktywnego pomiaru.</value>
+  </data>
+  <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
+    <value>{0} — {1}</value>
+  </data>
+</root>

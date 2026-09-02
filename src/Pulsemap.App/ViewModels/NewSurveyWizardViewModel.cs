@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Services;
@@ -22,6 +24,8 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     private readonly ISurveyFileService _surveyFileService;
     private readonly ISurveyLibraryService _surveyLibraryService;
     private readonly IFloorPlanFilePickerService _filePickerService;
+    private readonly ILocalizationService _localizationService;
+    private readonly IAppLogger _logger;
 
     private byte[]? _pickedImageData;
     private string? _pickedImageExtension;
@@ -29,11 +33,15 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     public NewSurveyWizardViewModel(
         ISurveyFileService surveyFileService,
         ISurveyLibraryService surveyLibraryService,
-        IFloorPlanFilePickerService filePickerService)
+        IFloorPlanFilePickerService filePickerService,
+        ILocalizationService localizationService,
+        IAppLogger logger)
     {
         _surveyFileService = surveyFileService;
         _surveyLibraryService = surveyLibraryService;
         _filePickerService = filePickerService;
+        _localizationService = localizationService;
+        _logger = logger;
 
         Rooms.CollectionChanged += (_, _) =>
         {
@@ -59,7 +67,14 @@ public partial class NewSurveyWizardViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SurveyTypeSummaryDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsExistingNetworkAuditSelected))]
     public partial SurveyType SelectedSurveyType { get; set; } = SurveyType.NewDeployment;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SurveyTypeSummaryDisplay))]
+    public partial string TargetNetworkSsid { get; set; } = string.Empty;
+
+    public bool IsExistingNetworkAuditSelected => SelectedSurveyType == SurveyType.ExistingNetworkAudit;
 
     // Step 2 — Floor plan
     [ObservableProperty]
@@ -124,22 +139,34 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     public bool IsNotReviewStep => !IsReviewStepVisible;
 
     public string SurveyTypeSummaryDisplay => SelectedSurveyType == SurveyType.NewDeployment
-        ? "New deployment — no access points yet"
-        : "Existing network audit";
+        ? _localizationService.GetString("WizardSurveyTypeSummaryNewDeployment")
+        : string.IsNullOrWhiteSpace(TargetNetworkSsid)
+            ? _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditNoSsid")
+            : string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditWithSsidFormat"), TargetNetworkSsid.Trim());
 
     public string FloorPlanSummaryDisplay => IsImageStyleSelected
-        ? $"Image/PDF floor plan ({SelectedImageFileName ?? "no file selected"})"
-        : $"Room list — {Rooms.Count} room{(Rooms.Count == 1 ? string.Empty : "s")}";
+        ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryImageFormat"), SelectedImageFileName ?? _localizationService.GetString("WizardFloorPlanSummaryNoFileSelected"))
+        : string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryRoomListFormat"), Rooms.Count, _localizationService.GetString(RoomCountWordKey(Rooms.Count)));
+
+    // Polish needs three plural forms (1 / 2-4 / 5+, with 11-14 folding into the "many" form even
+    // when the last digit would otherwise say "few") — English only has two, so its "few" and
+    // "many" resource entries are identical and this collapses to the usual singular/plural check.
+    private static string RoomCountWordKey(int count) => count switch
+    {
+        1 => "WizardRoomWordSingular",
+        _ when count % 10 is >= 2 and <= 4 && count % 100 is < 12 or > 14 => "WizardRoomWordFew",
+        _ => "WizardRoomWordMany",
+    };
 
     public string DefaultWallMaterialDisplay => DefaultWallMaterial switch
     {
-        WallMaterial.Drywall => "Drywall",
-        WallMaterial.GlassStandard => "Glass (standard)",
-        WallMaterial.GlassLowE => "Glass (low-E)",
-        WallMaterial.Wood => "Wood",
-        WallMaterial.Brick => "Brick",
-        WallMaterial.Concrete => "Concrete",
-        WallMaterial.ReinforcedConcrete => "Reinforced concrete",
+        WallMaterial.Drywall => _localizationService.GetString("WizardWallMaterialDrywall.Content"),
+        WallMaterial.GlassStandard => _localizationService.GetString("WizardWallMaterialGlassStandard.Content"),
+        WallMaterial.GlassLowE => _localizationService.GetString("WizardWallMaterialGlassLowE.Content"),
+        WallMaterial.Wood => _localizationService.GetString("WizardWallMaterialWood.Content"),
+        WallMaterial.Brick => _localizationService.GetString("WizardWallMaterialBrick.Content"),
+        WallMaterial.Concrete => _localizationService.GetString("WizardWallMaterialConcrete.Content"),
+        WallMaterial.ReinforcedConcrete => _localizationService.GetString("WizardWallMaterialReinforcedConcrete.Content"),
         _ => DefaultWallMaterial.ToString(),
     };
 
@@ -150,20 +177,20 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             var parts = new List<string>();
             if (Includes24Ghz)
             {
-                parts.Add("2.4 GHz");
+                parts.Add(_localizationService.GetString("WizardBand24Checkbox.Content"));
             }
 
             if (Includes5Ghz)
             {
-                parts.Add("5 GHz");
+                parts.Add(_localizationService.GetString("WizardBand5Checkbox.Content"));
             }
 
             if (Includes6Ghz)
             {
-                parts.Add("6 GHz");
+                parts.Add(_localizationService.GetString("WizardBand6Checkbox.Content"));
             }
 
-            return parts.Count == 0 ? "None selected" : string.Join(", ", parts);
+            return parts.Count == 0 ? _localizationService.GetString("WizardBandsSummaryNoneSelected") : string.Join(", ", parts);
         }
     }
 
@@ -255,7 +282,8 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            ErrorMessage = $"Couldn't save the survey: {ex.Message}";
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSaveSurveyErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync("Failed to create survey.", ex);
         }
         finally
         {
@@ -301,8 +329,9 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             Name = SurveyName.Trim(),
             SiteDescription = string.IsNullOrWhiteSpace(SiteDescription) ? null : SiteDescription.Trim(),
             Type = SelectedSurveyType,
+            TargetNetworkSsid = IsExistingNetworkAuditSelected && !string.IsNullOrWhiteSpace(TargetNetworkSsid) ? TargetNetworkSsid.Trim() : null,
             TargetBands = bands,
-            Floor = floor,
+            Floors = [floor],
         };
     }
 

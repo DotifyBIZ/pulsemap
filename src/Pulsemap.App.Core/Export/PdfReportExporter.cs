@@ -28,8 +28,15 @@ public sealed class PdfReportExporter : IReportExporter
         ArgumentNullException.ThrowIfNull(survey);
         ArgumentNullException.ThrowIfNull(destination);
 
+        // The PdfSharp calls below are synchronous CPU/disk work with no true async path — run
+        // them off the calling thread so awaiting this from the UI thread doesn't block it.
+        return Task.Run(() => WritePdf(survey, destination, cancellationToken), cancellationToken);
+    }
+
+    private static void WritePdf(Survey survey, Stream destination, CancellationToken cancellationToken)
+    {
         using var document = new PdfDocument();
-        var writer = new ReportWriter(document);
+        using var writer = new ReportWriter(document);
 
         writer.DrawTitle("Pulsemap Coverage Report");
         writer.DrawLine(survey.Name, HeadingFont);
@@ -41,35 +48,41 @@ public sealed class PdfReportExporter : IReportExporter
         writer.DrawLine($"Generated {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm} UTC", BodyFont);
         writer.DrawGap();
 
-        writer.DrawLine("Floor summary", HeadingFont);
-        writer.DrawLine($"Walls: {survey.Floor.Walls.Count}", BodyFont);
-        writer.DrawLine($"Test points: {survey.Floor.TestPoints.Count}", BodyFont);
-        writer.DrawLine($"Access points: {survey.Floor.AccessPoints.Count}", BodyFont);
-        writer.DrawGap();
+        foreach (var floor in survey.Floors)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-        writer.DrawLine("Access point recommendations", HeadingFont);
-        if (survey.Floor.AccessPoints.Count == 0)
-        {
-            writer.DrawLine("No access points suggested or placed yet.", BodyFont);
-        }
-        else
-        {
-            foreach (var accessPoint in survey.Floor.AccessPoints)
+            writer.DrawLine(floor.IsOutdoor ? $"{floor.Name} (outdoor)" : floor.Name, HeadingFont);
+            writer.DrawLine($"Walls: {floor.Walls.Count}", BodyFont);
+            writer.DrawLine($"Test points: {floor.TestPoints.Count}", BodyFont);
+            writer.DrawLine($"Access points: {floor.AccessPoints.Count}", BodyFont);
+            writer.DrawGap();
+
+            writer.DrawLine("Access point recommendations", HeadingFont);
+            if (floor.AccessPoints.Count == 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                string overrideNote = accessPoint.IsUserOverride ? " [user-edited]" : string.Empty;
-                writer.DrawLine($"{accessPoint.Label} — ({accessPoint.Position.X:0.0}, {accessPoint.Position.Y:0.0}){overrideNote}", BodyFont);
-
-                foreach (var (band, radio) in accessPoint.Radios.OrderBy(radioEntry => radioEntry.Key))
+                writer.DrawLine("No access points suggested or placed yet.", BodyFont);
+            }
+            else
+            {
+                foreach (var accessPoint in floor.AccessPoints)
                 {
-                    writer.DrawLine($"    {FormatBand(band)}: {radio.TransmitPowerDbm:0} dBm, channel {radio.Channel}", BodyFont);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string overrideNote = accessPoint.IsUserOverride ? " [user-edited]" : string.Empty;
+                    writer.DrawLine($"{accessPoint.Label} — ({accessPoint.Position.X:0.0}, {accessPoint.Position.Y:0.0}){overrideNote}", BodyFont);
+
+                    foreach (var (band, radio) in accessPoint.Radios.OrderBy(radioEntry => radioEntry.Key))
+                    {
+                        writer.DrawLine($"    {FormatBand(band)}: {radio.TransmitPowerDbm:0} dBm, channel {radio.Channel}", BodyFont);
+                    }
                 }
             }
+
+            writer.DrawGap();
         }
 
         document.Save(destination);
-        return Task.CompletedTask;
     }
 
     private static string FormatBand(Band band) => band switch
@@ -80,7 +93,7 @@ public sealed class PdfReportExporter : IReportExporter
         _ => band.ToString(),
     };
 
-    private sealed class ReportWriter
+    private sealed class ReportWriter : IDisposable
     {
         private readonly PdfDocument _document;
         private PdfPage _page;
@@ -117,9 +130,12 @@ public sealed class PdfReportExporter : IReportExporter
                 return;
             }
 
+            _graphics.Dispose();
             _page = _document.AddPage();
             _graphics = XGraphics.FromPdfPage(_page);
             _y = MarginPoints;
         }
+
+        public void Dispose() => _graphics.Dispose();
     }
 }

@@ -24,11 +24,11 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock Text="New Survey" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock Text="Set up a survey — you'll draw walls and collect measurements in the workspace." FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+                <TextBlock x:Uid="WizardTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock x:Uid="WizardSubtitle" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
-            <Button Grid.Column="1" VerticalAlignment="Top" Content="Cancel" Click="Cancel_Click" />
+            <Button x:Uid="WizardCancelButton" Grid.Column="1" VerticalAlignment="Top" Click="Cancel_Click" />
         </Grid>
 
         <ScrollViewer Grid.Row="1" Margin="0,24,0,0" HorizontalAlignment="Left" HorizontalScrollBarVisibility="Disabled">
@@ -36,47 +36,49 @@
                 <Grid>
                     <!-- Step 1: Basics -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsBasicsStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock Text="1. Basics" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep1Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
                         <TextBox
-                            Header="Survey name"
-                            PlaceholderText="e.g. Riverside Distribution Center"
+                            x:Uid="WizardSurveyNameField"
                             Text="{x:Bind ViewModel.SurveyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBox
-                            Header="Site description (optional)"
-                            PlaceholderText="A short note about this site"
+                            x:Uid="WizardSiteDescriptionField"
                             AcceptsReturn="True"
                             TextWrapping="Wrap"
                             Height="80"
                             Text="{x:Bind ViewModel.SiteDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <StackPanel Spacing="8">
-                            <TextBlock Text="What are you surveying?" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
+                            <TextBlock x:Uid="WizardSurveyTypeLabel" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
                             <RadioButton
+                                x:Uid="WizardNewDeploymentRadio"
                                 x:Name="NewDeploymentRadio"
-                                Content="New deployment — no access points yet"
                                 GroupName="SurveyType"
                                 IsChecked="True"
                                 Checked="SurveyTypeRadio_Checked" />
                             <RadioButton
+                                x:Uid="WizardExistingAuditRadio"
                                 x:Name="ExistingAuditRadio"
-                                Content="Existing network — auditing what's already there"
                                 GroupName="SurveyType"
                                 Checked="SurveyTypeRadio_Checked" />
                         </StackPanel>
+                        <TextBox
+                            x:Uid="WizardTargetSsidField"
+                            Visibility="{x:Bind ViewModel.IsExistingNetworkAuditSelected, Mode=OneWay}"
+                            Text="{x:Bind ViewModel.TargetNetworkSsid, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
                     <!-- Step 2: Floor plan -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsFloorPlanStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock Text="2. Floor plan" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep2Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
                         <StackPanel Spacing="8">
                             <RadioButton
+                                x:Uid="WizardRoomListRadio"
                                 x:Name="RoomListRadio"
-                                Content="Room list — describe rooms by name and size"
                                 GroupName="FloorPlanStyle"
                                 IsChecked="True"
                                 Checked="FloorPlanStyleRadio_Checked" />
                             <RadioButton
+                                x:Uid="WizardImageRadio"
                                 x:Name="ImageRadio"
-                                Content="Image or PDF — upload an existing floor plan"
                                 GroupName="FloorPlanStyle"
                                 Checked="FloorPlanStyleRadio_Checked" />
                         </StackPanel>
@@ -92,82 +94,82 @@
                                                 <ColumnDefinition Width="90" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" PlaceholderText="Room name" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                            <NumberBox Grid.Column="1" PlaceholderText="Width (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind WidthMeters, Mode=TwoWay}" />
-                                            <NumberBox Grid.Column="2" PlaceholderText="Length (m)" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind LengthMeters, Mode=TwoWay}" />
-                                            <Button Grid.Column="3" Content="Remove" Tag="{x:Bind}" Click="RemoveRoom_Click" />
+                                            <TextBox x:Uid="WizardRoomNameField" Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <NumberBox x:Uid="WizardRoomWidthField" Grid.Column="1" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind WidthMeters, Mode=TwoWay}" />
+                                            <NumberBox x:Uid="WizardRoomLengthField" Grid.Column="2" SpinButtonPlacementMode="Compact" SmallChange="1" Value="{x:Bind LengthMeters, Mode=TwoWay}" />
+                                            <Button x:Uid="WizardRemoveRoomButton" Grid.Column="3" Tag="{x:Bind}" Click="RemoveRoom_Click" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Content="+ Add room" Command="{x:Bind ViewModel.AddRoomCommand}" />
+                            <Button x:Uid="WizardAddRoomButton" Command="{x:Bind ViewModel.AddRoomCommand}" />
                         </StackPanel>
 
                         <StackPanel Visibility="{x:Bind ViewModel.IsImageStyleSelected, Mode=OneWay}" Spacing="12">
-                            <Button Content="Choose file…" Command="{x:Bind ViewModel.PickImageCommand}" />
+                            <Button x:Uid="WizardChooseFileButton" Command="{x:Bind ViewModel.PickImageCommand}" />
                             <TextBlock Text="{x:Bind ViewModel.SelectedImageFileName, Mode=OneWay}" Foreground="{StaticResource Gray500Brush}" FontSize="{StaticResource FontSizeSm}" />
-                            <NumberBox Header="Pixels per meter" SmallChange="1" Value="{x:Bind ViewModel.PixelsPerMeter, Mode=TwoWay}" />
+                            <NumberBox x:Uid="WizardPixelsPerMeterField" SmallChange="1" Value="{x:Bind ViewModel.PixelsPerMeter, Mode=TwoWay}" />
                         </StackPanel>
                     </StackPanel>
 
                     <!-- Step 3: Building details -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsBuildingDetailsStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock Text="3. Building details" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep3Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
                         <TextBlock
-                            Text="Default wall material for auto-generated room walls. You can override individual walls later in the workspace."
+                            x:Uid="WizardWallMaterialExplanation"
                             TextWrapping="Wrap"
                             FontSize="{StaticResource FontSizeSm}"
                             Foreground="{StaticResource Gray500Brush}" />
-                        <ComboBox Header="Default wall material" SelectedIndex="0" SelectionChanged="WallMaterialComboBox_SelectionChanged">
-                            <ComboBoxItem Content="Drywall" Tag="Drywall" />
-                            <ComboBoxItem Content="Glass (standard)" Tag="GlassStandard" />
-                            <ComboBoxItem Content="Glass (low-E)" Tag="GlassLowE" />
-                            <ComboBoxItem Content="Wood" Tag="Wood" />
-                            <ComboBoxItem Content="Brick" Tag="Brick" />
-                            <ComboBoxItem Content="Concrete" Tag="Concrete" />
-                            <ComboBoxItem Content="Reinforced concrete" Tag="ReinforcedConcrete" />
+                        <ComboBox x:Uid="WizardWallMaterialField" SelectedIndex="0" SelectionChanged="WallMaterialComboBox_SelectionChanged">
+                            <ComboBoxItem x:Uid="WizardWallMaterialDrywall" Tag="Drywall" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialGlassStandard" Tag="GlassStandard" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialGlassLowE" Tag="GlassLowE" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialWood" Tag="Wood" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialBrick" Tag="Brick" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialConcrete" Tag="Concrete" />
+                            <ComboBoxItem x:Uid="WizardWallMaterialReinforcedConcrete" Tag="ReinforcedConcrete" />
                         </ComboBox>
                     </StackPanel>
 
                     <!-- Step 4: Adapter & bands -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsAdapterBandsStepVisible, Mode=OneWay}" Spacing="16">
-                        <TextBlock Text="4. Adapter &amp; bands" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep4Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
                         <TextBlock
-                            Text="Which bands should this survey cover? Live adapter detection happens in the workspace."
+                            x:Uid="WizardBandsExplanation"
                             TextWrapping="Wrap"
                             FontSize="{StaticResource FontSizeSm}"
                             Foreground="{StaticResource Gray500Brush}" />
-                        <CheckBox Content="2.4 GHz" IsChecked="{x:Bind ViewModel.Includes24Ghz, Mode=TwoWay}" />
-                        <CheckBox Content="5 GHz" IsChecked="{x:Bind ViewModel.Includes5Ghz, Mode=TwoWay}" />
-                        <CheckBox Content="6 GHz" IsChecked="{x:Bind ViewModel.Includes6Ghz, Mode=TwoWay}" />
+                        <CheckBox x:Uid="WizardBand24Checkbox" IsChecked="{x:Bind ViewModel.Includes24Ghz, Mode=TwoWay}" />
+                        <CheckBox x:Uid="WizardBand5Checkbox" IsChecked="{x:Bind ViewModel.Includes5Ghz, Mode=TwoWay}" />
+                        <CheckBox x:Uid="WizardBand6Checkbox" IsChecked="{x:Bind ViewModel.Includes6Ghz, Mode=TwoWay}" />
                     </StackPanel>
 
                     <!-- Step 5: Review -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}" Spacing="16">
-                        <TextBlock Text="5. Review" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep5Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
 
                         <StackPanel Spacing="2">
-                            <TextBlock Text="Name" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock x:Uid="WizardReviewNameLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
                             <TextBlock Text="{x:Bind ViewModel.SurveyName, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock Text="Survey type" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock x:Uid="WizardReviewSurveyTypeLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
                             <TextBlock Text="{x:Bind ViewModel.SurveyTypeSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock Text="Floor plan" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock x:Uid="WizardReviewFloorPlanLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
                             <TextBlock Text="{x:Bind ViewModel.FloorPlanSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock Text="Default wall material" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock x:Uid="WizardReviewWallMaterialLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
                             <TextBlock Text="{x:Bind ViewModel.DefaultWallMaterialDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock Text="Bands" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                            <TextBlock x:Uid="WizardReviewBandsLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
                             <TextBlock Text="{x:Bind ViewModel.BandsSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
                         </StackPanel>
 
@@ -178,23 +180,35 @@
         </ScrollViewer>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="12" Margin="0,20,0,0">
-            <Button Content="Back" Command="{x:Bind ViewModel.BackCommand}" />
+            <Button x:Uid="WizardBackButton" Command="{x:Bind ViewModel.BackCommand}" />
             <Button
-                Content="Next"
-                Background="{StaticResource Primary600Brush}"
-                Foreground="White"
-                CornerRadius="6"
-                Padding="16,10"
+                x:Uid="WizardNextButton"
+                Style="{StaticResource PrimaryButtonStyle}"
                 Command="{x:Bind ViewModel.NextCommand}"
-                Visibility="{x:Bind ViewModel.IsNotReviewStep, Mode=OneWay}" />
+                Visibility="{x:Bind ViewModel.IsNotReviewStep, Mode=OneWay}">
+                <Button.Resources>
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                </Button.Resources>
+            </Button>
             <Button
-                Content="Create Survey"
-                Background="{StaticResource Primary600Brush}"
-                Foreground="White"
-                CornerRadius="6"
-                Padding="16,10"
+                x:Uid="WizardCreateSurveyButton"
+                Style="{StaticResource PrimaryButtonStyle}"
                 Command="{x:Bind ViewModel.CreateSurveyCommand}"
-                Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}" />
+                Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}">
+                <Button.Resources>
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                </Button.Resources>
+            </Button>
             <ProgressRing IsActive="{x:Bind ViewModel.IsCreating, Mode=OneWay}" Width="24" Height="24" />
         </StackPanel>
     </Grid>
