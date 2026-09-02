@@ -54,6 +54,8 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     public event EventHandler<Point2D>? DeleteRequested;
 
+    public event EventHandler<Point2D>? WallSelectRequested;
+
     /// <summary>
     /// Renders walls/points/heatmap immediately, plus (for an image-style floor plan) the
     /// background image/PDF once it's decoded — decoding only happens the first time a given
@@ -61,7 +63,13 @@ public sealed partial class FloorPlanCanvas : UserControl
     /// newer <see cref="RenderAsync"/> call starts while this one is still decoding, this call
     /// abandons itself rather than overwriting the newer render's result.
     /// </summary>
-    public async Task RenderAsync(Floor floor, IReadOnlyList<CoverageSample> heatmap, Point2D? walkTarget = null, CancellationToken cancellationToken = default)
+    public async Task RenderAsync(
+        Floor floor,
+        IReadOnlyList<CoverageSample> heatmap,
+        Point2D? walkTarget = null,
+        IReadOnlyCollection<Wall>? selectedWalls = null,
+        IReadOnlyList<Point2D>? remainingWalkPoints = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(floor);
         ArgumentNullException.ThrowIfNull(heatmap);
@@ -104,7 +112,7 @@ public sealed partial class FloorPlanCanvas : UserControl
             _backgroundHeightMeters = 0;
         }
 
-        RenderCore(floor, heatmap, walkTarget);
+        RenderCore(floor, heatmap, walkTarget, selectedWalls, remainingWalkPoints);
     }
 
     private static Task<(int PixelWidth, int PixelHeight)> LoadAndMeasureAsync(BitmapImage bitmap, string filePath)
@@ -132,7 +140,12 @@ public sealed partial class FloorPlanCanvas : UserControl
         return completion.Task;
     }
 
-    private void RenderCore(Floor floor, IReadOnlyList<CoverageSample> heatmap, Point2D? walkTarget)
+    private void RenderCore(
+        Floor floor,
+        IReadOnlyList<CoverageSample> heatmap,
+        Point2D? walkTarget,
+        IReadOnlyCollection<Wall>? selectedWalls,
+        IReadOnlyList<Point2D>? remainingWalkPoints)
     {
         _bounds = ComputeBounds(floor);
         RootGrid.Width = _bounds.WidthMeters * PixelsPerMeter;
@@ -156,7 +169,7 @@ public sealed partial class FloorPlanCanvas : UserControl
 
         foreach (var wall in floor.Walls)
         {
-            WallsLayer.Children.Add(BuildWallLine(wall));
+            WallsLayer.Children.Add(BuildWallLine(wall, selectedWalls?.Contains(wall) == true));
         }
 
         foreach (var testPoint in floor.TestPoints)
@@ -167,6 +180,11 @@ public sealed partial class FloorPlanCanvas : UserControl
         foreach (var accessPoint in floor.AccessPoints)
         {
             MarkersLayer.Children.Add(BuildAccessPointMarker(accessPoint));
+        }
+
+        foreach (var upcoming in remainingWalkPoints ?? [])
+        {
+            MarkersLayer.Children.Add(BuildRemainingWalkPointMarker(upcoming));
         }
 
         if (walkTarget is { } target)
@@ -191,7 +209,7 @@ public sealed partial class FloorPlanCanvas : UserControl
         return cell;
     }
 
-    private Line BuildWallLine(Wall wall)
+    private Line BuildWallLine(Wall wall, bool isSelected)
     {
         var (x1, y1) = ToPixels(wall.Start);
         var (x2, y2) = ToPixels(wall.End);
@@ -201,8 +219,8 @@ public sealed partial class FloorPlanCanvas : UserControl
             Y1 = y1,
             X2 = x2,
             Y2 = y2,
-            Stroke = new SolidColorBrush(Colors.DimGray),
-            StrokeThickness = WallStrokeThicknessPx,
+            Stroke = new SolidColorBrush(isSelected ? Colors.DodgerBlue : Colors.DimGray),
+            StrokeThickness = isSelected ? WallStrokeThicknessPx + 2 : WallStrokeThicknessPx,
             StrokeStartLineCap = PenLineCap.Round,
             StrokeEndLineCap = PenLineCap.Round,
         };
@@ -259,6 +277,23 @@ public sealed partial class FloorPlanCanvas : UserControl
         return marker;
     }
 
+    private Ellipse BuildRemainingWalkPointMarker(Point2D position)
+    {
+        var (px, py) = ToPixels(position);
+        double diameter = WalkTargetRadiusPx;
+        var marker = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Stroke = new SolidColorBrush(Colors.MediumPurple),
+            StrokeThickness = 1.5,
+            Opacity = 0.5,
+        };
+        Canvas.SetLeft(marker, px - (diameter / 2));
+        Canvas.SetTop(marker, py - (diameter / 2));
+        return marker;
+    }
+
     private static Color HeatmapColor(double signalDbm) => signalDbm switch
     {
         >= -50 => Colors.Green,
@@ -297,6 +332,9 @@ public sealed partial class FloorPlanCanvas : UserControl
                 break;
 
             case WorkspaceTool.Select:
+                WallSelectRequested?.Invoke(this, meters);
+                break;
+
             default:
                 break;
         }

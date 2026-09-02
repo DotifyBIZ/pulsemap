@@ -26,6 +26,7 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.TestPointRequested += async (_, position) => await ViewModel.AddTestPointAsync(position);
         PlanCanvas.WallRequested += async (_, span) => await ViewModel.AddWallAsync(span.Start, span.End);
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
+        PlanCanvas.WallSelectRequested += async (_, position) => await OnSelectClickAsync(position);
         SelectToolButton.IsChecked = true;
     }
 
@@ -50,13 +51,59 @@ public sealed partial class WorkspacePage : Page
 
         try
         {
-            await PlanCanvas.RenderAsync(ViewModel.SelectedFloor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
+            await PlanCanvas.RenderAsync(ViewModel.SelectedFloor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint, ViewModel.SelectedWalls, ViewModel.RemainingWalkPoints);
         }
         catch (Exception ex)
         {
             await _logger.LogErrorAsync("Failed to render the floor plan canvas.", ex);
         }
     }
+
+    private async Task OnSelectClickAsync(Point2D position)
+    {
+        switch (ViewModel.FindNearestSelectable(position))
+        {
+            case Wall wall:
+                ViewModel.ToggleWallSelection(wall);
+                break;
+
+            case TestPoint testPoint:
+                await ConfirmRecaptureAsync(testPoint);
+                break;
+        }
+    }
+
+    private async Task ConfirmRecaptureAsync(TestPoint testPoint)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceRecaptureDialogTitle"),
+            Content = _localizationService.GetString("WorkspaceRecaptureDialogContent"),
+            PrimaryButtonText = _localizationService.GetString("WorkspaceRecaptureDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceRecaptureDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await ViewModel.RecaptureTestPointAsync(testPoint);
+        }
+    }
+
+    private async void ApplyWallMaterial_Click(object sender, RoutedEventArgs e)
+    {
+        if (WallMaterialSelector.SelectedItem is not ComboBoxItem { Tag: string tag })
+        {
+            return;
+        }
+
+        WallMaterial? material = string.IsNullOrEmpty(tag) ? null : Enum.Parse<WallMaterial>(tag);
+        double? thickness = double.IsNaN(WallThicknessInput.Value) ? null : WallThicknessInput.Value;
+        await ViewModel.ApplyMaterialToSelectedWallsAsync(material, thickness);
+    }
+
+    private void ClearWallSelection_Click(object sender, RoutedEventArgs e) => ViewModel.ClearWallSelection();
 
     private void PopulateBandSelector()
     {
@@ -143,5 +190,10 @@ public sealed partial class WorkspacePage : Page
             : ReferenceEquals(sender, DrawWallToolButton) ? WorkspaceTool.DrawWall
             : ReferenceEquals(sender, DeleteToolButton) ? WorkspaceTool.DeleteElement
             : WorkspaceTool.Select;
+
+        if (PlanCanvas.Tool != WorkspaceTool.Select)
+        {
+            ViewModel.ClearWallSelection();
+        }
     }
 }

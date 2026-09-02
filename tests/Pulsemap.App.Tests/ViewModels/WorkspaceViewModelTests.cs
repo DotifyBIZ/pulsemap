@@ -126,6 +126,91 @@ public sealed class WorkspaceViewModelTests
     }
 
     [Fact]
+    public async Task ToggleWallSelection_TogglesMembershipAndCount()
+    {
+        var floor = SquareRoomFloor(10);
+        var sut = await LoadedViewModelAsync(floor);
+        var wall = floor.Walls[0];
+
+        sut.ToggleWallSelection(wall);
+
+        Assert.Equal(1, sut.SelectedWallCount);
+        Assert.Contains(wall, sut.SelectedWalls);
+        Assert.True(sut.HasWallSelection);
+
+        sut.ToggleWallSelection(wall);
+
+        Assert.Equal(0, sut.SelectedWallCount);
+        Assert.DoesNotContain(wall, sut.SelectedWalls);
+        Assert.False(sut.HasWallSelection);
+    }
+
+    [Fact]
+    public async Task ApplyMaterialToSelectedWallsAsync_SetsMaterialOnEverySelectedWallAndClearsSelection()
+    {
+        var floor = SquareRoomFloor(10);
+        var sut = await LoadedViewModelAsync(floor);
+        sut.ToggleWallSelection(floor.Walls[0]);
+        sut.ToggleWallSelection(floor.Walls[1]);
+
+        await sut.ApplyMaterialToSelectedWallsAsync(WallMaterial.Concrete, 0.2);
+
+        Assert.Equal(WallMaterial.Concrete, floor.Walls[0].Material);
+        Assert.Equal(0.2, floor.Walls[0].ThicknessMeters);
+        Assert.Equal(WallMaterial.Concrete, floor.Walls[1].Material);
+        Assert.Null(floor.Walls[2].Material);
+        Assert.Equal(0, sut.SelectedWallCount);
+        Assert.NotEmpty(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
+    public async Task FindNearestSelectable_ReturnsWallOrTestPointWithinToleranceElseNull()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.TestPoints.Add(new TestPoint { Position = new Point2D(5, 5) });
+        var sut = await LoadedViewModelAsync(floor);
+
+        Assert.IsType<TestPoint>(sut.FindNearestSelectable(new Point2D(5.1, 5.1)));
+        Assert.IsType<Wall>(sut.FindNearestSelectable(new Point2D(0, 0.05)));
+        Assert.Null(sut.FindNearestSelectable(new Point2D(5, 8)));
+    }
+
+    [Fact]
+    public async Task RecaptureTestPointAsync_ReplacesExistingTestPointWithNewScan()
+    {
+        var floor = SquareRoomFloor(10);
+        var existing = new TestPoint { Position = new Point2D(5, 5) };
+        floor.TestPoints.Add(existing);
+        _wlanAdapterService.DefaultScanResult = new WlanScanResult(WlanScanStatus.Success, [
+            new WlanNetworkReading("Neighbor", "AA:AA:AA:AA:AA:AA", Band.TwoPointFourGhz, 6, -70),
+        ]);
+        var sut = await LoadedViewModelWithAdapterAsync(floor);
+
+        await sut.RecaptureTestPointAsync(existing);
+
+        var rebuilt = Assert.Single(sut.SelectedFloor!.TestPoints);
+        Assert.NotSame(existing, rebuilt);
+        Assert.Equal(new Point2D(5, 5), rebuilt.Position);
+        Assert.Single(rebuilt.InterferenceReadings);
+        Assert.NotEmpty(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
+    public async Task RecaptureTestPointAsync_ScanFails_SetsErrorMessageAndKeepsOriginal()
+    {
+        var floor = SquareRoomFloor(10);
+        var existing = new TestPoint { Position = new Point2D(5, 5) };
+        floor.TestPoints.Add(existing);
+        _wlanAdapterService.DefaultScanResult = new WlanScanResult(WlanScanStatus.NoAdapter, []);
+        var sut = await LoadedViewModelWithAdapterAsync(floor);
+
+        await sut.RecaptureTestPointAsync(existing);
+
+        Assert.Same(existing, Assert.Single(sut.SelectedFloor!.TestPoints));
+        Assert.True(sut.HasError);
+    }
+
+    [Fact]
     public async Task SuggestPlacementsCommand_RemovesNonOverrideApsButKeepsUserOverrides()
     {
         var floor = SquareRoomFloor(10);
@@ -298,6 +383,76 @@ public sealed class WorkspaceViewModelTests
         Assert.False(sut.IsGuidedWalkActive);
         Assert.Single(sut.SelectedFloor!.TestPoints);
         Assert.True(sut.HasGuidedWalkStatusMessage);
+    }
+
+    [Fact]
+    public async Task StartGuidedWalkCommand_PersistsPendingPointsAndBandToFloor()
+    {
+        var floor = SquareRoomFloor(10);
+        var expectedPoints = MeasurementPointSuggester.SuggestPoints(floor);
+        var sut = await LoadedViewModelWithAdapterAsync(floor);
+
+        await sut.StartGuidedWalkCommand.ExecuteAsync(null);
+
+        Assert.Equal(expectedPoints, sut.SelectedFloor!.PendingGuidedWalkPoints);
+        Assert.Equal(Band.TwoPointFourGhz, sut.SelectedFloor.PendingGuidedWalkBand);
+        Assert.NotEmpty(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
+    public async Task SkipWalkPointCommand_DequeuesWithoutCapturingAndAdvances()
+    {
+        var floor = SquareRoomFloor(10);
+        var expectedPoints = MeasurementPointSuggester.SuggestPoints(floor);
+        var sut = await LoadedViewModelWithAdapterAsync(floor);
+        await sut.StartGuidedWalkCommand.ExecuteAsync(null);
+
+        await sut.SkipWalkPointCommand.ExecuteAsync(null);
+
+        Assert.Empty(sut.SelectedFloor!.TestPoints);
+        Assert.True(sut.IsGuidedWalkActive);
+        Assert.Equal(expectedPoints[1], sut.CurrentWalkPoint);
+        Assert.DoesNotContain(expectedPoints[0], sut.SelectedFloor.PendingGuidedWalkPoints);
+    }
+
+    [Fact]
+    public async Task CancelGuidedWalkCommand_ClearsPendingPointsOnFloor()
+    {
+        var floor = SquareRoomFloor(10);
+        var sut = await LoadedViewModelWithAdapterAsync(floor);
+        await sut.StartGuidedWalkCommand.ExecuteAsync(null);
+
+        await sut.CancelGuidedWalkCommand.ExecuteAsync(null);
+
+        Assert.Empty(sut.SelectedFloor!.PendingGuidedWalkPoints);
+    }
+
+    [Fact]
+    public async Task SwitchingToFloorWithPendingWalk_ResumesWalkAndSwitchingAwayPauses()
+    {
+        var floorA = SquareRoomFloor(10);
+        var floorB = new Floor { PlanSource = new RoomListSource() };
+        _surveyFileService.SurveyToReturn = new Survey
+        {
+            Name = "Test Survey",
+            Type = SurveyType.NewDeployment,
+            TargetBands = [Band.TwoPointFourGhz],
+            Floors = [floorA, floorB],
+        };
+        _wlanAdapterService.AdaptersToReturn = [new NetworkAdapterInfo(Guid.NewGuid(), "Test Adapter")];
+        var sut = CreateSut();
+        await sut.LoadAsync(FilePath);
+        var expectedPoints = MeasurementPointSuggester.SuggestPoints(floorA);
+        await sut.StartGuidedWalkCommand.ExecuteAsync(null);
+
+        sut.SelectedFloor = floorB;
+
+        Assert.False(sut.IsGuidedWalkActive);
+
+        sut.SelectedFloor = floorA;
+
+        Assert.True(sut.IsGuidedWalkActive);
+        Assert.Equal(expectedPoints[0], sut.CurrentWalkPoint);
     }
 
     [Fact]

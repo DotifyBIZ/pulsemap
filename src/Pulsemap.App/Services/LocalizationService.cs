@@ -110,6 +110,11 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Label",
             ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Save",
             ["WorkspaceSaveSnapshotDialogCloseButton"] = "Cancel",
+            ["WorkspaceWallSelectionCountFormat"] = "Selected walls: {0}",
+            ["WorkspaceRecaptureDialogTitle"] = "Recapture this point?",
+            ["WorkspaceRecaptureDialogContent"] = "This replaces its existing reading with a new scan from here.",
+            ["WorkspaceRecaptureDialogPrimaryButton"] = "Recapture",
+            ["WorkspaceRecaptureDialogCloseButton"] = "Cancel",
 
             ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
         },
@@ -180,6 +185,11 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Etykieta",
             ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Zapisz",
             ["WorkspaceSaveSnapshotDialogCloseButton"] = "Anuluj",
+            ["WorkspaceWallSelectionCountFormat"] = "Zaznaczone ściany: {0}",
+            ["WorkspaceRecaptureDialogTitle"] = "Zarejestrować ten punkt ponownie?",
+            ["WorkspaceRecaptureDialogContent"] = "Zastąpi to jego dotychczasowy odczyt nowym skanem z tego miejsca.",
+            ["WorkspaceRecaptureDialogPrimaryButton"] = "Zarejestruj ponownie",
+            ["WorkspaceRecaptureDialogCloseButton"] = "Anuluj",
 
             ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
         },
