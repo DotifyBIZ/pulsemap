@@ -15,7 +15,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     {
         var floor = SquareRoomFloor(sizeMeters: 10);
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
     }
@@ -23,7 +23,9 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     [Fact]
     public void SuggestPlacements_ThreeConcreteWalledRoomsAtSixGhz_SuggestsMoreThanOneAp()
     {
-        var placements = _sut.SuggestPlacements(ThreeConcreteWalledRoomsFloor(), [Band.SixGhz], _propagationModel);
+        var floor = ThreeConcreteWalledRoomsFloor();
+
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.SixGhz], _propagationModel);
 
         Assert.True(placements.Count > 1, $"Expected more than one AP across three concrete-divided rooms at 6GHz, got {placements.Count}.");
     }
@@ -34,7 +36,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
         var floor = SquareRoomFloor(sizeMeters: 10);
         Band[] bands = [Band.TwoPointFourGhz, Band.FiveGhz, Band.SixGhz];
 
-        var placements = _sut.SuggestPlacements(floor, bands, _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], bands, _propagationModel);
 
         Assert.NotEmpty(placements);
         foreach (var ap in placements)
@@ -49,7 +51,9 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     [Fact]
     public void SuggestPlacements_MultipleAps_AssignsDistinctChannelsPerBand()
     {
-        var placements = _sut.SuggestPlacements(ThreeConcreteWalledRoomsFloor(), [Band.SixGhz], _propagationModel);
+        var floor = ThreeConcreteWalledRoomsFloor();
+
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.SixGhz], _propagationModel);
 
         Assert.True(placements.Count > 1, "Test requires more than one AP to be meaningful.");
         var channels = placements.Select(ap => ap.Radios[Band.SixGhz].Channel).ToList();
@@ -61,7 +65,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     {
         var floor = new Floor { PlanSource = new RoomListSource() };
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Empty(placements);
     }
@@ -82,7 +86,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
             ],
         });
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
         Assert.NotEqual(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
@@ -93,7 +97,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     {
         var floor = SquareRoomFloor(sizeMeters: 10);
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
         Assert.Equal(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
@@ -104,7 +108,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
     {
         var floor = SquareRoomFloor(sizeMeters: 20);
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
     }
@@ -122,7 +126,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
             ],
         });
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.True(placements.Count > 1, $"Expected the SINR-adjusted threshold near strong interference to force a second AP, got {placements.Count}.");
     }
@@ -140,7 +144,7 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
             ],
         });
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
     }
@@ -158,9 +162,75 @@ public sealed class GreedyCoverageApPlacementOptimizerTests
             ],
         });
 
-        var placements = _sut.SuggestPlacements(floor, [Band.TwoPointFourGhz], _propagationModel);
+        var placements = _sut.SuggestPlacements(floor, [floor], [Band.TwoPointFourGhz], _propagationModel);
 
         Assert.Single(placements);
+    }
+
+    [Fact]
+    public void SuggestPlacements_ChannelUsedByAdjacentFloorAp_IsDeprioritized()
+    {
+        var floorBelow = SquareRoomFloor(sizeMeters: 10);
+        floorBelow.Level = 0;
+        floorBelow.AccessPoints.Add(new AccessPoint
+        {
+            Position = new Point2D(5, 5),
+            Label = "Existing AP",
+            Radios = { [Band.TwoPointFourGhz] = new BandRadioSettings { Channel = 1, TransmitPowerDbm = 17 } },
+        });
+        var floorAbove = SquareRoomFloor(sizeMeters: 10);
+        floorAbove.Level = 1;
+
+        var placements = _sut.SuggestPlacements(floorAbove, [floorBelow, floorAbove], [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+        Assert.NotEqual(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
+    }
+
+    [Fact]
+    public void SuggestPlacements_SameLevelDifferentFloor_DoesNotAffectChannelChoice()
+    {
+        var otherFloor = SquareRoomFloor(sizeMeters: 10);
+        otherFloor.Level = 0;
+        otherFloor.AccessPoints.Add(new AccessPoint
+        {
+            Position = new Point2D(5, 5),
+            Label = "Existing AP",
+            Radios = { [Band.TwoPointFourGhz] = new BandRadioSettings { Channel = 1, TransmitPowerDbm = 17 } },
+        });
+        var floor = SquareRoomFloor(sizeMeters: 10);
+        floor.Level = 0;
+
+        var placements = _sut.SuggestPlacements(floor, [otherFloor, floor], [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+        Assert.Equal(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
+    }
+
+    [Fact]
+    public void SuggestPlacements_AdjacentFloorIsOutdoor_DoesNotAffectChannelChoice()
+    {
+        var outdoorFloor = new Floor
+        {
+            PlanSource = new RoomListSource(),
+            IsOutdoor = true,
+            Level = 0,
+            OutdoorBoundsMin = new Point2D(0, 0),
+            OutdoorBoundsMax = new Point2D(10, 10),
+            AccessPoints = { new AccessPoint
+            {
+                Position = new Point2D(5, 5),
+                Label = "Existing AP",
+                Radios = { [Band.TwoPointFourGhz] = new BandRadioSettings { Channel = 1, TransmitPowerDbm = 17 } },
+            } },
+        };
+        var floor = SquareRoomFloor(sizeMeters: 10);
+        floor.Level = 1;
+
+        var placements = _sut.SuggestPlacements(floor, [outdoorFloor, floor], [Band.TwoPointFourGhz], _propagationModel);
+
+        Assert.Single(placements);
+        Assert.Equal(1, placements[0].Radios[Band.TwoPointFourGhz].Channel);
     }
 
     // Three 10x10m rooms in a row, separated by concrete dividing walls — enough attenuation at

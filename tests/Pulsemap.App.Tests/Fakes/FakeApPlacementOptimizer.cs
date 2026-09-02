@@ -8,6 +8,6 @@ internal sealed class FakeApPlacementOptimizer : IApPlacementOptimizer
 {
     public IReadOnlyList<AccessPoint> PlacementsToReturn { get; set; } = [];
 
-    public IReadOnlyList<AccessPoint> SuggestPlacements(Floor floor, IReadOnlyList<Band> bands, IPropagationModel propagationModel) =>
+    public IReadOnlyList<AccessPoint> SuggestPlacements(Floor floor, IReadOnlyList<Floor> allFloors, IReadOnlyList<Band> bands, IPropagationModel propagationModel) =>
         PlacementsToReturn;
 }
