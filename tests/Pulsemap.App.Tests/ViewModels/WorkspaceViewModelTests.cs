@@ -21,6 +21,8 @@ public sealed class WorkspaceViewModelTests
     private readonly FakeReportExporter _reportExporter = new();
     private readonly FakeSurveyExportFilePickerService _exportFilePickerService = new();
     private readonly FakeAppSettingsService _appSettingsService = new();
+    private readonly FakeLinkDiagnosticsService _linkDiagnosticsService = new();
+    private readonly FakeNetworkHealthService _networkHealthService = new();
 
     // Real (not faked) — pure/deterministic, no I/O, and every test here loads a floor with zero
     // existing TestPoints, so StartGuidedWalk's adaptive path never actually calls into this (falls
@@ -39,7 +41,9 @@ public sealed class WorkspaceViewModelTests
         _reportExporter,
         _exportFilePickerService,
         _krigingInterpolator,
-        _appSettingsService);
+        _appSettingsService,
+        _linkDiagnosticsService,
+        _networkHealthService);
 
     [Fact]
     public async Task LoadAsync_ValidSurvey_PopulatesSurveyAndBands()
@@ -738,6 +742,45 @@ public sealed class WorkspaceViewModelTests
     {
         _wlanAdapterService.AdaptersToReturn = [new NetworkAdapterInfo(Guid.NewGuid(), "Test Adapter")];
         return await LoadedViewModelAsync(floor);
+    }
+
+    [Fact]
+    public async Task DiagnoseAtPointAsync_NoAdapterSelected_DoesNothing()
+    {
+        _surveyFileService.SurveyToReturn = BuildSurvey(SquareRoomFloor(10));
+        var sut = CreateSut();
+        await sut.LoadAsync(FilePath);
+        sut.SelectedAdapter = null;
+
+        await sut.DiagnoseAtPointAsync(new Point2D(1, 1));
+
+        Assert.Empty(sut.DiagnoseFindings);
+    }
+
+    [Fact]
+    public async Task DiagnoseAtPointAsync_Connected_PopulatesPredictionAndFindings()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.AccessPoints.Add(new AccessPoint
+        {
+            Position = new Point2D(0, 0),
+            Label = "AP",
+            Radios = { [Band.TwoPointFourGhz] = new BandRadioSettings { TransmitPowerDbm = 17, Channel = 1 } },
+        });
+        _surveyFileService.SurveyToReturn = BuildSurvey(floor);
+        var adapter = new NetworkAdapterInfo(Guid.NewGuid(), "Test Adapter");
+        _wlanAdapterService.AdaptersToReturn = [adapter];
+        _linkDiagnosticsService.SnapshotToReturn = new LinkDiagnosticsSnapshot(
+            IsConnected: true, Ssid: "Net", Bssid: "AA:BB:CC:DD:EE:FF", Band: Band.TwoPointFourGhz, Channel: 1,
+            SignalPercent: 90, PhyType: "HT (802.11n)", RxLinkSpeedMbps: 150, TxLinkSpeedMbps: 150);
+        _networkHealthService.SnapshotToReturn = new NetworkHealthSnapshot("192.168.1.1", 5, 10, true);
+        var sut = CreateSut();
+        await sut.LoadAsync(FilePath);
+
+        await sut.DiagnoseAtPointAsync(new Point2D(1, 0));
+
+        Assert.NotNull(sut.DiagnoseSummaryDisplay);
+        Assert.NotEmpty(sut.DiagnoseFindings);
     }
 
     private static Survey BuildSurvey(Floor floor) => new()

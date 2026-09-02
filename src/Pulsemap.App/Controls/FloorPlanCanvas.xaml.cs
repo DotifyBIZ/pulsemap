@@ -81,6 +81,8 @@ public sealed partial class FloorPlanCanvas : UserControl
 
     public event EventHandler<Point2D>? WallSelectRequested;
 
+    public event EventHandler<Point2D>? DiagnosePositionRequested;
+
     public event EventHandler<(Point2D Min, Point2D Max)>? OutdoorBoundsChanged;
 
     /// <summary>
@@ -417,6 +419,10 @@ public sealed partial class FloorPlanCanvas : UserControl
                 WallSelectRequested?.Invoke(this, meters);
                 break;
 
+            case WorkspaceTool.Diagnose:
+                DiagnosePositionRequested?.Invoke(this, meters);
+                break;
+
             default:
                 break;
         }
@@ -504,6 +510,15 @@ public sealed partial class FloorPlanCanvas : UserControl
 
         _previewBoundsMin = null;
         _previewBoundsMax = null;
+    }
+
+    /// <summary>Converts a floor-plan point to this control's own pixel space — used by
+    /// WorkspacePage to anchor the diagnostics flyout at the point the user actually clicked,
+    /// rather than at the control's default position.</summary>
+    public Windows.Foundation.Point ToScreenPoint(Point2D meters)
+    {
+        var (x, y) = ToPixels(meters);
+        return new Windows.Foundation.Point(x, y);
     }
 
     private (double X, double Y) ToPixels(Point2D meters) =>

@@ -64,6 +64,7 @@
             <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceDiagnoseToolButton" x:Name="DiagnoseToolButton" Checked="ToolToggle_Checked" />
 
             <Button x:Name="ToolLegendButton" x:Uid="WorkspaceToolLegendButton" Margin="8,0,0,0">
                 <Button.Flyout>
@@ -85,6 +86,10 @@
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
                                 <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
                             </StackPanel>
                         </StackPanel>
                     </Flyout>

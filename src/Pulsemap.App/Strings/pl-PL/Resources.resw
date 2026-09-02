@@ -20,6 +20,9 @@
   <data name="NavSurveys.Content" xml:space="preserve">
     <value>Badania</value>
   </data>
+  <data name="NavDiagnose.Content" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
   <data name="NavSettings.Content" xml:space="preserve">
     <value>Ustawienia</value>
   </data>
@@ -275,6 +278,9 @@
   <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
     <value>Usuń</value>
   </data>
+  <data name="WorkspaceDiagnoseToolButton.Content" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
   <data name="WorkspaceToolLegendButton.Content" xml:space="preserve">
     <value>Pomoc dot. narzędzi</value>
   </data>
@@ -304,6 +310,12 @@
   </data>
   <data name="WorkspaceToolLegendDeleteBody.Text" xml:space="preserve">
     <value>Kliknij w pobliżu ściany, punktu pomiarowego lub punktu dostępowego, aby go usunąć. Zaraz potem pojawi się opcja cofnięcia, ważna do kolejnego usunięcia.</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseHeader.Text" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseBody.Text" xml:space="preserve">
+    <value>Kliknij dowolny punkt na planie, aby porównać aktualny sygnał WiFi tego urządzenia z tym, co przewidział pomiar.</value>
   </data>
   <data name="WorkspaceOnboardingStep1.Title" xml:space="preserve">
     <value>Witaj w Obszarze roboczym</value>
@@ -524,5 +536,26 @@
   </data>
   <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
     <value>{0} — {1}</value>
+  </data>
+  <data name="DiagnosticsTitle" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
+  <data name="DiagnosticsSubtitle" xml:space="preserve">
+    <value>Sprawdź aktualne połączenie WiFi tego urządzenia i stan sieci lokalnej — bez potrzeby pomiaru.</value>
+  </data>
+  <data name="DiagnosticsAdapterField.Header" xml:space="preserve">
+    <value>Adapter</value>
+  </data>
+  <data name="DiagnosticsRunButton.Content" xml:space="preserve">
+    <value>Uruchom diagnostykę</value>
+  </data>
+  <data name="DiagnosticsLinkSectionLabel" xml:space="preserve">
+    <value>Połączenie</value>
+  </data>
+  <data name="DiagnosticsFindingsSectionLabel" xml:space="preserve">
+    <value>Wyniki</value>
+  </data>
+  <data name="DiagnosticsMonitoringSectionLabel" xml:space="preserve">
+    <value>Monitorowanie</value>
   </data>
 </root>

@@ -1,8 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Pulsemap.App.Controls;
+using Pulsemap.App.Core.Diagnostics;
 using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Services;
@@ -28,6 +31,7 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
         PlanCanvas.WallSelectRequested += async (_, position) => await OnSelectClickAsync(position);
         PlanCanvas.OutdoorBoundsChanged += async (_, bounds) => await ViewModel.UpdateOutdoorBoundsAsync(bounds.Min, bounds.Max);
+        PlanCanvas.DiagnosePositionRequested += async (_, position) => await OnDiagnoseClickAsync(position);
         SelectToolButton.IsChecked = true;
     }
 
@@ -141,6 +145,45 @@ public sealed partial class WorkspacePage : Page
 
     private void ClearWallSelection_Click(object sender, RoutedEventArgs e) => ViewModel.ClearWallSelection();
 
+    // Predicted-vs-actual comparison, anchored at the clicked point rather than a docked panel —
+    // this is Workspace's own addition on top of the standalone Diagnose page, since only here is
+    // there a survey/propagation model to predict against.
+    private async Task OnDiagnoseClickAsync(Point2D position)
+    {
+        await ViewModel.DiagnoseAtPointAsync(position);
+        ShowDiagnoseFlyout(position);
+    }
+
+    private void ShowDiagnoseFlyout(Point2D position)
+    {
+        var content = new StackPanel { Spacing = 8, MaxWidth = 320 };
+        content.Children.Add(new TextBlock
+        {
+            Text = ViewModel.DiagnoseSummaryDisplay,
+            TextWrapping = TextWrapping.Wrap,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+        });
+
+        foreach (var finding in ViewModel.DiagnoseFindings)
+        {
+            content.Children.Add(new TextBlock
+            {
+                Text = finding.Message,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = SeverityBrush(finding.Severity),
+            });
+        }
+
+        var flyout = new Flyout { Content = content };
+        flyout.ShowAt(PlanCanvas, new FlyoutShowOptions { Position = PlanCanvas.ToScreenPoint(position) });
+    }
+
+    private static Brush SeverityBrush(DiagnosticSeverity severity)
+    {
+        string resourceKey = severity is DiagnosticSeverity.Error ? "DangerBrush" : severity is DiagnosticSeverity.Warning ? "WarningBrush" : "SuccessBrush";
+        return (Brush)Application.Current.Resources[resourceKey];
+    }
+
     private void PopulateBandSelector()
     {
         BandSelector.Items.Clear();
@@ -214,7 +257,7 @@ public sealed partial class WorkspacePage : Page
 
     private void ToolToggle_Checked(object sender, RoutedEventArgs e)
     {
-        foreach (var button in new[] { SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton })
+        foreach (var button in new[] { SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton, DiagnoseToolButton })
         {
             if (!ReferenceEquals(button, sender))
             {
@@ -225,6 +268,7 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.Tool = ReferenceEquals(sender, AddTestPointToolButton) ? WorkspaceTool.AddTestPoint
             : ReferenceEquals(sender, DrawWallToolButton) ? WorkspaceTool.DrawWall
             : ReferenceEquals(sender, DeleteToolButton) ? WorkspaceTool.DeleteElement
+            : ReferenceEquals(sender, DiagnoseToolButton) ? WorkspaceTool.Diagnose
             : WorkspaceTool.Select;
 
         if (PlanCanvas.Tool != WorkspaceTool.Select)

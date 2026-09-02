@@ -27,6 +27,10 @@ public partial class HomeViewModel(
         "HomeWellbeingMessage2",
         "HomeWellbeingMessage3",
         "HomeWellbeingMessage4",
+        "HomeWellbeingMessage5",
+        "HomeWellbeingMessage6",
+        "HomeWellbeingMessage7",
+        "HomeWellbeingMessage8",
     ];
 
     private string? _releaseUrl;

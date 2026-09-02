@@ -26,6 +26,11 @@
                     <FontIcon Glyph="&#xE8FD;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem x:Uid="NavDiagnose" Tag="Diagnose">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9D9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem x:Uid="NavSettings" Tag="Settings">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE713;" />
