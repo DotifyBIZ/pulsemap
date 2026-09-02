@@ -12,6 +12,7 @@ using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Core.Settings;
 using Pulsemap.App.Services;
 using Pulsemap.App.ViewModels;
 
@@ -105,7 +106,12 @@ public partial class App : Application
         services.AddSingleton<ISurveyExportFilePickerService, SurveyExportFilePickerService>();
         services.AddSingleton<FloorPlanImageCache>();
         services.AddSingleton<IWlanAdapterService, WlanAdapterService>();
+        services.AddSingleton<ILinkDiagnosticsService, WlanLinkDiagnosticsService>();
+        services.AddSingleton<INetworkHealthService, NetworkHealthService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
+        services.AddSingleton<IAppSettingsService, FileAppSettingsService>();
+        services.AddHttpClient();
+        services.AddSingleton<IUpdateCheckService, GitHubUpdateCheckService>();
 
         // ViewModels — transient, recreated per navigation.
         services.AddTransient<HomeViewModel>();
@@ -114,6 +120,7 @@ public partial class App : Application
         services.AddTransient<WorkspaceViewModel>();
         services.AddTransient<SnapshotComparisonViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<DiagnosticsViewModel>();
 
         return services.BuildServiceProvider();
     }

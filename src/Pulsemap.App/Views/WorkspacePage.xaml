@@ -26,6 +26,7 @@
 
             <StackPanel Grid.Column="0">
                 <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
@@ -48,11 +49,53 @@
 
         <InfoBar Grid.Row="1" Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Margin="0,12,0,0" />
 
+        <InfoBar
+            Grid.Row="1"
+            Severity="Informational"
+            IsOpen="{x:Bind ViewModel.CanUndoDelete, Mode=OneWay}"
+            Message="{x:Bind ViewModel.LastDeletedItemDisplay, Mode=OneWay}"
+            Margin="0,12,0,0">
+            <InfoBar.ActionButton>
+                <Button x:Uid="WorkspaceUndoDeleteButton" Command="{x:Bind ViewModel.UndoDeleteCommand}" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
             <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceDiagnoseToolButton" x:Name="DiagnoseToolButton" Checked="ToolToggle_Checked" />
+
+            <Button x:Name="ToolLegendButton" x:Uid="WorkspaceToolLegendButton" Margin="8,0,0,0">
+                <Button.Flyout>
+                    <Flyout Placement="Bottom">
+                        <StackPanel Spacing="10" MaxWidth="320">
+                            <TextBlock x:Uid="WorkspaceToolLegendTitle" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
 
             <ComboBox x:Name="BandSelector" Width="120" Margin="16,0,0,0" SelectionChanged="BandSelector_SelectionChanged" />
 
@@ -65,6 +108,23 @@
             <Button x:Uid="WorkspaceAddFloorButton" Click="AddFloor_Click" />
 
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
+
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0" VerticalAlignment="Center" Visibility="{x:Bind ViewModel.HasWallSelection, Mode=OneWay}">
+                <TextBlock Text="{x:Bind ViewModel.WallSelectionCountDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <ComboBox x:Name="WallMaterialSelector" Width="170" SelectedIndex="0">
+                    <ComboBoxItem x:Uid="WorkspaceWallMaterialUnspecified" Tag="" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialDrywall" Tag="Drywall" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialGlassStandard" Tag="GlassStandard" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialGlassLowE" Tag="GlassLowE" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialWood" Tag="Wood" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialBrick" Tag="Brick" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialConcrete" Tag="Concrete" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialReinforcedConcrete" Tag="ReinforcedConcrete" />
+                </ComboBox>
+                <NumberBox x:Name="WallThicknessInput" Width="110" PlaceholderText="m" SpinButtonPlacementMode="Compact" SmallChange="0.01" Minimum="0" />
+                <Button x:Uid="WorkspaceApplyWallMaterialButton" Click="ApplyWallMaterial_Click" />
+                <Button x:Uid="WorkspaceClearWallSelectionButton" Click="ClearWallSelection_Click" />
+            </StackPanel>
         </StackPanel>
 
         <Grid Grid.Row="3" Margin="0,20,0,0">
@@ -78,8 +138,12 @@
             </Border>
 
             <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Padding="16">
-                <Pivot>
-                    <PivotItem x:Uid="WorkspaceCoverageTab">
+                <!-- TabView, not Pivot: Pivot silently clips overflowing headers into an
+                     unreachable scroll strip once the host column narrows even slightly (see
+                     CLAUDE.md's documented XAML compiler/control quirks) — TabView doesn't have
+                     that failure mode. -->
+                <TabView IsAddTabButtonVisible="False" CanReorderTabs="False" CanDragTabs="False" TabWidthMode="SizeToContent">
+                    <TabViewItem x:Uid="WorkspaceCoverageTab" IsClosable="False">
                         <StackPanel Spacing="12">
                             <TextBlock x:Uid="WorkspaceSignalLegendLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
                             <StackPanel Spacing="6">
@@ -110,14 +174,14 @@
                                 FontSize="{StaticResource FontSizeXs}"
                                 Foreground="{StaticResource Gray400Brush}" />
                         </StackPanel>
-                    </PivotItem>
+                    </TabViewItem>
 
-                    <PivotItem x:Uid="WorkspaceSuggestionsTab">
+                    <TabViewItem x:Uid="WorkspaceSuggestionsTab" IsClosable="False">
                         <StackPanel Spacing="12">
                             <Button
                                 x:Uid="WorkspaceSuggestPlacementsButton"
                                 Style="{StaticResource PrimaryButtonStyle}"
-                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}">
+                                Click="SuggestPlacements_Click">
                                 <Button.Resources>
                                     <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
                                     <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
@@ -134,9 +198,9 @@
                                 FontSize="{StaticResource FontSizeSm}"
                                 Foreground="{StaticResource Gray700Brush}" />
                         </StackPanel>
-                    </PivotItem>
+                    </TabViewItem>
 
-                    <PivotItem x:Uid="WorkspaceAdapterTab">
+                    <TabViewItem x:Uid="WorkspaceAdapterTab" IsClosable="False">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12">
                             <ComboBox
@@ -230,6 +294,7 @@
                                             <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
                                         </Button.Resources>
                                     </Button>
+                                    <Button x:Uid="WorkspaceSkipWalkPointButton" Command="{x:Bind ViewModel.SkipWalkPointCommand}" />
                                     <Button x:Uid="WorkspaceCancelWalkButton" Command="{x:Bind ViewModel.CancelGuidedWalkCommand}" />
                                     <ProgressRing IsActive="{x:Bind ViewModel.IsCapturingWalkPoint, Mode=OneWay}" Width="20" Height="20" />
                                 </StackPanel>
@@ -243,9 +308,18 @@
                                 Foreground="{StaticResource Gray500Brush}" />
                         </StackPanel>
                         </ScrollViewer>
-                    </PivotItem>
-                </Pivot>
+                    </TabViewItem>
+                </TabView>
             </Border>
         </Grid>
+
+        <!-- First-run coach-mark tour (skippable) — see WorkspacePage.xaml.cs's onboarding
+             sequencing. Content lives here (x:Uid) rather than the always-available Tool Help
+             flyout above, since a short guided blurb and a full reference description read
+             differently even for the same tool. -->
+        <TeachingTip x:Name="OnboardingStep1" x:Uid="WorkspaceOnboardingStep1" Target="{x:Bind SelectToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep2" x:Uid="WorkspaceOnboardingStep2" Target="{x:Bind AddTestPointToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep3" x:Uid="WorkspaceOnboardingStep3" Target="{x:Bind DrawWallToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep4" x:Uid="WorkspaceOnboardingStep4" Target="{x:Bind DeleteToolButton}" ActionButtonClick="OnboardingFinish_Click" CloseButtonClick="OnboardingSkip_Click" />
     </Grid>
 </Page>

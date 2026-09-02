@@ -30,6 +30,9 @@ public sealed partial class MainPage : Page
             case "Surveys":
                 ContentFrame.Navigate(typeof(SurveysPage));
                 break;
+            case "Diagnose":
+                ContentFrame.Navigate(typeof(DiagnosticsPage));
+                break;
         }
     }
 }

@@ -1,8 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Pulsemap.App.Controls;
+using Pulsemap.App.Core.Diagnostics;
 using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Services;
@@ -26,6 +29,9 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.TestPointRequested += async (_, position) => await ViewModel.AddTestPointAsync(position);
         PlanCanvas.WallRequested += async (_, span) => await ViewModel.AddWallAsync(span.Start, span.End);
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
+        PlanCanvas.WallSelectRequested += async (_, position) => await OnSelectClickAsync(position);
+        PlanCanvas.OutdoorBoundsChanged += async (_, bounds) => await ViewModel.UpdateOutdoorBoundsAsync(bounds.Min, bounds.Max);
+        PlanCanvas.DiagnosePositionRequested += async (_, position) => await OnDiagnoseClickAsync(position);
         SelectToolButton.IsChecked = true;
     }
 
@@ -38,7 +44,42 @@ public sealed partial class WorkspacePage : Page
             await ViewModel.LoadAsync(filePath);
             PopulateBandSelector();
             await RenderCanvasAsync();
+
+            if (await ViewModel.ShouldShowOnboardingAsync())
+            {
+                OnboardingStep1.IsOpen = true;
+            }
         }
+    }
+
+    private void OnboardingNext_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+
+        if (ReferenceEquals(sender, OnboardingStep1))
+        {
+            OnboardingStep2.IsOpen = true;
+        }
+        else if (ReferenceEquals(sender, OnboardingStep2))
+        {
+            OnboardingStep3.IsOpen = true;
+        }
+        else if (ReferenceEquals(sender, OnboardingStep3))
+        {
+            OnboardingStep4.IsOpen = true;
+        }
+    }
+
+    private async void OnboardingFinish_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+        await ViewModel.MarkOnboardingSeenAsync();
+    }
+
+    private async void OnboardingSkip_Click(TeachingTip sender, object args)
+    {
+        sender.IsOpen = false;
+        await ViewModel.MarkOnboardingSeenAsync();
     }
 
     private async Task RenderCanvasAsync()
@@ -50,12 +91,120 @@ public sealed partial class WorkspacePage : Page
 
         try
         {
-            await PlanCanvas.RenderAsync(ViewModel.SelectedFloor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint);
+            await PlanCanvas.RenderAsync(ViewModel.SelectedFloor, ViewModel.Heatmap, ViewModel.CurrentWalkPoint, ViewModel.SelectedWalls, ViewModel.RemainingWalkPoints);
         }
         catch (Exception ex)
         {
             await _logger.LogErrorAsync("Failed to render the floor plan canvas.", ex);
         }
+    }
+
+    private async Task OnSelectClickAsync(Point2D position)
+    {
+        switch (ViewModel.FindNearestSelectable(position))
+        {
+            case Wall wall:
+                ViewModel.ToggleWallSelection(wall);
+                break;
+
+            case TestPoint testPoint:
+                await ConfirmRecaptureAsync(testPoint);
+                break;
+        }
+    }
+
+    private async Task ConfirmRecaptureAsync(TestPoint testPoint)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceRecaptureDialogTitle"),
+            Content = _localizationService.GetString("WorkspaceRecaptureDialogContent"),
+            PrimaryButtonText = _localizationService.GetString("WorkspaceRecaptureDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceRecaptureDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await ViewModel.RecaptureTestPointAsync(testPoint);
+        }
+    }
+
+    private async void ApplyWallMaterial_Click(object sender, RoutedEventArgs e)
+    {
+        if (WallMaterialSelector.SelectedItem is not ComboBoxItem { Tag: string tag })
+        {
+            return;
+        }
+
+        WallMaterial? material = string.IsNullOrEmpty(tag) ? null : Enum.Parse<WallMaterial>(tag);
+        double? thickness = double.IsNaN(WallThicknessInput.Value) ? null : WallThicknessInput.Value;
+        await ViewModel.ApplyMaterialToSelectedWallsAsync(material, thickness);
+    }
+
+    private void ClearWallSelection_Click(object sender, RoutedEventArgs e) => ViewModel.ClearWallSelection();
+
+    private async void SuggestPlacements_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.HasReplaceableSuggestions)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogTitle"),
+                Content = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogContent"),
+                PrimaryButtonText = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogPrimaryButton"),
+                CloseButtonText = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogCloseButton"),
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+        }
+
+        await ViewModel.SuggestPlacementsCommand.ExecuteAsync(null);
+    }
+
+    // Predicted-vs-actual comparison, anchored at the clicked point rather than a docked panel —
+    // this is Workspace's own addition on top of the standalone Diagnose page, since only here is
+    // there a survey/propagation model to predict against.
+    private async Task OnDiagnoseClickAsync(Point2D position)
+    {
+        await ViewModel.DiagnoseAtPointAsync(position);
+        ShowDiagnoseFlyout(position);
+    }
+
+    private void ShowDiagnoseFlyout(Point2D position)
+    {
+        var content = new StackPanel { Spacing = 8, MaxWidth = 320 };
+        content.Children.Add(new TextBlock
+        {
+            Text = ViewModel.DiagnoseSummaryDisplay,
+            TextWrapping = TextWrapping.Wrap,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+        });
+
+        foreach (var finding in ViewModel.DiagnoseFindings)
+        {
+            content.Children.Add(new TextBlock
+            {
+                Text = finding.Message,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = SeverityBrush(finding.Severity),
+            });
+        }
+
+        var flyout = new Flyout { Content = content };
+        flyout.ShowAt(PlanCanvas, new FlyoutShowOptions { Position = PlanCanvas.ToScreenPoint(position) });
+    }
+
+    private static Brush SeverityBrush(DiagnosticSeverity severity)
+    {
+        string resourceKey = severity is DiagnosticSeverity.Error ? "DangerBrush" : severity is DiagnosticSeverity.Warning ? "WarningBrush" : "SuccessBrush";
+        return (Brush)Application.Current.Resources[resourceKey];
     }
 
     private void PopulateBandSelector()
@@ -123,15 +272,15 @@ public sealed partial class WorkspacePage : Page
 
     private void CompareSnapshots_Click(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.Survey is not null)
+        if (ViewModel.Survey is not null && ViewModel.FilePath is not null)
         {
-            Frame.Navigate(typeof(SnapshotComparisonPage), ViewModel.Survey);
+            Frame.Navigate(typeof(SnapshotComparisonPage), (ViewModel.Survey, ViewModel.FilePath));
         }
     }
 
     private void ToolToggle_Checked(object sender, RoutedEventArgs e)
     {
-        foreach (var button in new[] { SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton })
+        foreach (var button in new[] { SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton, DiagnoseToolButton })
         {
             if (!ReferenceEquals(button, sender))
             {
@@ -142,6 +291,12 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.Tool = ReferenceEquals(sender, AddTestPointToolButton) ? WorkspaceTool.AddTestPoint
             : ReferenceEquals(sender, DrawWallToolButton) ? WorkspaceTool.DrawWall
             : ReferenceEquals(sender, DeleteToolButton) ? WorkspaceTool.DeleteElement
+            : ReferenceEquals(sender, DiagnoseToolButton) ? WorkspaceTool.Diagnose
             : WorkspaceTool.Select;
+
+        if (PlanCanvas.Tool != WorkspaceTool.Select)
+        {
+            ViewModel.ClearWallSelection();
+        }
     }
 }

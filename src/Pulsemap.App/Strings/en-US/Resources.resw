@@ -20,14 +20,14 @@
   <data name="NavSurveys.Content" xml:space="preserve">
     <value>Surveys</value>
   </data>
+  <data name="NavDiagnose.Content" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
   <data name="NavSettings.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
 
   <!-- Home page -->
-  <data name="HomeTitle.Text" xml:space="preserve">
-    <value>Home</value>
-  </data>
   <data name="HomeSubtitle.Text" xml:space="preserve">
     <value>Your surveys, all in one place.</value>
   </data>
@@ -36,6 +36,9 @@
   </data>
   <data name="HomeRecentSurveysHeader.Text" xml:space="preserve">
     <value>Recent surveys</value>
+  </data>
+  <data name="HomeUpdateAvailableActionButton.Content" xml:space="preserve">
+    <value>View release</value>
   </data>
 
   <!-- Surveys page -->
@@ -73,6 +76,15 @@
   </data>
   <data name="SettingsOpenLogsFolderButton.Content" xml:space="preserve">
     <value>Open Logs Folder</value>
+  </data>
+  <data name="SettingsUpdatesLabel.Text" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="SettingsUpdatesExplanation.Text" xml:space="preserve">
+    <value>On launch, Pulsemap checks GitHub's public release list for a newer version — a single request with nothing about you or your surveys attached. Turn it off if you'd rather it never happen.</value>
+  </data>
+  <data name="SettingsCheckForUpdatesToggle.Header" xml:space="preserve">
+    <value>Check for updates on launch</value>
   </data>
 
   <!-- New Survey wizard -->
@@ -266,6 +278,93 @@
   <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="WorkspaceDiagnoseToolButton.Content" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="WorkspaceToolLegendButton.Content" xml:space="preserve">
+    <value>Tool Help</value>
+  </data>
+  <data name="WorkspaceToolLegendTitle.Text" xml:space="preserve">
+    <value>What each tool does</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectHeader.Text" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectBody.Text" xml:space="preserve">
+    <value>Click a wall to add it to a multi-select for batch material/thickness editing. Click a test point to rescan and replace its reading. On an outdoor area, drag its edge to resize or drag inside it to move the whole area.</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointHeader.Text" xml:space="preserve">
+    <value>Add Test Point</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointBody.Text" xml:space="preserve">
+    <value>Click anywhere on the canvas to place a manual test point without doing a full guided walk.</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallHeader.Text" xml:space="preserve">
+    <value>Draw Wall</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallBody.Text" xml:space="preserve">
+    <value>Click one endpoint, then click the other to draw a wall between them.</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteHeader.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteBody.Text" xml:space="preserve">
+    <value>Click near a wall, test point, or access point to remove it. An Undo option appears right after, until your next delete.</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseHeader.Text" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="WorkspaceToolLegendDiagnoseBody.Text" xml:space="preserve">
+    <value>Click any point on the plan to compare this machine's live WiFi signal there against what the survey predicted.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Title" xml:space="preserve">
+    <value>Welcome to the Workspace</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Subtitle" xml:space="preserve">
+    <value>Select does different things depending on what you click: a wall, a test point, or an outdoor area's edge. The Tool Help button always explains this if you forget.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Title" xml:space="preserve">
+    <value>Add Test Point</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Subtitle" xml:space="preserve">
+    <value>Click anywhere to drop a manual test point — or use the Adapter tab's guided walk to be led through suggested points instead.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Title" xml:space="preserve">
+    <value>Draw Wall</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Subtitle" xml:space="preserve">
+    <value>Click one end, then the other, to draw a wall. Give it a material afterward with Select for a more accurate coverage prediction.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Title" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Subtitle" xml:space="preserve">
+    <value>Click near anything to remove it — an Undo option appears right after, so a misclick isn't permanent.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.ActionButtonContent" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Back</value>
   </data>
@@ -347,8 +446,23 @@
   <data name="WorkspaceConfirmWalkPointButton.Content" xml:space="preserve">
     <value>Confirm Arrival &amp; Capture</value>
   </data>
+  <data name="WorkspaceSkipWalkPointButton.Content" xml:space="preserve">
+    <value>Skip</value>
+  </data>
   <data name="WorkspaceCancelWalkButton.Content" xml:space="preserve">
     <value>Cancel Walk</value>
+  </data>
+  <data name="WorkspaceWallMaterialUnspecified.Content" xml:space="preserve">
+    <value>Unspecified</value>
+  </data>
+  <data name="WorkspaceApplyWallMaterialButton.Content" xml:space="preserve">
+    <value>Apply material</value>
+  </data>
+  <data name="WorkspaceClearWallSelectionButton.Content" xml:space="preserve">
+    <value>Clear selection</value>
+  </data>
+  <data name="WorkspaceUndoDeleteButton.Content" xml:space="preserve">
+    <value>Undo</value>
   </data>
 
   <!-- Snapshot comparison page -->
@@ -369,6 +483,9 @@
   </data>
   <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
     <value>Band</value>
+  </data>
+  <data name="SnapshotComparisonDeleteButton.Content" xml:space="preserve">
+    <value>Delete</value>
   </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->
@@ -422,5 +539,26 @@
   </data>
   <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
     <value>{0} — {1}</value>
+  </data>
+  <data name="DiagnosticsTitle" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="DiagnosticsSubtitle" xml:space="preserve">
+    <value>Check this machine's live WiFi link and local network health — no survey needed.</value>
+  </data>
+  <data name="DiagnosticsAdapterField.Header" xml:space="preserve">
+    <value>Adapter</value>
+  </data>
+  <data name="DiagnosticsRunButton.Content" xml:space="preserve">
+    <value>Run diagnostics</value>
+  </data>
+  <data name="DiagnosticsLinkSectionLabel" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="DiagnosticsFindingsSectionLabel" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="DiagnosticsMonitoringSectionLabel" xml:space="preserve">
+    <value>Monitoring</value>
   </data>
 </root>

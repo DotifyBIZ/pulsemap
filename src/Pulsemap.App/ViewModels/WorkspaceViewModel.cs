@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Diagnostics;
 using Pulsemap.App.Core.Export;
 using Pulsemap.App.Core.Interpolation;
 using Pulsemap.App.Core.Logging;
@@ -11,6 +12,7 @@ using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Persistence;
 using Pulsemap.App.Core.Placement;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Core.Settings;
 using Pulsemap.App.Services;
 using Windows.System;
 
@@ -28,9 +30,8 @@ public partial class WorkspaceViewModel : ObservableObject
     private const double HeatmapGridSpacingMeters = 0.5;
     private const double DeleteHitToleranceMeters = 0.5;
 
-    // A new outdoor area's extent, since there's no dedicated bounds-editing UI yet — the user can
-    // redraw/relocate what it covers by editing OutdoorBoundsMin/Max later if this default doesn't
-    // fit (e.g. via re-export/re-import), a known limitation of this first pass at outdoor areas.
+    // A new outdoor area's starting extent — resizable/movable afterward via the canvas's drag
+    // handle (see FloorPlanCanvas/UpdateOutdoorBoundsAsync), so this is just a reasonable default.
     private const double DefaultOutdoorBoundsSizeMeters = 40;
 
     private readonly ISurveyFileService _surveyFileService;
@@ -43,8 +44,13 @@ public partial class WorkspaceViewModel : ObservableObject
     private readonly IReportExporter _reportExporter;
     private readonly ISurveyExportFilePickerService _exportFilePickerService;
     private readonly IKrigingInterpolator _krigingInterpolator;
+    private readonly IAppSettingsService _appSettingsService;
+    private readonly ILinkDiagnosticsService _linkDiagnosticsService;
+    private readonly INetworkHealthService _networkHealthService;
 
     private string? _filePath;
+
+    public string? FilePath => _filePath;
 
     public WorkspaceViewModel(
         ISurveyFileService surveyFileService,
@@ -56,7 +62,10 @@ public partial class WorkspaceViewModel : ObservableObject
         ISurveyDataExporter surveyDataExporter,
         IReportExporter reportExporter,
         ISurveyExportFilePickerService exportFilePickerService,
-        IKrigingInterpolator krigingInterpolator)
+        IKrigingInterpolator krigingInterpolator,
+        IAppSettingsService appSettingsService,
+        ILinkDiagnosticsService linkDiagnosticsService,
+        INetworkHealthService networkHealthService)
     {
         _surveyFileService = surveyFileService;
         _propagationModel = propagationModel;
@@ -68,6 +77,9 @@ public partial class WorkspaceViewModel : ObservableObject
         _reportExporter = reportExporter;
         _exportFilePickerService = exportFilePickerService;
         _krigingInterpolator = krigingInterpolator;
+        _appSettingsService = appSettingsService;
+        _linkDiagnosticsService = linkDiagnosticsService;
+        _networkHealthService = networkHealthService;
     }
 
     public event EventHandler? FloorChanged;
@@ -106,6 +118,17 @@ public partial class WorkspaceViewModel : ObservableObject
     public IReadOnlyList<CoverageSample> Heatmap { get; private set; } = [];
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
+
+    /// <summary>Same survey-type summary the wizard shows on its final step — repeated here since
+    /// nothing in Workspace otherwise reminds a user which mode ("new deployment" vs. "existing
+    /// network audit") their survey is in once they've left the wizard.</summary>
+    public string SurveyTypeDisplay => Survey switch
+    {
+        null => string.Empty,
+        { Type: SurveyType.NewDeployment } => _localizationService.GetString("WizardSurveyTypeSummaryNewDeployment"),
+        { TargetNetworkSsid: null or "" } => _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditNoSsid"),
+        _ => string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditWithSsidFormat"), Survey.TargetNetworkSsid),
+    };
 
     public string CoveragePercentDisplay =>
         string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceCoveragePercentFormat"), CoveragePercent);
@@ -176,6 +199,7 @@ public partial class WorkspaceViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SkipWalkPointCommand))]
     public partial bool IsGuidedWalkActive { get; set; }
 
     public bool IsGuidedWalkIdle => !IsGuidedWalkActive;
@@ -187,6 +211,7 @@ public partial class WorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SkipWalkPointCommand))]
     public partial bool IsCapturingWalkPoint { get; set; }
 
     [ObservableProperty]
@@ -205,6 +230,39 @@ public partial class WorkspaceViewModel : ObservableObject
             point.Y)
         : _localizationService.GetString("WorkspaceGuidedWalkNotWalking");
 
+    // Points still queued (after the current one) in an active guided walk, for the canvas to
+    // show as upcoming-point markers.
+    public IReadOnlyList<Point2D> RemainingWalkPoints => IsGuidedWalkActive ? [.. _guidedWalkQueue.Skip(1)] : [];
+
+    // Wall material editing: the Select tool toggles walls in and out of this set by clicking
+    // them, then a batch action applies one material/thickness to everything selected.
+    private readonly List<Wall> _selectedWalls = [];
+
+    public IReadOnlyList<Wall> SelectedWalls => _selectedWalls;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWallSelection))]
+    [NotifyPropertyChangedFor(nameof(WallSelectionCountDisplay))]
+    public partial int SelectedWallCount { get; set; }
+
+    public bool HasWallSelection => SelectedWallCount > 0;
+
+    public string WallSelectionCountDisplay =>
+        string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceWallSelectionCountFormat"), SelectedWallCount);
+
+    public async Task<bool> ShouldShowOnboardingAsync()
+    {
+        var settings = await _appSettingsService.LoadAsync();
+        return !settings.HasSeenWorkspaceOnboarding;
+    }
+
+    public async Task MarkOnboardingSeenAsync()
+    {
+        var settings = await _appSettingsService.LoadAsync();
+        settings.HasSeenWorkspaceOnboarding = true;
+        await _appSettingsService.SaveAsync(settings);
+    }
+
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
         _filePath = filePath;
@@ -217,6 +275,7 @@ public partial class WorkspaceViewModel : ObservableObject
             SelectedBand = AvailableBands.Count > 0 ? AvailableBands[0] : Band.TwoPointFourGhz;
             SelectedFloor = Survey.Floors.Count > 0 ? Survey.Floors[0] : null;
             OnPropertyChanged(nameof(SurveyNameDisplay));
+            OnPropertyChanged(nameof(SurveyTypeDisplay));
             OnPropertyChanged(nameof(AvailableBands));
             OnPropertyChanged(nameof(Floors));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
@@ -308,7 +367,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null && SelectedFloor is not null;
 
     [RelayCommand(CanExecute = nameof(CanStartGuidedWalk))]
-    private void StartGuidedWalk()
+    private async Task StartGuidedWalkAsync()
     {
         if (Survey is null || SelectedFloor is null)
         {
@@ -326,6 +385,10 @@ public partial class WorkspaceViewModel : ObservableObject
         _guidedWalkTotalPoints = points.Count;
         GuidedWalkStatusMessage = null;
         IsGuidedWalkActive = true;
+        SelectedFloor.PendingGuidedWalkPoints.Clear();
+        SelectedFloor.PendingGuidedWalkPoints.AddRange(points);
+        SelectedFloor.PendingGuidedWalkBand = SelectedBand;
+        await SaveAndRefreshAsync();
         AdvanceGuidedWalk();
     }
 
@@ -352,9 +415,11 @@ public partial class WorkspaceViewModel : ObservableObject
 
             var testPoint = TestPointCapture.BuildTestPoint(position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
             SelectedFloor.TestPoints.Add(testPoint);
+            _guidedWalkQueue.Dequeue();
+            SelectedFloor.PendingGuidedWalkPoints.Clear();
+            SelectedFloor.PendingGuidedWalkPoints.AddRange(_guidedWalkQueue);
             await SaveAndRefreshAsync();
 
-            _guidedWalkQueue.Dequeue();
             AdvanceGuidedWalk();
         }
         finally
@@ -366,13 +431,37 @@ public partial class WorkspaceViewModel : ObservableObject
     private bool CanCancelGuidedWalk() => IsGuidedWalkActive;
 
     [RelayCommand(CanExecute = nameof(CanCancelGuidedWalk))]
-    private void CancelGuidedWalk()
+    private async Task CancelGuidedWalkAsync()
     {
         _guidedWalkQueue.Clear();
         IsGuidedWalkActive = false;
         CurrentWalkPoint = null;
         GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkCanceled");
+        if (SelectedFloor is not null)
+        {
+            SelectedFloor.PendingGuidedWalkPoints.Clear();
+            await SaveAndRefreshAsync();
+        }
+
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool CanSkipWalkPoint() => IsGuidedWalkActive && !IsCapturingWalkPoint;
+
+    [RelayCommand(CanExecute = nameof(CanSkipWalkPoint))]
+    private async Task SkipWalkPointAsync()
+    {
+        if (SelectedFloor is null || _guidedWalkQueue.Count == 0)
+        {
+            return;
+        }
+
+        _guidedWalkQueue.Dequeue();
+        SelectedFloor.PendingGuidedWalkPoints.Clear();
+        SelectedFloor.PendingGuidedWalkPoints.AddRange(_guidedWalkQueue);
+        await SaveAndRefreshAsync();
+        AdvanceGuidedWalk();
     }
 
     private void AdvanceGuidedWalk()
@@ -388,6 +477,7 @@ public partial class WorkspaceViewModel : ObservableObject
             CurrentWalkPoint = _guidedWalkQueue.Peek();
         }
 
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -413,16 +503,200 @@ public partial class WorkspaceViewModel : ObservableObject
         await SaveAndRefreshAsync();
     }
 
+    public async Task UpdateOutdoorBoundsAsync(Point2D min, Point2D max)
+    {
+        if (SelectedFloor is not { IsOutdoor: true } floor)
+        {
+            return;
+        }
+
+        floor.OutdoorBoundsMin = min;
+        floor.OutdoorBoundsMax = max;
+        await SaveAndRefreshAsync();
+    }
+
+    // Single-level undo, scoped to the Delete tool only — the highest-risk edit in the app since
+    // it's the one permanent, unconfirmed action on the canvas. Not a general undo/redo stack:
+    // overwritten by the next delete, and cleared on floor switch so it never applies somewhere
+    // other than where the deletion actually happened.
+    private (Floor Floor, object Item)? _lastDeletedElement;
+
+    public bool CanUndoDelete => _lastDeletedElement is not null;
+
+    public string LastDeletedItemDisplay => _lastDeletedElement?.Item switch
+    {
+        Wall => _localizationService.GetString("WorkspaceUndoDeleteWallMessage"),
+        TestPoint => _localizationService.GetString("WorkspaceUndoDeleteTestPointMessage"),
+        AccessPoint => _localizationService.GetString("WorkspaceUndoDeleteAccessPointMessage"),
+        _ => string.Empty,
+    };
+
     public async Task DeleteNearestElementAsync(Point2D at)
     {
-        if (SelectedFloor is null || !TryFindNearestElement(SelectedFloor, at, out var remove))
+        if (SelectedFloor is null || !TryFindNearestElement(SelectedFloor, at, out var remove, out var removedItem))
         {
             return;
         }
 
         remove();
+        _selectedWalls.RemoveAll(wall => !SelectedFloor.Walls.Contains(wall));
+        SelectedWallCount = _selectedWalls.Count;
+        _lastDeletedElement = removedItem is not null ? (SelectedFloor, removedItem) : null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        OnPropertyChanged(nameof(LastDeletedItemDisplay));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
         await SaveAndRefreshAsync();
     }
+
+    [RelayCommand(CanExecute = nameof(CanUndoDelete))]
+    private async Task UndoDeleteAsync()
+    {
+        if (_lastDeletedElement is not { } deleted)
+        {
+            return;
+        }
+
+        switch (deleted.Item)
+        {
+            case Wall wall:
+                deleted.Floor.Walls.Add(wall);
+                break;
+            case TestPoint testPoint:
+                deleted.Floor.TestPoints.Add(testPoint);
+                break;
+            case AccessPoint accessPoint:
+                deleted.Floor.AccessPoints.Add(accessPoint);
+                break;
+        }
+
+        _lastDeletedElement = null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        OnPropertyChanged(nameof(LastDeletedItemDisplay));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
+        await SaveAndRefreshAsync();
+    }
+
+    /// <summary>Nearest wall or test point to a Select-tool click, within the same hit tolerance
+    /// the Delete tool uses — a wall is offered for material editing, a test point for recapture.
+    /// Access points aren't selectable here; neither has a per-element edit affordance today.</summary>
+    public object? FindNearestSelectable(Point2D at)
+    {
+        if (SelectedFloor is not { } floor)
+        {
+            return null;
+        }
+
+        var (testPoint, testPointDistance) = NearestTestPoint(floor, at);
+        var (wall, wallDistance) = NearestWall(floor, at);
+        double best = Math.Min(testPointDistance, wallDistance);
+        if (best > DeleteHitToleranceMeters)
+        {
+            return null;
+        }
+
+        return best == testPointDistance ? testPoint : wall;
+    }
+
+    public void ToggleWallSelection(Wall wall)
+    {
+        if (!_selectedWalls.Remove(wall))
+        {
+            _selectedWalls.Add(wall);
+        }
+
+        SelectedWallCount = _selectedWalls.Count;
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ClearWallSelection()
+    {
+        if (_selectedWalls.Count == 0)
+        {
+            return;
+        }
+
+        _selectedWalls.Clear();
+        SelectedWallCount = 0;
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public async Task ApplyMaterialToSelectedWallsAsync(WallMaterial? material, double? thicknessMeters)
+    {
+        if (_selectedWalls.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var wall in _selectedWalls)
+        {
+            wall.Material = material;
+            wall.ThicknessMeters = thicknessMeters;
+        }
+
+        ClearWallSelection();
+        await SaveAndRefreshAsync();
+    }
+
+    public async Task RecaptureTestPointAsync(TestPoint testPoint)
+    {
+        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        {
+            return;
+        }
+
+        var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+        if (scanResult.Status != WlanScanStatus.Success)
+        {
+            ErrorMessage = DescribeScanStatus(scanResult.Status);
+            return;
+        }
+
+        var rebuilt = TestPointCapture.BuildTestPoint(testPoint.Position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
+        SelectedFloor.TestPoints.Remove(testPoint);
+        SelectedFloor.TestPoints.Add(rebuilt);
+        await SaveAndRefreshAsync();
+    }
+
+    public ObservableCollection<DiagnosticFindingDisplay> DiagnoseFindings { get; } = [];
+
+    [ObservableProperty]
+    public partial string? DiagnoseSummaryDisplay { get; set; }
+
+    /// <summary>Compares this machine's live link against what the survey's own propagation model
+    /// predicted at the clicked point — the Workspace-only half of diagnostics that the standalone
+    /// Diagnose page can't offer, since it has no survey/floor to predict against. Reuses the exact
+    /// same cross-floor/outdoor skip rules as the coverage heatmap via
+    /// <see cref="CoverageGridCalculator.StrongestSignalDbm"/>, so the two never disagree.</summary>
+    public async Task DiagnoseAtPointAsync(Point2D position)
+    {
+        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        {
+            return;
+        }
+
+        double? predicted = CoverageGridCalculator.StrongestSignalDbm(position, SelectedFloor, Survey.Floors, SelectedBand, _propagationModel);
+
+        var link = await _linkDiagnosticsService.GetCurrentLinkAsync(SelectedAdapter.Id);
+        var health = link.IsConnected ? await _networkHealthService.CheckHealthAsync(SelectedAdapter.Id) : NetworkHealthSnapshot.Unavailable;
+
+        DiagnoseSummaryDisplay = predicted is { } predictedDbm
+            ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceDiagnosePredictedFormat"), predictedDbm)
+            : _localizationService.GetString("WorkspaceDiagnoseNoPredictionDisplay");
+
+        var findings = LinkDiagnosticsAnalyzer.Analyze(link, health, predicted);
+        DiagnoseFindings.Clear();
+        foreach (var finding in findings)
+        {
+            string template = _localizationService.GetString(finding.MessageKey);
+            string message = finding.FormatArgs is null ? template : string.Format(CultureInfo.CurrentCulture, template, [.. finding.FormatArgs]);
+            DiagnoseFindings.Add(new DiagnosticFindingDisplay(finding.Severity, message));
+        }
+    }
+
+    /// <summary>Whether running Suggest Placements again would discard previously suggested (not
+    /// user-placed) access points on this floor — lets the page ask for confirmation only when
+    /// there's actually something to lose, rather than always or never.</summary>
+    public bool HasReplaceableSuggestions => SelectedFloor?.AccessPoints.Any(ap => !ap.IsUserOverride) == true;
 
     [RelayCommand]
     private async Task SuggestPlacementsAsync()
@@ -433,7 +707,7 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         SelectedFloor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
-        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.TargetBands, _propagationModel);
+        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.Floors, Survey.TargetBands, _propagationModel);
         SelectedFloor.AccessPoints.AddRange(suggestions);
         await SaveAndRefreshAsync();
     }
@@ -567,6 +841,25 @@ public partial class WorkspaceViewModel : ObservableObject
 
     partial void OnSelectedFloorChanged(Floor? value)
     {
+        ClearWallSelection();
+
+        _lastDeletedElement = null;
+        OnPropertyChanged(nameof(CanUndoDelete));
+        UndoDeleteCommand.NotifyCanExecuteChanged();
+
+        _guidedWalkQueue.Clear();
+        IsGuidedWalkActive = false;
+        CurrentWalkPoint = null;
+        if (value is { PendingGuidedWalkPoints.Count: > 0 } floor)
+        {
+            _guidedWalkQueue = new Queue<Point2D>(floor.PendingGuidedWalkPoints);
+            _guidedWalkTotalPoints = _guidedWalkQueue.Count;
+            SelectedBand = floor.PendingGuidedWalkBand ?? SelectedBand;
+            IsGuidedWalkActive = true;
+            CurrentWalkPoint = _guidedWalkQueue.Peek();
+        }
+
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         Recompute();
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -599,70 +892,94 @@ public partial class WorkspaceViewModel : ObservableObject
             : Heatmap.Count(s => s.ValueDbm >= ReliableCoverageThresholdDbm) / (double)Heatmap.Count * 100;
     }
 
-    private static bool TryFindNearestElement(Floor floor, Point2D at, out Action remove)
+    private static bool TryFindNearestElement(Floor floor, Point2D at, out Action remove, out object? removedItem)
     {
-        TestPoint? nearestTestPoint = null;
-        double nearestTestPointDist = double.MaxValue;
-        foreach (var testPoint in floor.TestPoints)
-        {
-            double distance = testPoint.Position.DistanceTo(at);
-            if (distance < nearestTestPointDist)
-            {
-                nearestTestPointDist = distance;
-                nearestTestPoint = testPoint;
-            }
-        }
-
-        AccessPoint? nearestAccessPoint = null;
-        double nearestAccessPointDist = double.MaxValue;
-        foreach (var accessPoint in floor.AccessPoints)
-        {
-            double distance = accessPoint.Position.DistanceTo(at);
-            if (distance < nearestAccessPointDist)
-            {
-                nearestAccessPointDist = distance;
-                nearestAccessPoint = accessPoint;
-            }
-        }
-
-        Wall? nearestWall = null;
-        double nearestWallDist = double.MaxValue;
-        foreach (var wall in floor.Walls)
-        {
-            double distance = DistanceToSegment(at, wall.Start, wall.End);
-            if (distance < nearestWallDist)
-            {
-                nearestWallDist = distance;
-                nearestWall = wall;
-            }
-        }
+        var (nearestTestPoint, nearestTestPointDist) = NearestTestPoint(floor, at);
+        var (nearestAccessPoint, nearestAccessPointDist) = NearestAccessPoint(floor, at);
+        var (nearestWall, nearestWallDist) = NearestWall(floor, at);
 
         double best = Math.Min(nearestTestPointDist, Math.Min(nearestAccessPointDist, nearestWallDist));
         if (best > DeleteHitToleranceMeters)
         {
             remove = static () => { };
+            removedItem = null;
             return false;
         }
 
         if (best == nearestTestPointDist && nearestTestPoint is not null)
         {
             remove = () => floor.TestPoints.Remove(nearestTestPoint);
+            removedItem = nearestTestPoint;
         }
         else if (best == nearestAccessPointDist && nearestAccessPoint is not null)
         {
             remove = () => floor.AccessPoints.Remove(nearestAccessPoint);
+            removedItem = nearestAccessPoint;
         }
         else if (nearestWall is not null)
         {
             remove = () => floor.Walls.Remove(nearestWall);
+            removedItem = nearestWall;
         }
         else
         {
             remove = static () => { };
+            removedItem = null;
             return false;
         }
 
         return true;
+    }
+
+    private static (TestPoint? Item, double Distance) NearestTestPoint(Floor floor, Point2D at)
+    {
+        TestPoint? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var testPoint in floor.TestPoints)
+        {
+            double distance = testPoint.Position.DistanceTo(at);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = testPoint;
+            }
+        }
+
+        return (nearest, nearestDistance);
+    }
+
+    private static (AccessPoint? Item, double Distance) NearestAccessPoint(Floor floor, Point2D at)
+    {
+        AccessPoint? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var accessPoint in floor.AccessPoints)
+        {
+            double distance = accessPoint.Position.DistanceTo(at);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = accessPoint;
+            }
+        }
+
+        return (nearest, nearestDistance);
+    }
+
+    private static (Wall? Item, double Distance) NearestWall(Floor floor, Point2D at)
+    {
+        Wall? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var wall in floor.Walls)
+        {
+            double distance = DistanceToSegment(at, wall.Start, wall.End);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = wall;
+            }
+        }
+
+        return (nearest, nearestDistance);
     }
 
     private static double DistanceToSegment(Point2D point, Point2D segmentStart, Point2D segmentEnd)
