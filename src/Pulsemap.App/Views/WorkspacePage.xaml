@@ -48,6 +48,17 @@
 
         <InfoBar Grid.Row="1" Severity="Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Margin="0,12,0,0" />
 
+        <InfoBar
+            Grid.Row="1"
+            Severity="Informational"
+            IsOpen="{x:Bind ViewModel.CanUndoDelete, Mode=OneWay}"
+            Message="{x:Bind ViewModel.LastDeletedItemDisplay, Mode=OneWay}"
+            Margin="0,12,0,0">
+            <InfoBar.ActionButton>
+                <Button x:Uid="WorkspaceUndoDeleteButton" Command="{x:Bind ViewModel.UndoDeleteCommand}" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
             <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" />
             <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
