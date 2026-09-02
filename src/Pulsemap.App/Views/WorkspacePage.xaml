@@ -26,6 +26,7 @@
 
             <StackPanel Grid.Column="0">
                 <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
             </StackPanel>
 
@@ -180,7 +181,7 @@
                             <Button
                                 x:Uid="WorkspaceSuggestPlacementsButton"
                                 Style="{StaticResource PrimaryButtonStyle}"
-                                Command="{x:Bind ViewModel.SuggestPlacementsCommand}">
+                                Click="SuggestPlacements_Click">
                                 <Button.Resources>
                                     <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
                                     <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />

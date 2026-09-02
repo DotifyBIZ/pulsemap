@@ -57,6 +57,7 @@ public sealed class WorkspaceViewModelTests
         Assert.Equal("Test Survey", sut.SurveyNameDisplay);
         Assert.Equal(Band.TwoPointFourGhz, sut.SelectedBand);
         Assert.Contains(Band.TwoPointFourGhz, sut.AvailableBands);
+        Assert.Equal("WizardSurveyTypeSummaryNewDeployment", sut.SurveyTypeDisplay);
     }
 
     [Fact]
@@ -781,6 +782,62 @@ public sealed class WorkspaceViewModelTests
 
         Assert.NotNull(sut.DiagnoseSummaryDisplay);
         Assert.NotEmpty(sut.DiagnoseFindings);
+    }
+
+    [Fact]
+    public async Task SurveyTypeDisplay_ExistingAuditWithSsid_UsesSsidFormat()
+    {
+        var survey = BuildSurvey(SquareRoomFloor(10));
+        survey.Type = SurveyType.ExistingNetworkAudit;
+        survey.TargetNetworkSsid = "MyNetwork";
+        _surveyFileService.SurveyToReturn = survey;
+        var sut = CreateSut();
+
+        await sut.LoadAsync(FilePath);
+
+        Assert.Equal("WizardSurveyTypeSummaryExistingAuditWithSsidFormat", sut.SurveyTypeDisplay);
+    }
+
+    [Fact]
+    public async Task SurveyTypeDisplay_ExistingAuditNoSsid_UsesNoSsidKey()
+    {
+        var survey = BuildSurvey(SquareRoomFloor(10));
+        survey.Type = SurveyType.ExistingNetworkAudit;
+        survey.TargetNetworkSsid = null;
+        _surveyFileService.SurveyToReturn = survey;
+        var sut = CreateSut();
+
+        await sut.LoadAsync(FilePath);
+
+        Assert.Equal("WizardSurveyTypeSummaryExistingAuditNoSsid", sut.SurveyTypeDisplay);
+    }
+
+    [Fact]
+    public async Task HasReplaceableSuggestions_NoAccessPoints_IsFalse()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        Assert.False(sut.HasReplaceableSuggestions);
+    }
+
+    [Fact]
+    public async Task HasReplaceableSuggestions_HasSuggestedAccessPoint_IsTrue()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.AccessPoints.Add(new AccessPoint { Position = new Point2D(5, 5), Label = "AP", IsUserOverride = false });
+        var sut = await LoadedViewModelAsync(floor);
+
+        Assert.True(sut.HasReplaceableSuggestions);
+    }
+
+    [Fact]
+    public async Task HasReplaceableSuggestions_OnlyUserPlacedAccessPoints_IsFalse()
+    {
+        var floor = SquareRoomFloor(10);
+        floor.AccessPoints.Add(new AccessPoint { Position = new Point2D(5, 5), Label = "AP", IsUserOverride = true });
+        var sut = await LoadedViewModelAsync(floor);
+
+        Assert.False(sut.HasReplaceableSuggestions);
     }
 
     private static Survey BuildSurvey(Floor floor) => new()

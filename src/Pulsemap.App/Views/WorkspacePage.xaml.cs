@@ -145,6 +145,29 @@ public sealed partial class WorkspacePage : Page
 
     private void ClearWallSelection_Click(object sender, RoutedEventArgs e) => ViewModel.ClearWallSelection();
 
+    private async void SuggestPlacements_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.HasReplaceableSuggestions)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogTitle"),
+                Content = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogContent"),
+                PrimaryButtonText = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogPrimaryButton"),
+                CloseButtonText = _localizationService.GetString("WorkspaceReplaceSuggestionsDialogCloseButton"),
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+        }
+
+        await ViewModel.SuggestPlacementsCommand.ExecuteAsync(null);
+    }
+
     // Predicted-vs-actual comparison, anchored at the clicked point rather than a docked panel —
     // this is Workspace's own addition on top of the standalone Diagnose page, since only here is
     // there a survey/propagation model to predict against.
@@ -249,9 +272,9 @@ public sealed partial class WorkspacePage : Page
 
     private void CompareSnapshots_Click(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.Survey is not null)
+        if (ViewModel.Survey is not null && ViewModel.FilePath is not null)
         {
-            Frame.Navigate(typeof(SnapshotComparisonPage), ViewModel.Survey);
+            Frame.Navigate(typeof(SnapshotComparisonPage), (ViewModel.Survey, ViewModel.FilePath));
         }
     }
 

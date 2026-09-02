@@ -33,12 +33,20 @@
                 ItemsSource="{x:Bind ViewModel.Options, Mode=OneWay}"
                 SelectedItem="{x:Bind ViewModel.LeftOption, Mode=TwoWay}"
                 DisplayMemberPath="Label" />
+            <Button
+                x:Uid="SnapshotComparisonDeleteButton"
+                Click="DeleteLeftSnapshot_Click"
+                IsEnabled="{x:Bind ViewModel.CanDeleteLeftSnapshot, Mode=OneWay}" />
             <ComboBox
                 x:Uid="SnapshotComparisonRightField"
                 Width="180"
                 ItemsSource="{x:Bind ViewModel.Options, Mode=OneWay}"
                 SelectedItem="{x:Bind ViewModel.RightOption, Mode=TwoWay}"
                 DisplayMemberPath="Label" />
+            <Button
+                x:Uid="SnapshotComparisonDeleteButton"
+                Click="DeleteRightSnapshot_Click"
+                IsEnabled="{x:Bind ViewModel.CanDeleteRightSnapshot, Mode=OneWay}" />
             <ComboBox
                 x:Uid="SnapshotComparisonFloorField"
                 Width="160"

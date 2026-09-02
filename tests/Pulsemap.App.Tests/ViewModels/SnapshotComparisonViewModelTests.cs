@@ -1,16 +1,20 @@
 using Pulsemap.App.Core.Models;
 using Pulsemap.App.Core.Propagation;
+using Pulsemap.App.Tests.Fakes;
 using Pulsemap.App.ViewModels;
 
 namespace Pulsemap.App.Tests.ViewModels;
 
 public sealed class SnapshotComparisonViewModelTests
 {
+    private const string FilePath = "C:\\FakeSurveys\\Test.pulsemap";
+
     // Real (not faked) — pure/deterministic, and these tests want to confirm an actual heatmap
     // comes out the other end, not just that some delegate was called.
     private readonly LogDistancePropagationModel _propagationModel = new();
+    private readonly FakeSurveyFileService _surveyFileService = new();
 
-    private SnapshotComparisonViewModel CreateSut() => new(_propagationModel);
+    private SnapshotComparisonViewModel CreateSut() => new(_propagationModel, _surveyFileService);
 
     [Fact]
     public void Initialize_PopulatesOptionsWithCurrentFirstThenSnapshots()
@@ -18,7 +22,7 @@ public sealed class SnapshotComparisonViewModelTests
         var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
         var sut = CreateSut();
 
-        sut.Initialize(survey);
+        sut.Initialize(survey, FilePath);
 
         Assert.Equal(2, sut.Options.Count);
         Assert.Null(sut.Options[0].SnapshotId);
@@ -31,7 +35,7 @@ public sealed class SnapshotComparisonViewModelTests
         var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
         var sut = CreateSut();
 
-        sut.Initialize(survey);
+        sut.Initialize(survey, FilePath);
 
         Assert.Same(sut.Options[0], sut.LeftOption);
         Assert.Same(sut.Options[0], sut.RightOption);
@@ -46,7 +50,7 @@ public sealed class SnapshotComparisonViewModelTests
         // must come out empty even though the live ("Current") side has real coverage.
         var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
         var sut = CreateSut();
-        sut.Initialize(survey);
+        sut.Initialize(survey, FilePath);
         Assert.NotEmpty(sut.RightHeatmap);
 
         sut.RightOption = sut.Options[1];
@@ -61,13 +65,66 @@ public sealed class SnapshotComparisonViewModelTests
     {
         var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
         var sut = CreateSut();
-        sut.Initialize(survey);
+        sut.Initialize(survey, FilePath);
         int changedCount = 0;
         sut.Changed += (_, _) => changedCount++;
 
         sut.RightOption = sut.Options[1];
 
         Assert.Equal(1, changedCount);
+    }
+
+    [Fact]
+    public void CanDeleteLeftSnapshot_CurrentSelected_IsFalse()
+    {
+        var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
+        var sut = CreateSut();
+        sut.Initialize(survey, FilePath);
+
+        Assert.False(sut.CanDeleteLeftSnapshot);
+    }
+
+    [Fact]
+    public void CanDeleteLeftSnapshot_SnapshotSelected_IsTrue()
+    {
+        var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
+        var sut = CreateSut();
+        sut.Initialize(survey, FilePath);
+
+        sut.LeftOption = sut.Options[1];
+
+        Assert.True(sut.CanDeleteLeftSnapshot);
+    }
+
+    [Fact]
+    public async Task DeleteLeftSnapshotCommand_RemovesSnapshotAndSaves()
+    {
+        var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
+        var sut = CreateSut();
+        sut.Initialize(survey, FilePath);
+        sut.LeftOption = sut.Options[1];
+
+        await sut.DeleteLeftSnapshotCommand.ExecuteAsync(null);
+
+        Assert.Empty(survey.Snapshots);
+        Assert.Single(sut.Options);
+        Assert.Same(sut.Options[0], sut.LeftOption);
+        Assert.Single(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
+    public async Task DeleteLeftSnapshotCommand_RightSideKeepsItsOwnSelection()
+    {
+        var survey = BuildSurvey(withAccessPoint: true, snapshotLabel: "Before upgrade");
+        survey.Snapshots.Add(new SurveySnapshot { Label = "Another", Floors = survey.Snapshots[0].Floors });
+        var sut = CreateSut();
+        sut.Initialize(survey, FilePath);
+        sut.LeftOption = sut.Options[1];
+        sut.RightOption = sut.Options[2];
+
+        await sut.DeleteLeftSnapshotCommand.ExecuteAsync(null);
+
+        Assert.Equal("Another", sut.RightOption?.Label);
     }
 
     private static Survey BuildSurvey(bool withAccessPoint, string snapshotLabel)

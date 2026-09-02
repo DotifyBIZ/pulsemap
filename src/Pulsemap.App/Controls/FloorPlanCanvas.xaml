@@ -14,11 +14,22 @@
             PointerPressed="RootGrid_PointerPressed"
             PointerMoved="RootGrid_PointerMoved"
             PointerReleased="RootGrid_PointerReleased"
-            PointerCaptureLost="RootGrid_PointerCaptureLost">
+            PointerCaptureLost="RootGrid_PointerCaptureLost"
+            PointerExited="RootGrid_PointerExited">
             <Image x:Name="BackgroundLayer" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" />
             <Canvas x:Name="HeatmapLayer" />
             <Canvas x:Name="WallsLayer" />
             <Canvas x:Name="MarkersLayer" />
+            <Canvas x:Name="TooltipLayer" IsHitTestVisible="False">
+                <Border
+                    x:Name="HeatmapTooltip"
+                    Visibility="Collapsed"
+                    Background="{StaticResource Gray900Brush}"
+                    CornerRadius="4"
+                    Padding="6,3">
+                    <TextBlock x:Name="HeatmapTooltipText" Foreground="White" FontSize="{StaticResource FontSizeXs}" />
+                </Border>
+            </Canvas>
         </Grid>
     </ScrollViewer>
 </UserControl>

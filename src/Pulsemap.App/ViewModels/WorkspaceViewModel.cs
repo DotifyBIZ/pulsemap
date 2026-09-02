@@ -50,6 +50,8 @@ public partial class WorkspaceViewModel : ObservableObject
 
     private string? _filePath;
 
+    public string? FilePath => _filePath;
+
     public WorkspaceViewModel(
         ISurveyFileService surveyFileService,
         IPropagationModel propagationModel,
@@ -116,6 +118,17 @@ public partial class WorkspaceViewModel : ObservableObject
     public IReadOnlyList<CoverageSample> Heatmap { get; private set; } = [];
 
     public string SurveyNameDisplay => Survey?.Name ?? string.Empty;
+
+    /// <summary>Same survey-type summary the wizard shows on its final step — repeated here since
+    /// nothing in Workspace otherwise reminds a user which mode ("new deployment" vs. "existing
+    /// network audit") their survey is in once they've left the wizard.</summary>
+    public string SurveyTypeDisplay => Survey switch
+    {
+        null => string.Empty,
+        { Type: SurveyType.NewDeployment } => _localizationService.GetString("WizardSurveyTypeSummaryNewDeployment"),
+        { TargetNetworkSsid: null or "" } => _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditNoSsid"),
+        _ => string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditWithSsidFormat"), Survey.TargetNetworkSsid),
+    };
 
     public string CoveragePercentDisplay =>
         string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceCoveragePercentFormat"), CoveragePercent);
@@ -262,6 +275,7 @@ public partial class WorkspaceViewModel : ObservableObject
             SelectedBand = AvailableBands.Count > 0 ? AvailableBands[0] : Band.TwoPointFourGhz;
             SelectedFloor = Survey.Floors.Count > 0 ? Survey.Floors[0] : null;
             OnPropertyChanged(nameof(SurveyNameDisplay));
+            OnPropertyChanged(nameof(SurveyTypeDisplay));
             OnPropertyChanged(nameof(AvailableBands));
             OnPropertyChanged(nameof(Floors));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
@@ -678,6 +692,11 @@ public partial class WorkspaceViewModel : ObservableObject
             DiagnoseFindings.Add(new DiagnosticFindingDisplay(finding.Severity, message));
         }
     }
+
+    /// <summary>Whether running Suggest Placements again would discard previously suggested (not
+    /// user-placed) access points on this floor — lets the page ask for confirmation only when
+    /// there's actually something to lose, rather than always or never.</summary>
+    public bool HasReplaceableSuggestions => SelectedFloor?.AccessPoints.Any(ap => !ap.IsUserOverride) == true;
 
     [RelayCommand]
     private async Task SuggestPlacementsAsync()

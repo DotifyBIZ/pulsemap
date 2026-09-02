@@ -484,6 +484,9 @@
   <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
     <value>Band</value>
   </data>
+  <data name="SnapshotComparisonDeleteButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->
   <data name="WorkspaceCoveragePercentFormat" xml:space="preserve">
