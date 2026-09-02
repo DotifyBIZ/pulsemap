@@ -37,6 +37,9 @@
   <data name="HomeRecentSurveysHeader.Text" xml:space="preserve">
     <value>Recent surveys</value>
   </data>
+  <data name="HomeUpdateAvailableActionButton.Content" xml:space="preserve">
+    <value>View release</value>
+  </data>
 
   <!-- Surveys page -->
   <data name="SurveysTitle.Text" xml:space="preserve">
@@ -73,6 +76,15 @@
   </data>
   <data name="SettingsOpenLogsFolderButton.Content" xml:space="preserve">
     <value>Open Logs Folder</value>
+  </data>
+  <data name="SettingsUpdatesLabel.Text" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="SettingsUpdatesExplanation.Text" xml:space="preserve">
+    <value>On launch, Pulsemap checks GitHub's public release list for a newer version — a single request with nothing about you or your surveys attached. Turn it off if you'd rather it never happen.</value>
+  </data>
+  <data name="SettingsCheckForUpdatesToggle.Header" xml:space="preserve">
+    <value>Check for updates on launch</value>
   </data>
 
   <!-- New Survey wizard -->

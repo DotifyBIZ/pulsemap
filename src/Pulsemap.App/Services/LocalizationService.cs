@@ -110,6 +110,8 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Label",
             ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Save",
             ["WorkspaceSaveSnapshotDialogCloseButton"] = "Cancel",
+
+            ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
         },
         ["pl-PL"] = new Dictionary<string, string>
         {
@@ -178,6 +180,8 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceSaveSnapshotDialogLabelHeader"] = "Etykieta",
             ["WorkspaceSaveSnapshotDialogPrimaryButton"] = "Zapisz",
             ["WorkspaceSaveSnapshotDialogCloseButton"] = "Anuluj",
+
+            ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
         },
     };
 }
