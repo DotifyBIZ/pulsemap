@@ -21,7 +21,7 @@ Out of scope, deliberately: reading live data from AP controllers (UniFi, Omada,
 - **Live on-site measurement** through whichever network adapter you choose, honest about what that adapter can and can't see (a 6GHz-blind adapter shows 6GHz as unmeasured, not as no signal)
 - **Adaptive test-point suggestion** — points at the coverage gaps that matter most (Kriging-based interpolation), instead of a fixed grid
 - **AP count and placement recommendations** — position, transmit power, and channel per band, always overridable
-- **Floor plans and outdoor areas** — upload an image/PDF and draw on it, or build a structured room/zone list; outdoor areas use GPS
+- **Floor plans and outdoor areas** — upload an image/PDF and draw on it, or build a structured room/zone list; outdoor areas share the same local grid, positioned relative to the building
 - **Historical comparison** — snapshot a site before and after a change
 - A guided wizard for new surveys, with the same data editable on a freeform canvas underneath
 - Interactive heatmap, PDF report, and CSV/JSON export
@@ -37,7 +37,7 @@ Projects are local files — no account, no server, nothing phones home.
 ## Build phases
 
 - **Phase 1 (MVP):** single floor, walls with optional material + thickness, live scan via chosen adapter, manual test-point placement, heatmap + PDF/CSV/JSON export, AP count + placement suggestion, generic per-band recommendations
-- **Phase 2 (Depth):** multi-floor with ceiling/floor propagation between levels, adaptive Kriging-based test-point suggestion, outdoor/GPS areas, historical before/after comparison
+- **Phase 2 (Depth):** multi-floor with ceiling/floor propagation between levels, adaptive Kriging-based test-point suggestion, outdoor areas (same local grid as indoor floors — not GPS/map-based; deliberately dropped that framing once actually designed), historical before/after comparison
 - **Phase 3 (Reach):** Linux shell, vendor-specific config templates, monitor-mode adapter support
 
 ## Getting started
