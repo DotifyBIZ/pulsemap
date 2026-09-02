@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-01
 - **Status:** Accepted
-- **Deciders:** dmiesopust@pm.me
+- **Deciders:** Product Manager
 - **Affected systems:** `Pulsemap.App.Core` (`Logging/`), all catch blocks that previously swallowed or silently handled a failure, Settings page
 
 ## Context

@@ -115,6 +115,8 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogContent"] = "This replaces its existing reading with a new scan from here.",
             ["WorkspaceRecaptureDialogPrimaryButton"] = "Recapture",
             ["WorkspaceRecaptureDialogCloseButton"] = "Cancel",
+
+            ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
         },
         ["pl-PL"] = new Dictionary<string, string>
         {
@@ -188,6 +190,8 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceRecaptureDialogContent"] = "Zastąpi to jego dotychczasowy odczyt nowym skanem z tego miejsca.",
             ["WorkspaceRecaptureDialogPrimaryButton"] = "Zarejestruj ponownie",
             ["WorkspaceRecaptureDialogCloseButton"] = "Anuluj",
+
+            ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
         },
     };
 }

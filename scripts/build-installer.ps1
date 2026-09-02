@@ -15,8 +15,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Locked mode, matching how every other restore in this repo's CI runs — fails loudly on
-# packages.lock.json drift instead of silently resolving something newer.
-dotnet publish src\Pulsemap.App\Pulsemap.App.csproj -c Release -p:PublishProfile=win-x64 -p:RestoreLockedMode=true
+# packages.lock.json drift instead of silently resolving something newer. -p:Version stamps this
+# release's number into the published assembly so the in-app update check has something real to
+# compare against (see docs/adr/0004-update-check-network-call.md) — without it, every build would
+# report the SDK's static default version forever.
+dotnet publish src\Pulsemap.App\Pulsemap.App.csproj -c Release -p:PublishProfile=win-x64 -p:RestoreLockedMode=true -p:Version=$Version
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed with exit code $LASTEXITCODE"
 }

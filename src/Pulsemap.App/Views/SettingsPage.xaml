@@ -12,6 +12,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -44,6 +45,18 @@
                 <Button
                     x:Uid="SettingsOpenLogsFolderButton"
                     Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3" Margin="0,16,0,0" Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <StackPanel Spacing="12">
+                <TextBlock x:Uid="SettingsUpdatesLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock
+                    x:Uid="SettingsUpdatesExplanation"
+                    TextWrapping="Wrap"
+                    FontSize="{StaticResource FontSizeXs}"
+                    Foreground="{StaticResource Gray500Brush}" />
+                <ToggleSwitch x:Uid="SettingsCheckForUpdatesToggle" IsOn="{x:Bind ViewModel.CheckForUpdatesEnabled, Mode=TwoWay}" />
             </StackPanel>
         </Border>
     </Grid>
