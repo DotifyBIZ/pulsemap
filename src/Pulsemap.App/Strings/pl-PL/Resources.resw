@@ -347,8 +347,20 @@
   <data name="WorkspaceConfirmWalkPointButton.Content" xml:space="preserve">
     <value>Potwierdź przybycie i zarejestruj</value>
   </data>
+  <data name="WorkspaceSkipWalkPointButton.Content" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
   <data name="WorkspaceCancelWalkButton.Content" xml:space="preserve">
     <value>Anuluj pomiar</value>
+  </data>
+  <data name="WorkspaceWallMaterialUnspecified.Content" xml:space="preserve">
+    <value>Nieokreślony</value>
+  </data>
+  <data name="WorkspaceApplyWallMaterialButton.Content" xml:space="preserve">
+    <value>Zastosuj materiał</value>
+  </data>
+  <data name="WorkspaceClearWallSelectionButton.Content" xml:space="preserve">
+    <value>Wyczyść zaznaczenie</value>
   </data>
 
   <!-- Snapshot comparison page -->

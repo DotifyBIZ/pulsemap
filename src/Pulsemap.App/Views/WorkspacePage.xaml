@@ -65,6 +65,23 @@
             <Button x:Uid="WorkspaceAddFloorButton" Click="AddFloor_Click" />
 
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
+
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0" VerticalAlignment="Center" Visibility="{x:Bind ViewModel.HasWallSelection, Mode=OneWay}">
+                <TextBlock Text="{x:Bind ViewModel.WallSelectionCountDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <ComboBox x:Name="WallMaterialSelector" Width="170" SelectedIndex="0">
+                    <ComboBoxItem x:Uid="WorkspaceWallMaterialUnspecified" Tag="" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialDrywall" Tag="Drywall" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialGlassStandard" Tag="GlassStandard" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialGlassLowE" Tag="GlassLowE" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialWood" Tag="Wood" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialBrick" Tag="Brick" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialConcrete" Tag="Concrete" />
+                    <ComboBoxItem x:Uid="WizardWallMaterialReinforcedConcrete" Tag="ReinforcedConcrete" />
+                </ComboBox>
+                <NumberBox x:Name="WallThicknessInput" Width="110" PlaceholderText="m" SpinButtonPlacementMode="Compact" SmallChange="0.01" Minimum="0" />
+                <Button x:Uid="WorkspaceApplyWallMaterialButton" Click="ApplyWallMaterial_Click" />
+                <Button x:Uid="WorkspaceClearWallSelectionButton" Click="ClearWallSelection_Click" />
+            </StackPanel>
         </StackPanel>
 
         <Grid Grid.Row="3" Margin="0,20,0,0">
@@ -230,6 +247,7 @@
                                             <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
                                         </Button.Resources>
                                     </Button>
+                                    <Button x:Uid="WorkspaceSkipWalkPointButton" Command="{x:Bind ViewModel.SkipWalkPointCommand}" />
                                     <Button x:Uid="WorkspaceCancelWalkButton" Command="{x:Bind ViewModel.CancelGuidedWalkCommand}" />
                                     <ProgressRing IsActive="{x:Bind ViewModel.IsCapturingWalkPoint, Mode=OneWay}" Width="20" Height="20" />
                                 </StackPanel>

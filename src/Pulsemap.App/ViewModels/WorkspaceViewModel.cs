@@ -176,6 +176,7 @@ public partial class WorkspaceViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SkipWalkPointCommand))]
     public partial bool IsGuidedWalkActive { get; set; }
 
     public bool IsGuidedWalkIdle => !IsGuidedWalkActive;
@@ -187,6 +188,7 @@ public partial class WorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SkipWalkPointCommand))]
     public partial bool IsCapturingWalkPoint { get; set; }
 
     [ObservableProperty]
@@ -204,6 +206,26 @@ public partial class WorkspaceViewModel : ObservableObject
             point.X,
             point.Y)
         : _localizationService.GetString("WorkspaceGuidedWalkNotWalking");
+
+    // Points still queued (after the current one) in an active guided walk, for the canvas to
+    // show as upcoming-point markers.
+    public IReadOnlyList<Point2D> RemainingWalkPoints => IsGuidedWalkActive ? [.. _guidedWalkQueue.Skip(1)] : [];
+
+    // Wall material editing: the Select tool toggles walls in and out of this set by clicking
+    // them, then a batch action applies one material/thickness to everything selected.
+    private readonly List<Wall> _selectedWalls = [];
+
+    public IReadOnlyList<Wall> SelectedWalls => _selectedWalls;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWallSelection))]
+    [NotifyPropertyChangedFor(nameof(WallSelectionCountDisplay))]
+    public partial int SelectedWallCount { get; set; }
+
+    public bool HasWallSelection => SelectedWallCount > 0;
+
+    public string WallSelectionCountDisplay =>
+        string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceWallSelectionCountFormat"), SelectedWallCount);
 
     public async Task LoadAsync(string filePath, CancellationToken cancellationToken = default)
     {
@@ -308,7 +330,7 @@ public partial class WorkspaceViewModel : ObservableObject
     private bool CanStartGuidedWalk() => !IsGuidedWalkActive && SelectedAdapter is not null && Survey is not null && SelectedFloor is not null;
 
     [RelayCommand(CanExecute = nameof(CanStartGuidedWalk))]
-    private void StartGuidedWalk()
+    private async Task StartGuidedWalkAsync()
     {
         if (Survey is null || SelectedFloor is null)
         {
@@ -326,6 +348,10 @@ public partial class WorkspaceViewModel : ObservableObject
         _guidedWalkTotalPoints = points.Count;
         GuidedWalkStatusMessage = null;
         IsGuidedWalkActive = true;
+        SelectedFloor.PendingGuidedWalkPoints.Clear();
+        SelectedFloor.PendingGuidedWalkPoints.AddRange(points);
+        SelectedFloor.PendingGuidedWalkBand = SelectedBand;
+        await SaveAndRefreshAsync();
         AdvanceGuidedWalk();
     }
 
@@ -352,9 +378,11 @@ public partial class WorkspaceViewModel : ObservableObject
 
             var testPoint = TestPointCapture.BuildTestPoint(position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
             SelectedFloor.TestPoints.Add(testPoint);
+            _guidedWalkQueue.Dequeue();
+            SelectedFloor.PendingGuidedWalkPoints.Clear();
+            SelectedFloor.PendingGuidedWalkPoints.AddRange(_guidedWalkQueue);
             await SaveAndRefreshAsync();
 
-            _guidedWalkQueue.Dequeue();
             AdvanceGuidedWalk();
         }
         finally
@@ -366,13 +394,37 @@ public partial class WorkspaceViewModel : ObservableObject
     private bool CanCancelGuidedWalk() => IsGuidedWalkActive;
 
     [RelayCommand(CanExecute = nameof(CanCancelGuidedWalk))]
-    private void CancelGuidedWalk()
+    private async Task CancelGuidedWalkAsync()
     {
         _guidedWalkQueue.Clear();
         IsGuidedWalkActive = false;
         CurrentWalkPoint = null;
         GuidedWalkStatusMessage = _localizationService.GetString("WorkspaceGuidedWalkCanceled");
+        if (SelectedFloor is not null)
+        {
+            SelectedFloor.PendingGuidedWalkPoints.Clear();
+            await SaveAndRefreshAsync();
+        }
+
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool CanSkipWalkPoint() => IsGuidedWalkActive && !IsCapturingWalkPoint;
+
+    [RelayCommand(CanExecute = nameof(CanSkipWalkPoint))]
+    private async Task SkipWalkPointAsync()
+    {
+        if (SelectedFloor is null || _guidedWalkQueue.Count == 0)
+        {
+            return;
+        }
+
+        _guidedWalkQueue.Dequeue();
+        SelectedFloor.PendingGuidedWalkPoints.Clear();
+        SelectedFloor.PendingGuidedWalkPoints.AddRange(_guidedWalkQueue);
+        await SaveAndRefreshAsync();
+        AdvanceGuidedWalk();
     }
 
     private void AdvanceGuidedWalk()
@@ -388,6 +440,7 @@ public partial class WorkspaceViewModel : ObservableObject
             CurrentWalkPoint = _guidedWalkQueue.Peek();
         }
 
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -421,6 +474,89 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         remove();
+        _selectedWalls.RemoveAll(wall => !SelectedFloor.Walls.Contains(wall));
+        SelectedWallCount = _selectedWalls.Count;
+        await SaveAndRefreshAsync();
+    }
+
+    /// <summary>Nearest wall or test point to a Select-tool click, within the same hit tolerance
+    /// the Delete tool uses — a wall is offered for material editing, a test point for recapture.
+    /// Access points aren't selectable here; neither has a per-element edit affordance today.</summary>
+    public object? FindNearestSelectable(Point2D at)
+    {
+        if (SelectedFloor is not { } floor)
+        {
+            return null;
+        }
+
+        var (testPoint, testPointDistance) = NearestTestPoint(floor, at);
+        var (wall, wallDistance) = NearestWall(floor, at);
+        double best = Math.Min(testPointDistance, wallDistance);
+        if (best > DeleteHitToleranceMeters)
+        {
+            return null;
+        }
+
+        return best == testPointDistance ? testPoint : wall;
+    }
+
+    public void ToggleWallSelection(Wall wall)
+    {
+        if (!_selectedWalls.Remove(wall))
+        {
+            _selectedWalls.Add(wall);
+        }
+
+        SelectedWallCount = _selectedWalls.Count;
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ClearWallSelection()
+    {
+        if (_selectedWalls.Count == 0)
+        {
+            return;
+        }
+
+        _selectedWalls.Clear();
+        SelectedWallCount = 0;
+        FloorChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public async Task ApplyMaterialToSelectedWallsAsync(WallMaterial? material, double? thicknessMeters)
+    {
+        if (_selectedWalls.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var wall in _selectedWalls)
+        {
+            wall.Material = material;
+            wall.ThicknessMeters = thicknessMeters;
+        }
+
+        ClearWallSelection();
+        await SaveAndRefreshAsync();
+    }
+
+    public async Task RecaptureTestPointAsync(TestPoint testPoint)
+    {
+        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        {
+            return;
+        }
+
+        var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+        if (scanResult.Status != WlanScanStatus.Success)
+        {
+            ErrorMessage = DescribeScanStatus(scanResult.Status);
+            return;
+        }
+
+        var rebuilt = TestPointCapture.BuildTestPoint(testPoint.Position, scanResult, Survey, SelectedAdapter.Name, DateTimeOffset.Now);
+        SelectedFloor.TestPoints.Remove(testPoint);
+        SelectedFloor.TestPoints.Add(rebuilt);
         await SaveAndRefreshAsync();
     }
 
@@ -567,6 +703,21 @@ public partial class WorkspaceViewModel : ObservableObject
 
     partial void OnSelectedFloorChanged(Floor? value)
     {
+        ClearWallSelection();
+
+        _guidedWalkQueue.Clear();
+        IsGuidedWalkActive = false;
+        CurrentWalkPoint = null;
+        if (value is { PendingGuidedWalkPoints.Count: > 0 } floor)
+        {
+            _guidedWalkQueue = new Queue<Point2D>(floor.PendingGuidedWalkPoints);
+            _guidedWalkTotalPoints = _guidedWalkQueue.Count;
+            SelectedBand = floor.PendingGuidedWalkBand ?? SelectedBand;
+            IsGuidedWalkActive = true;
+            CurrentWalkPoint = _guidedWalkQueue.Peek();
+        }
+
+        OnPropertyChanged(nameof(RemainingWalkPoints));
         Recompute();
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -601,41 +752,9 @@ public partial class WorkspaceViewModel : ObservableObject
 
     private static bool TryFindNearestElement(Floor floor, Point2D at, out Action remove)
     {
-        TestPoint? nearestTestPoint = null;
-        double nearestTestPointDist = double.MaxValue;
-        foreach (var testPoint in floor.TestPoints)
-        {
-            double distance = testPoint.Position.DistanceTo(at);
-            if (distance < nearestTestPointDist)
-            {
-                nearestTestPointDist = distance;
-                nearestTestPoint = testPoint;
-            }
-        }
-
-        AccessPoint? nearestAccessPoint = null;
-        double nearestAccessPointDist = double.MaxValue;
-        foreach (var accessPoint in floor.AccessPoints)
-        {
-            double distance = accessPoint.Position.DistanceTo(at);
-            if (distance < nearestAccessPointDist)
-            {
-                nearestAccessPointDist = distance;
-                nearestAccessPoint = accessPoint;
-            }
-        }
-
-        Wall? nearestWall = null;
-        double nearestWallDist = double.MaxValue;
-        foreach (var wall in floor.Walls)
-        {
-            double distance = DistanceToSegment(at, wall.Start, wall.End);
-            if (distance < nearestWallDist)
-            {
-                nearestWallDist = distance;
-                nearestWall = wall;
-            }
-        }
+        var (nearestTestPoint, nearestTestPointDist) = NearestTestPoint(floor, at);
+        var (nearestAccessPoint, nearestAccessPointDist) = NearestAccessPoint(floor, at);
+        var (nearestWall, nearestWallDist) = NearestWall(floor, at);
 
         double best = Math.Min(nearestTestPointDist, Math.Min(nearestAccessPointDist, nearestWallDist));
         if (best > DeleteHitToleranceMeters)
@@ -663,6 +782,57 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         return true;
+    }
+
+    private static (TestPoint? Item, double Distance) NearestTestPoint(Floor floor, Point2D at)
+    {
+        TestPoint? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var testPoint in floor.TestPoints)
+        {
+            double distance = testPoint.Position.DistanceTo(at);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = testPoint;
+            }
+        }
+
+        return (nearest, nearestDistance);
+    }
+
+    private static (AccessPoint? Item, double Distance) NearestAccessPoint(Floor floor, Point2D at)
+    {
+        AccessPoint? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var accessPoint in floor.AccessPoints)
+        {
+            double distance = accessPoint.Position.DistanceTo(at);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = accessPoint;
+            }
+        }
+
+        return (nearest, nearestDistance);
+    }
+
+    private static (Wall? Item, double Distance) NearestWall(Floor floor, Point2D at)
+    {
+        Wall? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var wall in floor.Walls)
+        {
+            double distance = DistanceToSegment(at, wall.Start, wall.End);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = wall;
+            }
+        }
+
+        return (nearest, nearestDistance);
     }
 
     private static double DistanceToSegment(Point2D point, Point2D segmentStart, Point2D segmentEnd)

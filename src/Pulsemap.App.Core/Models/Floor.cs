@@ -29,4 +29,13 @@ public sealed class Floor
     public List<TestPoint> TestPoints { get; init; } = [];
 
     public List<AccessPoint> AccessPoints { get; init; } = [];
+
+    /// <summary>Points not yet captured in an in-progress guided measurement walk, so closing and
+    /// reopening the app mid-walk resumes instead of losing the remaining queue. Empty when no
+    /// walk is in progress on this floor.</summary>
+    public List<Point2D> PendingGuidedWalkPoints { get; init; } = [];
+
+    /// <summary>The band the pending walk above was suggested for — needed to restore
+    /// <c>SelectedBand</c> on resume, since the suggester's candidate order depends on it.</summary>
+    public Band? PendingGuidedWalkBand { get; set; }
 }
