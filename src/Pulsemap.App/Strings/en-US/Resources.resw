@@ -25,9 +25,6 @@
   </data>
 
   <!-- Home page -->
-  <data name="HomeTitle.Text" xml:space="preserve">
-    <value>Home</value>
-  </data>
   <data name="HomeSubtitle.Text" xml:space="preserve">
     <value>Your surveys, all in one place.</value>
   </data>
@@ -277,6 +274,84 @@
   </data>
   <data name="WorkspaceDeleteToolButton.Content" xml:space="preserve">
     <value>Delete</value>
+  </data>
+  <data name="WorkspaceToolLegendButton.Content" xml:space="preserve">
+    <value>Tool Help</value>
+  </data>
+  <data name="WorkspaceToolLegendTitle.Text" xml:space="preserve">
+    <value>What each tool does</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectHeader.Text" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="WorkspaceToolLegendSelectBody.Text" xml:space="preserve">
+    <value>Click a wall to add it to a multi-select for batch material/thickness editing. Click a test point to rescan and replace its reading. On an outdoor area, drag its edge to resize or drag inside it to move the whole area.</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointHeader.Text" xml:space="preserve">
+    <value>Add Test Point</value>
+  </data>
+  <data name="WorkspaceToolLegendAddTestPointBody.Text" xml:space="preserve">
+    <value>Click anywhere on the canvas to place a manual test point without doing a full guided walk.</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallHeader.Text" xml:space="preserve">
+    <value>Draw Wall</value>
+  </data>
+  <data name="WorkspaceToolLegendDrawWallBody.Text" xml:space="preserve">
+    <value>Click one endpoint, then click the other to draw a wall between them.</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteHeader.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="WorkspaceToolLegendDeleteBody.Text" xml:space="preserve">
+    <value>Click near a wall, test point, or access point to remove it. An Undo option appears right after, until your next delete.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Title" xml:space="preserve">
+    <value>Welcome to the Workspace</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.Subtitle" xml:space="preserve">
+    <value>Select does different things depending on what you click: a wall, a test point, or an outdoor area's edge. The Tool Help button always explains this if you forget.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep1.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Title" xml:space="preserve">
+    <value>Add Test Point</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.Subtitle" xml:space="preserve">
+    <value>Click anywhere to drop a manual test point — or use the Adapter tab's guided walk to be led through suggested points instead.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep2.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Title" xml:space="preserve">
+    <value>Draw Wall</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.Subtitle" xml:space="preserve">
+    <value>Click one end, then the other, to draw a wall. Give it a material afterward with Select for a more accurate coverage prediction.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.ActionButtonContent" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="WorkspaceOnboardingStep3.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Title" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.Subtitle" xml:space="preserve">
+    <value>Click near anything to remove it — an Undo option appears right after, so a misclick isn't permanent.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.ActionButtonContent" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="WorkspaceOnboardingStep4.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
   </data>
   <data name="WorkspaceBackButton.Content" xml:space="preserve">
     <value>Back</value>
