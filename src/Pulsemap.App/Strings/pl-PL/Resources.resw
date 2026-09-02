@@ -374,6 +374,9 @@
   <data name="WorkspaceClearWallSelectionButton.Content" xml:space="preserve">
     <value>Wyczyść zaznaczenie</value>
   </data>
+  <data name="WorkspaceUndoDeleteButton.Content" xml:space="preserve">
+    <value>Cofnij</value>
+  </data>
 
   <!-- Snapshot comparison page -->
   <data name="SnapshotComparisonTitle.Text" xml:space="preserve">
