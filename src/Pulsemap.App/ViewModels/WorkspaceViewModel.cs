@@ -28,9 +28,8 @@ public partial class WorkspaceViewModel : ObservableObject
     private const double HeatmapGridSpacingMeters = 0.5;
     private const double DeleteHitToleranceMeters = 0.5;
 
-    // A new outdoor area's extent, since there's no dedicated bounds-editing UI yet — the user can
-    // redraw/relocate what it covers by editing OutdoorBoundsMin/Max later if this default doesn't
-    // fit (e.g. via re-export/re-import), a known limitation of this first pass at outdoor areas.
+    // A new outdoor area's starting extent — resizable/movable afterward via the canvas's drag
+    // handle (see FloorPlanCanvas/UpdateOutdoorBoundsAsync), so this is just a reasonable default.
     private const double DefaultOutdoorBoundsSizeMeters = 40;
 
     private readonly ISurveyFileService _surveyFileService;
@@ -463,6 +462,18 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         SelectedFloor.Walls.Add(new Wall { Start = start, End = end });
+        await SaveAndRefreshAsync();
+    }
+
+    public async Task UpdateOutdoorBoundsAsync(Point2D min, Point2D max)
+    {
+        if (SelectedFloor is not { IsOutdoor: true } floor)
+        {
+            return;
+        }
+
+        floor.OutdoorBoundsMin = min;
+        floor.OutdoorBoundsMax = max;
         await SaveAndRefreshAsync();
     }
 

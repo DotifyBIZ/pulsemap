@@ -102,6 +102,31 @@ public sealed class WorkspaceViewModelTests
     }
 
     [Fact]
+    public async Task UpdateOutdoorBoundsAsync_OutdoorFloor_UpdatesBoundsAndSaves()
+    {
+        var floor = new Floor { PlanSource = new RoomListSource(), IsOutdoor = true, OutdoorBoundsMin = new Point2D(0, 0), OutdoorBoundsMax = new Point2D(40, 40) };
+        var sut = await LoadedViewModelAsync(floor);
+
+        await sut.UpdateOutdoorBoundsAsync(new Point2D(5, 5), new Point2D(25, 30));
+
+        Assert.Equal(new Point2D(5, 5), sut.SelectedFloor!.OutdoorBoundsMin);
+        Assert.Equal(new Point2D(25, 30), sut.SelectedFloor.OutdoorBoundsMax);
+        Assert.Single(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
+    public async Task UpdateOutdoorBoundsAsync_IndoorFloor_DoesNothing()
+    {
+        var floor = SquareRoomFloor(10);
+        var sut = await LoadedViewModelAsync(floor);
+
+        await sut.UpdateOutdoorBoundsAsync(new Point2D(5, 5), new Point2D(25, 30));
+
+        Assert.Null(sut.SelectedFloor!.OutdoorBoundsMin);
+        Assert.Empty(_surveyFileService.SaveCalls);
+    }
+
+    [Fact]
     public async Task DeleteNearestElementAsync_WithinTolerance_RemovesNearestTestPoint()
     {
         var floor = SquareRoomFloor(10);

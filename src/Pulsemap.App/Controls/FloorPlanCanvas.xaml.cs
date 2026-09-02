@@ -30,6 +30,9 @@ public sealed partial class FloorPlanCanvas : UserControl
     private const double WalkTargetRadiusPx = 14;
     private const double WallStrokeThicknessPx = 4;
     private const double HeatmapOpacity = 0.55;
+    private const double OutdoorResizeHandleRadiusPx = 8;
+    private const double OutdoorHitToleranceMeters = 0.5; // matches WorkspaceViewModel's own DeleteHitToleranceMeters
+    private const double MinOutdoorSizeMeters = 2;
 
     private readonly FloorPlanImageCache _imageCache;
 
@@ -39,6 +42,28 @@ public sealed partial class FloorPlanCanvas : UserControl
     private double _backgroundWidthMeters;
     private double _backgroundHeightMeters;
     private int _renderVersion;
+
+    // Outdoor-bounds drag state — resize/move only ever needs one anchored corner (Min) and one
+    // dragged corner (Max) rather than four independent handles, the smallest interaction that
+    // still covers "resize" and "reposition" without a full multi-handle editor.
+    private OutdoorDragMode _outdoorDragMode = OutdoorDragMode.None;
+    private Point2D _dragStartPointerMeters;
+    private Point2D _dragStartMin;
+    private Point2D _dragStartMax;
+    private Point2D? _previewBoundsMin;
+    private Point2D? _previewBoundsMax;
+    private Floor? _lastFloor;
+    private IReadOnlyList<CoverageSample> _lastHeatmap = [];
+    private Point2D? _lastWalkTarget;
+    private IReadOnlyCollection<Wall>? _lastSelectedWalls;
+    private IReadOnlyList<Point2D>? _lastRemainingWalkPoints;
+
+    private enum OutdoorDragMode
+    {
+        None,
+        Move,
+        Resize,
+    }
 
     public FloorPlanCanvas()
     {
@@ -55,6 +80,8 @@ public sealed partial class FloorPlanCanvas : UserControl
     public event EventHandler<Point2D>? DeleteRequested;
 
     public event EventHandler<Point2D>? WallSelectRequested;
+
+    public event EventHandler<(Point2D Min, Point2D Max)>? OutdoorBoundsChanged;
 
     /// <summary>
     /// Renders walls/points/heatmap immediately, plus (for an image-style floor plan) the
@@ -147,6 +174,12 @@ public sealed partial class FloorPlanCanvas : UserControl
         IReadOnlyCollection<Wall>? selectedWalls,
         IReadOnlyList<Point2D>? remainingWalkPoints)
     {
+        _lastFloor = floor;
+        _lastHeatmap = heatmap;
+        _lastWalkTarget = walkTarget;
+        _lastSelectedWalls = selectedWalls;
+        _lastRemainingWalkPoints = remainingWalkPoints;
+
         _bounds = ComputeBounds(floor);
         RootGrid.Width = _bounds.WidthMeters * PixelsPerMeter;
         RootGrid.Height = _bounds.HeightMeters * PixelsPerMeter;
@@ -170,6 +203,14 @@ public sealed partial class FloorPlanCanvas : UserControl
         foreach (var wall in floor.Walls)
         {
             WallsLayer.Children.Add(BuildWallLine(wall, selectedWalls?.Contains(wall) == true));
+        }
+
+        if (floor.IsOutdoor
+            && (_previewBoundsMin ?? floor.OutdoorBoundsMin) is { } boundsMin
+            && (_previewBoundsMax ?? floor.OutdoorBoundsMax) is { } boundsMax)
+        {
+            MarkersLayer.Children.Add(BuildOutdoorBoundsRectangle(boundsMin, boundsMax));
+            MarkersLayer.Children.Add(BuildOutdoorResizeHandle(boundsMax));
         }
 
         foreach (var testPoint in floor.TestPoints)
@@ -294,6 +335,41 @@ public sealed partial class FloorPlanCanvas : UserControl
         return marker;
     }
 
+    private Rectangle BuildOutdoorBoundsRectangle(Point2D min, Point2D max)
+    {
+        var (x1, y1) = ToPixels(min);
+        var (x2, y2) = ToPixels(max);
+        var rectangle = new Rectangle
+        {
+            Width = Math.Abs(x2 - x1),
+            Height = Math.Abs(y2 - y1),
+            Stroke = new SolidColorBrush(Colors.SeaGreen),
+            StrokeThickness = 2,
+            StrokeDashArray = [6, 3],
+            Fill = new SolidColorBrush(Color.FromArgb(24, 46, 139, 87)),
+        };
+        Canvas.SetLeft(rectangle, Math.Min(x1, x2));
+        Canvas.SetTop(rectangle, Math.Min(y1, y2));
+        return rectangle;
+    }
+
+    private Ellipse BuildOutdoorResizeHandle(Point2D max)
+    {
+        var (px, py) = ToPixels(max);
+        double diameter = OutdoorResizeHandleRadiusPx * 2;
+        var handle = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Fill = new SolidColorBrush(Colors.SeaGreen),
+            Stroke = new SolidColorBrush(Colors.White),
+            StrokeThickness = 2,
+        };
+        Canvas.SetLeft(handle, px - OutdoorResizeHandleRadiusPx);
+        Canvas.SetTop(handle, py - OutdoorResizeHandleRadiusPx);
+        return handle;
+    }
+
     private static Color HeatmapColor(double signalDbm) => signalDbm switch
     {
         >= -50 => Colors.Green,
@@ -332,12 +408,102 @@ public sealed partial class FloorPlanCanvas : UserControl
                 break;
 
             case WorkspaceTool.Select:
+                if (TryStartOutdoorBoundsDrag(position, meters))
+                {
+                    RootGrid.CapturePointer(e.Pointer);
+                    break;
+                }
+
                 WallSelectRequested?.Invoke(this, meters);
                 break;
 
             default:
                 break;
         }
+    }
+
+    // A click on the resize handle or inside the rectangle body starts a drag instead of firing
+    // WallSelectRequested — but only when nothing selectable (test point/AP) is under the click,
+    // so precise clicks on markers placed inside an outdoor area still work as before.
+    private bool TryStartOutdoorBoundsDrag(Windows.Foundation.Point position, Point2D meters)
+    {
+        if (_lastFloor is not { IsOutdoor: true } floor
+            || (_previewBoundsMin ?? floor.OutdoorBoundsMin) is not { } min
+            || (_previewBoundsMax ?? floor.OutdoorBoundsMax) is not { } max
+            || IsNearExistingMarker(floor, meters))
+        {
+            return false;
+        }
+
+        var (maxPx, maxPy) = ToPixels(max);
+        double handleDx = position.X - maxPx;
+        double handleDy = position.Y - maxPy;
+        bool onHandle = Math.Sqrt((handleDx * handleDx) + (handleDy * handleDy)) <= OutdoorResizeHandleRadiusPx;
+        bool insideBody = meters.X >= min.X && meters.X <= max.X && meters.Y >= min.Y && meters.Y <= max.Y;
+
+        if (!onHandle && !insideBody)
+        {
+            return false;
+        }
+
+        _outdoorDragMode = onHandle ? OutdoorDragMode.Resize : OutdoorDragMode.Move;
+        _dragStartPointerMeters = meters;
+        _dragStartMin = min;
+        _dragStartMax = max;
+        return true;
+    }
+
+    private static bool IsNearExistingMarker(Floor floor, Point2D at) =>
+        floor.TestPoints.Any(tp => tp.Position.DistanceTo(at) <= OutdoorHitToleranceMeters) ||
+        floor.AccessPoints.Any(ap => ap.Position.DistanceTo(at) <= OutdoorHitToleranceMeters);
+
+    private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_outdoorDragMode == OutdoorDragMode.None || _lastFloor is null)
+        {
+            return;
+        }
+
+        var meters = ToMeters(e.GetCurrentPoint(RootGrid).Position);
+        double deltaX = meters.X - _dragStartPointerMeters.X;
+        double deltaY = meters.Y - _dragStartPointerMeters.Y;
+
+        if (_outdoorDragMode == OutdoorDragMode.Move)
+        {
+            _previewBoundsMin = new Point2D(_dragStartMin.X + deltaX, _dragStartMin.Y + deltaY);
+            _previewBoundsMax = new Point2D(_dragStartMax.X + deltaX, _dragStartMax.Y + deltaY);
+        }
+        else
+        {
+            _previewBoundsMin = _dragStartMin;
+            _previewBoundsMax = new Point2D(
+                Math.Max(_dragStartMin.X + MinOutdoorSizeMeters, _dragStartMax.X + deltaX),
+                Math.Max(_dragStartMin.Y + MinOutdoorSizeMeters, _dragStartMax.Y + deltaY));
+        }
+
+        RenderCore(_lastFloor, _lastHeatmap, _lastWalkTarget, _lastSelectedWalls, _lastRemainingWalkPoints);
+    }
+
+    private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e) => EndOutdoorBoundsDrag(raiseChanged: true);
+
+    private void RootGrid_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => EndOutdoorBoundsDrag(raiseChanged: false);
+
+    private void EndOutdoorBoundsDrag(bool raiseChanged)
+    {
+        if (_outdoorDragMode == OutdoorDragMode.None)
+        {
+            return;
+        }
+
+        _outdoorDragMode = OutdoorDragMode.None;
+
+        if (raiseChanged && _previewBoundsMin is { } min && _previewBoundsMax is { } max)
+        {
+            OutdoorBoundsChanged?.Invoke(this, (min, max));
+        }
+
+        _previewBoundsMin = null;
+        _previewBoundsMax = null;
     }
 
     private (double X, double Y) ToPixels(Point2D meters) =>
@@ -382,8 +548,11 @@ public sealed partial class FloorPlanCanvas : UserControl
         }
 
         // An outdoor area has no walls to size the canvas from — same explicit-bounds fallback
-        // FloorGrid uses for its candidate grid.
-        if (floor.IsOutdoor && floor.OutdoorBoundsMin is { } outdoorMin && floor.OutdoorBoundsMax is { } outdoorMax)
+        // FloorGrid uses for its candidate grid. Prefers the live drag preview (if any) so the
+        // canvas doesn't clip a rectangle being resized/moved past its last-committed extent.
+        if (floor.IsOutdoor
+            && (_previewBoundsMin ?? floor.OutdoorBoundsMin) is { } outdoorMin
+            && (_previewBoundsMax ?? floor.OutdoorBoundsMax) is { } outdoorMax)
         {
             xs.Add(outdoorMin.X);
             xs.Add(outdoorMax.X);
