@@ -75,4 +75,38 @@ public sealed class OrdinaryKrigingInterpolatorTests
     {
         Assert.Throws<ArgumentException>(() => _sut.Interpolate([], [new Point2D(0, 0)]));
     }
+
+    [Fact]
+    public void InterpolateVariance_AtAKnownSamplePosition_IsNearZero()
+    {
+        CoverageSample[] samples =
+        [
+            new(new Point2D(0, 0), -40),
+            new(new Point2D(10, 0), -55),
+            new(new Point2D(0, 10), -48),
+            new(new Point2D(10, 10), -62),
+        ];
+
+        var variance = _sut.InterpolateVariance(samples, [new Point2D(0, 0)]);
+
+        // Ordinary kriging is an exact interpolator with no nugget configured here — querying
+        // exactly at a known sample should carry (near) zero estimation uncertainty.
+        Assert.True(Math.Abs(variance[0]) < 0.01, $"Expected ~0 variance at a known sample position, got {variance[0]}.");
+    }
+
+    [Fact]
+    public void InterpolateVariance_FarFromEverySample_ExceedsVarianceNearASample()
+    {
+        CoverageSample[] samples =
+        [
+            new(new Point2D(0, 0), -40),
+            new(new Point2D(10, 0), -55),
+            new(new Point2D(0, 10), -48),
+            new(new Point2D(10, 10), -62),
+        ];
+
+        var variances = _sut.InterpolateVariance(samples, [new Point2D(0.5, 0.5), new Point2D(1000, 1000)]);
+
+        Assert.True(variances[1] > variances[0], $"Expected the far point's variance ({variances[1]}) to exceed the near point's ({variances[0]}) — kriging should be more uncertain far from any measurement.");
+    }
 }

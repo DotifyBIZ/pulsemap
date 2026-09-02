@@ -48,31 +48,38 @@ public sealed class PdfReportExporter : IReportExporter
         writer.DrawLine($"Generated {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm} UTC", BodyFont);
         writer.DrawGap();
 
-        writer.DrawLine("Floor summary", HeadingFont);
-        writer.DrawLine($"Walls: {survey.Floor.Walls.Count}", BodyFont);
-        writer.DrawLine($"Test points: {survey.Floor.TestPoints.Count}", BodyFont);
-        writer.DrawLine($"Access points: {survey.Floor.AccessPoints.Count}", BodyFont);
-        writer.DrawGap();
+        foreach (var floor in survey.Floors)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-        writer.DrawLine("Access point recommendations", HeadingFont);
-        if (survey.Floor.AccessPoints.Count == 0)
-        {
-            writer.DrawLine("No access points suggested or placed yet.", BodyFont);
-        }
-        else
-        {
-            foreach (var accessPoint in survey.Floor.AccessPoints)
+            writer.DrawLine(floor.IsOutdoor ? $"{floor.Name} (outdoor)" : floor.Name, HeadingFont);
+            writer.DrawLine($"Walls: {floor.Walls.Count}", BodyFont);
+            writer.DrawLine($"Test points: {floor.TestPoints.Count}", BodyFont);
+            writer.DrawLine($"Access points: {floor.AccessPoints.Count}", BodyFont);
+            writer.DrawGap();
+
+            writer.DrawLine("Access point recommendations", HeadingFont);
+            if (floor.AccessPoints.Count == 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                string overrideNote = accessPoint.IsUserOverride ? " [user-edited]" : string.Empty;
-                writer.DrawLine($"{accessPoint.Label} — ({accessPoint.Position.X:0.0}, {accessPoint.Position.Y:0.0}){overrideNote}", BodyFont);
-
-                foreach (var (band, radio) in accessPoint.Radios.OrderBy(radioEntry => radioEntry.Key))
+                writer.DrawLine("No access points suggested or placed yet.", BodyFont);
+            }
+            else
+            {
+                foreach (var accessPoint in floor.AccessPoints)
                 {
-                    writer.DrawLine($"    {FormatBand(band)}: {radio.TransmitPowerDbm:0} dBm, channel {radio.Channel}", BodyFont);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string overrideNote = accessPoint.IsUserOverride ? " [user-edited]" : string.Empty;
+                    writer.DrawLine($"{accessPoint.Label} — ({accessPoint.Position.X:0.0}, {accessPoint.Position.Y:0.0}){overrideNote}", BodyFont);
+
+                    foreach (var (band, radio) in accessPoint.Radios.OrderBy(radioEntry => radioEntry.Key))
+                    {
+                        writer.DrawLine($"    {FormatBand(band)}: {radio.TransmitPowerDbm:0} dBm, channel {radio.Channel}", BodyFont);
+                    }
                 }
             }
+
+            writer.DrawGap();
         }
 
         document.Save(destination);

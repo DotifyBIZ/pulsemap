@@ -7,6 +7,9 @@ namespace Pulsemap.App.ViewModels;
 
 public partial class HomeViewModel(ISurveyLibraryService surveyLibraryService) : ObservableObject
 {
+    // Home is a dashboard, not the library — the Surveys nav tab shows the full, unlimited list.
+    private const int RecentSurveysLimit = 3;
+
     public ObservableCollection<SurveySummary> Surveys { get; } = [];
 
     [ObservableProperty]
@@ -20,7 +23,7 @@ public partial class HomeViewModel(ISurveyLibraryService surveyLibraryService) :
         {
             var summaries = await surveyLibraryService.ListSurveysAsync();
             Surveys.Clear();
-            foreach (var summary in summaries)
+            foreach (var summary in summaries.Take(RecentSurveysLimit))
             {
                 Surveys.Add(summary);
             }

@@ -30,6 +30,8 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="WorkspaceSaveSnapshotButton" Click="SaveSnapshot_Click" />
+                <Button x:Uid="WorkspaceCompareSnapshotsButton" Click="CompareSnapshots_Click" />
                 <Button x:Uid="WorkspaceExportMenuButton">
                     <Button.Flyout>
                         <MenuFlyout Placement="Bottom">
@@ -53,6 +55,14 @@
             <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
 
             <ComboBox x:Name="BandSelector" Width="120" Margin="16,0,0,0" SelectionChanged="BandSelector_SelectionChanged" />
+
+            <ComboBox
+                Width="160"
+                Margin="8,0,0,0"
+                ItemsSource="{x:Bind ViewModel.Floors, Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.SelectedFloor, Mode=TwoWay}"
+                DisplayMemberPath="Name" />
+            <Button x:Uid="WorkspaceAddFloorButton" Click="AddFloor_Click" />
 
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
         </StackPanel>

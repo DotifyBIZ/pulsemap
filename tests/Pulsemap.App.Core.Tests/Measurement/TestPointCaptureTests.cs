@@ -86,6 +86,6 @@ public sealed class TestPointCaptureTests
         Type = type,
         TargetNetworkSsid = targetSsid,
         TargetBands = targetBands,
-        Floor = new Floor { PlanSource = new RoomListSource() },
+        Floors = [new Floor { PlanSource = new RoomListSource() }],
     };
 }

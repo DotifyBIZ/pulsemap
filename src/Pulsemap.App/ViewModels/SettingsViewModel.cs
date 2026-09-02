@@ -19,6 +19,19 @@ public sealed partial class SettingsViewModel(ILocalizationService localizationS
     public string LogDirectoryDisplay => logger.LogDirectory;
 
     [RelayCommand]
-    private async Task OpenLogsFolderAsync() =>
-        await Launcher.LaunchFolderPathAsync(logger.LogDirectory);
+    private async Task OpenLogsFolderAsync()
+    {
+        try
+        {
+            // FileAppLogger only creates this folder lazily, on its first write — on a fresh
+            // install with no errors logged yet, it doesn't exist, and LaunchFolderPathAsync
+            // fails outright on a path that isn't there. Ensure it exists before launching.
+            Directory.CreateDirectory(logger.LogDirectory);
+            await Launcher.LaunchFolderPathAsync(logger.LogDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            await logger.LogErrorAsync("Failed to open the logs folder.", ex);
+        }
+    }
 }

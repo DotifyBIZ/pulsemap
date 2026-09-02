@@ -18,7 +18,7 @@ public sealed class SurveyDataExporterTests
         await _sut.ExportTestPointsCsvAsync(survey, stream);
 
         var lines = Encoding.UTF8.GetString(stream.ToArray()).Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        Assert.Equal("TestPointId,X,Y,Band,SignalDbm,MeasuredAt,AdapterName", lines[0].TrimEnd('\r'));
+        Assert.Equal("FloorName,TestPointId,X,Y,Band,SignalDbm,MeasuredAt,AdapterName", lines[0].TrimEnd('\r'));
         Assert.Equal(2, lines.Length); // header + one measurement row
         Assert.Contains("TwoPointFourGhz", lines[1]);
         Assert.Contains("-42", lines[1]);
@@ -33,7 +33,7 @@ public sealed class SurveyDataExporterTests
         await _sut.ExportAccessPointsCsvAsync(survey, stream);
 
         var lines = Encoding.UTF8.GetString(stream.ToArray()).Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        Assert.Equal("AccessPointId,Label,X,Y,Band,TransmitPowerDbm,Channel,IsUserOverride", lines[0].TrimEnd('\r'));
+        Assert.Equal("FloorName,AccessPointId,Label,X,Y,Band,TransmitPowerDbm,Channel,IsUserOverride", lines[0].TrimEnd('\r'));
         Assert.Equal(3, lines.Length); // header + 2 radios
     }
 
@@ -51,7 +51,7 @@ public sealed class SurveyDataExporterTests
         Assert.NotNull(deserialized);
         Assert.Equal(survey.Id, deserialized!.Id);
         Assert.Equal(survey.Name, deserialized.Name);
-        Assert.Single(deserialized.Floor.AccessPoints);
+        Assert.Single(deserialized.Floors[0].AccessPoints);
     }
 
     private static Survey SurveyWithMeasuredTestPoint()
@@ -64,7 +64,7 @@ public sealed class SurveyDataExporterTests
             Name = "Test Survey",
             Type = SurveyType.ExistingNetworkAudit,
             TargetBands = [Band.TwoPointFourGhz],
-            Floor = new Floor { PlanSource = new RoomListSource(), TestPoints = { testPoint } },
+            Floors = [new Floor { PlanSource = new RoomListSource(), TestPoints = { testPoint } }],
         };
     }
 
@@ -79,7 +79,7 @@ public sealed class SurveyDataExporterTests
             Name = "Test Survey",
             Type = SurveyType.NewDeployment,
             TargetBands = [Band.TwoPointFourGhz],
-            Floor = new Floor { PlanSource = new RoomListSource(), AccessPoints = { accessPoint } },
+            Floors = [new Floor { PlanSource = new RoomListSource(), AccessPoints = { accessPoint } }],
         };
     }
 }
