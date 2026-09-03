@@ -109,6 +109,8 @@
                 SelectedItem="{x:Bind ViewModel.SelectedFloor, Mode=TwoWay}"
                 DisplayMemberPath="Name" />
             <Button x:Uid="WorkspaceAddFloorButton" Click="AddFloor_Click" />
+            <Button x:Uid="WorkspaceRenameFloorButton" Click="RenameFloor_Click" />
+            <Button x:Uid="WorkspaceDeleteFloorButton" Click="DeleteFloor_Click" IsEnabled="{x:Bind ViewModel.CanDeleteCurrentFloor, Mode=OneWay}" />
 
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
 

@@ -642,6 +642,30 @@ public sealed partial class FloorPlanCanvas : UserControl
         return point.DistanceTo(projection);
     }
 
+    // Mirrors the MinZoomFactor/MaxZoomFactor set in XAML — ChangeView doesn't clamp its own
+    // zoomFactor argument, so a repeated click past either limit would otherwise silently exceed
+    // what the ScrollViewer itself allows for pinch/Ctrl+scroll.
+    private const float MinZoomFactor = 0.25f;
+    private const float MaxZoomFactor = 4f;
+    private const float ZoomStep = 0.25f;
+    private const float DefaultZoomFactor = 1f;
+
+    private void ZoomInButton_Click(object sender, RoutedEventArgs e) => ZoomBy(ZoomStep);
+
+    private void ZoomOutButton_Click(object sender, RoutedEventArgs e) => ZoomBy(-ZoomStep);
+
+    private void ZoomResetButton_Click(object sender, RoutedEventArgs e) =>
+        Scroller.ChangeView(null, null, DefaultZoomFactor);
+
+    private void ZoomBy(float delta)
+    {
+        float target = Math.Clamp(Scroller.ZoomFactor + delta, MinZoomFactor, MaxZoomFactor);
+        Scroller.ChangeView(null, null, target);
+    }
+
+    private void Scroller_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e) =>
+        ZoomPercentText.Text = $"{Scroller.ZoomFactor:P0}";
+
     private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e)
     {
         HeatmapTooltip.Visibility = Visibility.Collapsed;

@@ -7,29 +7,62 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ZoomMode="Disabled">
-        <Grid
-            x:Name="RootGrid"
-            Background="Transparent"
-            PointerPressed="RootGrid_PointerPressed"
-            PointerMoved="RootGrid_PointerMoved"
-            PointerReleased="RootGrid_PointerReleased"
-            PointerCaptureLost="RootGrid_PointerCaptureLost"
-            PointerExited="RootGrid_PointerExited">
-            <Image x:Name="BackgroundLayer" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" />
-            <Canvas x:Name="HeatmapLayer" />
-            <Canvas x:Name="WallsLayer" />
-            <Canvas x:Name="MarkersLayer" />
-            <Canvas x:Name="TooltipLayer" IsHitTestVisible="False">
-                <Border
-                    x:Name="HeatmapTooltip"
-                    Visibility="Collapsed"
-                    Background="{StaticResource Gray900Brush}"
-                    CornerRadius="4"
-                    Padding="6,3">
-                    <TextBlock x:Name="HeatmapTooltipText" Foreground="White" FontSize="{StaticResource FontSizeXs}" />
-                </Border>
-            </Canvas>
-        </Grid>
-    </ScrollViewer>
+    <Grid>
+        <ScrollViewer
+            x:Name="Scroller"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto"
+            ZoomMode="Enabled"
+            MinZoomFactor="0.25"
+            MaxZoomFactor="4"
+            ViewChanged="Scroller_ViewChanged">
+            <Grid
+                x:Name="RootGrid"
+                Background="Transparent"
+                PointerPressed="RootGrid_PointerPressed"
+                PointerMoved="RootGrid_PointerMoved"
+                PointerReleased="RootGrid_PointerReleased"
+                PointerCaptureLost="RootGrid_PointerCaptureLost"
+                PointerExited="RootGrid_PointerExited">
+                <Image x:Name="BackgroundLayer" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                <Canvas x:Name="HeatmapLayer" />
+                <Canvas x:Name="WallsLayer" />
+                <Canvas x:Name="MarkersLayer" />
+                <Canvas x:Name="TooltipLayer" IsHitTestVisible="False">
+                    <Border
+                        x:Name="HeatmapTooltip"
+                        Visibility="Collapsed"
+                        Background="{StaticResource Gray900Brush}"
+                        CornerRadius="4"
+                        Padding="6,3">
+                        <TextBlock x:Name="HeatmapTooltipText" Foreground="White" FontSize="{StaticResource FontSizeXs}" />
+                    </Border>
+                </Canvas>
+            </Grid>
+        </ScrollViewer>
+
+        <!--
+            A fixed overlay outside the ScrollViewer, not scrolled/zoomed content — the canvas had
+            no way to zoom in for precise wall placement or out for a whole-building overview on a
+            real survey, only pan at a fixed 40px/meter. ZoomMode="Enabled" above already gives
+            pinch/Ctrl+scroll for free; these buttons are the discoverable, mouse-only equivalent.
+        -->
+        <Border
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="12"
+            Background="White"
+            BorderBrush="{StaticResource Gray200Brush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="4">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button x:Name="ZoomOutButton" Content="−" Width="32" Click="ZoomOutButton_Click" />
+                <Button x:Name="ZoomResetButton" Width="56" Click="ZoomResetButton_Click">
+                    <TextBlock x:Name="ZoomPercentText" Text="100%" HorizontalAlignment="Center" FontSize="{StaticResource FontSizeXs}" />
+                </Button>
+                <Button x:Name="ZoomInButton" Content="+" Width="32" Click="ZoomInButton_Click" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>
