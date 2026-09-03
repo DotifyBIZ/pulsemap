@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -285,6 +286,53 @@ public sealed partial class WorkspacePage : Page
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(nameBox.Text))
         {
             await ViewModel.AddFloorCommand.ExecuteAsync((nameBox.Text.Trim(), outdoorCheckBox.IsChecked == true));
+        }
+    }
+
+    private async void RenameFloor_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedFloor is not { } floor)
+        {
+            return;
+        }
+
+        var nameBox = new TextBox { Header = _localizationService.GetString("WorkspaceAddFloorDialogNameLabel"), Text = floor.Name };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceRenameFloorDialogTitle"),
+            Content = nameBox,
+            PrimaryButtonText = _localizationService.GetString("WorkspaceRenameFloorDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceRenameFloorDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(nameBox.Text))
+        {
+            await ViewModel.RenameFloorCommand.ExecuteAsync(nameBox.Text.Trim());
+        }
+    }
+
+    private async void DeleteFloor_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedFloor is not { } floor)
+        {
+            return;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = _localizationService.GetString("WorkspaceDeleteFloorDialogTitle"),
+            Content = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceDeleteFloorDialogContentFormat"), floor.Name),
+            PrimaryButtonText = _localizationService.GetString("WorkspaceDeleteFloorDialogPrimaryButton"),
+            CloseButtonText = _localizationService.GetString("WorkspaceDeleteFloorDialogCloseButton"),
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await ViewModel.DeleteFloorCommand.ExecuteAsync(null);
         }
     }
 

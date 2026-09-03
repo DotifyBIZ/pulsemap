@@ -39,7 +39,14 @@ public sealed class FloorPlanImageCache
 
             bool isPdf = string.Equals(imagePlan.FileExtension, ".pdf", StringComparison.OrdinalIgnoreCase);
             string cacheKey = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(imagePlan.ImageData));
-            string cachePath = Path.Combine(_cacheDirectory, $"{cacheKey}.png");
+
+            // The page index is only meaningful for a PDF, but including it unconditionally in the
+            // key is harmless (PdfPageIndex defaults to 0 for a non-PDF plan) and keeps this
+            // correct if a future feature ever lets a non-image floor plan carry the same image
+            // bytes at two different pages.
+            string cachePath = isPdf
+                ? Path.Combine(_cacheDirectory, $"{cacheKey}-p{imagePlan.PdfPageIndex}.png")
+                : Path.Combine(_cacheDirectory, $"{cacheKey}.png");
 
             if (File.Exists(cachePath))
             {
@@ -49,7 +56,7 @@ public sealed class FloorPlanImageCache
             if (isPdf)
             {
                 using var pdfStream = new MemoryStream(imagePlan.ImageData);
-                PDFtoImage.Conversion.SavePng(cachePath, pdfStream, page: 0);
+                PDFtoImage.Conversion.SavePng(cachePath, pdfStream, page: imagePlan.PdfPageIndex);
             }
             else
             {

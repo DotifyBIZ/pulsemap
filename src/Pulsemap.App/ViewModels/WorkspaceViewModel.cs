@@ -89,7 +89,10 @@ public partial class WorkspaceViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AccessPointSummaryDisplay))]
+    [NotifyPropertyChangedFor(nameof(CanDeleteCurrentFloor))]
     [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RenameFloorCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteFloorCommand))]
     public partial Floor? SelectedFloor { get; set; }
 
     [ObservableProperty]
@@ -824,6 +827,57 @@ public partial class WorkspaceViewModel : ObservableObject
         Survey.Floors.Add(floor);
         OnPropertyChanged(nameof(Floors));
         SelectedFloor = floor;
+        await SaveAndRefreshAsync();
+    }
+
+    /// <summary>A survey always needs at least one floor — Workspace's own load default
+    /// (<c>Survey.Floors[0]</c>) and every per-floor feature (suggestions, guided walk, export)
+    /// assume one exists — so the Delete Floor button is disabled rather than silently refusing
+    /// when it's the last one.</summary>
+    public bool CanDeleteCurrentFloor => Survey is { Floors.Count: > 1 } && SelectedFloor is not null;
+
+    private bool CanRenameFloor() => SelectedFloor is not null;
+
+    [RelayCommand(CanExecute = nameof(CanRenameFloor))]
+    private async Task RenameFloorAsync(string newName)
+    {
+        if (SelectedFloor is null)
+        {
+            return;
+        }
+
+        SelectedFloor.Name = newName;
+        OnPropertyChanged(nameof(Floors));
+        await SaveAndRefreshAsync();
+    }
+
+    private bool CanDeleteFloor() => CanDeleteCurrentFloor;
+
+    [RelayCommand(CanExecute = nameof(CanDeleteFloor))]
+    private async Task DeleteFloorAsync()
+    {
+        // CanDeleteFloor already gates this for the button, but AsyncRelayCommand.ExecuteAsync
+        // doesn't re-check CanExecute when called directly (only the ICommand-binding path does) —
+        // without this guard, deleting the last floor would leave Floors empty and then index it
+        // at -1 below.
+        if (!CanDeleteCurrentFloor || Survey is null || SelectedFloor is null)
+        {
+            return;
+        }
+
+        int removedIndex = Survey.Floors.IndexOf(SelectedFloor);
+        if (removedIndex < 0)
+        {
+            return;
+        }
+
+        Survey.Floors.RemoveAt(removedIndex);
+        OnPropertyChanged(nameof(Floors));
+
+        // Land on whichever floor now sits at the same position, or the last one if the deleted
+        // floor was at the end — closer to "stay where you were" than always jumping back to the
+        // first floor.
+        SelectedFloor = Survey.Floors[Math.Min(removedIndex, Survey.Floors.Count - 1)];
         await SaveAndRefreshAsync();
     }
 
