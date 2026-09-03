@@ -90,6 +90,26 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     [ObservableProperty]
     public partial double PixelsPerMeter { get; set; } = DefaultPixelsPerMeter;
 
+    // A picked PDF's own page count — 1 for a non-PDF pick, or before anything has been picked
+    // yet. Only when this is more than 1 does the wizard show a page picker at all; a single-page
+    // PDF (the common case) stays exactly as simple as picking an image.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPdfWithMultiplePages))]
+    [NotifyPropertyChangedFor(nameof(PdfPageNumbers))]
+    [NotifyPropertyChangedFor(nameof(FloorPlanSummaryDisplay))]
+    public partial int PdfPageCount { get; set; } = 1;
+
+    // 0-based, matching ImagePlanSource.PdfPageIndex directly — the ComboBox's SelectedIndex binds
+    // straight to this with no translation, since PdfPageNumbers is just the display labels (1..N)
+    // in the same order.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FloorPlanSummaryDisplay))]
+    public partial int SelectedPdfPageIndex { get; set; }
+
+    public bool IsPdfWithMultiplePages => IsImageStyleSelected && PdfPageCount > 1;
+
+    public IReadOnlyList<int> PdfPageNumbers => [.. Enumerable.Range(1, PdfPageCount)];
+
     public bool IsImageStyleSelected => SelectedFloorPlanStyle == FloorPlanStyleChoice.Image;
 
     public bool IsRoomListStyleSelected => SelectedFloorPlanStyle == FloorPlanStyleChoice.RoomList;
@@ -149,9 +169,21 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             ? _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditNoSsid")
             : string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardSurveyTypeSummaryExistingAuditWithSsidFormat"), TargetNetworkSsid.Trim());
 
-    public string FloorPlanSummaryDisplay => IsImageStyleSelected
-        ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryImageFormat"), SelectedImageFileName ?? _localizationService.GetString("WizardFloorPlanSummaryNoFileSelected"))
-        : string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryRoomListFormat"), Rooms.Count, _localizationService.GetString(RoomCountWordKey(Rooms.Count)));
+    public string FloorPlanSummaryDisplay
+    {
+        get
+        {
+            if (!IsImageStyleSelected)
+            {
+                return string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryRoomListFormat"), Rooms.Count, _localizationService.GetString(RoomCountWordKey(Rooms.Count)));
+            }
+
+            string fileName = SelectedImageFileName ?? _localizationService.GetString("WizardFloorPlanSummaryNoFileSelected");
+            return IsPdfWithMultiplePages
+                ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryImageWithPageFormat"), fileName, SelectedPdfPageIndex + 1, PdfPageCount)
+                : string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanSummaryImageFormat"), fileName);
+        }
+    }
 
     // Polish needs three plural forms (1 / 2-4 / 5+, with 11-14 folding into the "many" form even
     // when the last digit would otherwise say "few") — English only has two, so its "few" and
@@ -216,6 +248,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsImageStyleSelected));
         OnPropertyChanged(nameof(IsRoomListStyleSelected));
+        OnPropertyChanged(nameof(IsPdfWithMultiplePages));
     }
 
     [RelayCommand]
@@ -236,8 +269,10 @@ public partial class NewSurveyWizardViewModel : ObservableObject
                 ex.MaxBytes / (1024 * 1024));
             return;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PDFtoImage.Exceptions.PdfException)
         {
+            // PdfException: a corrupt, password-protected, or otherwise unreadable PDF — reading
+            // its page count is the first thing that touches PDFium, so this is where that surfaces.
             ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanReadErrorFormat"), ex.Message);
             await _logger.LogErrorAsync("Failed to read the picked floor plan file.", ex);
             return;
@@ -251,6 +286,8 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         _pickedImageData = result.ImageData;
         _pickedImageExtension = result.FileExtension;
         SelectedImageFileName = result.FileName;
+        PdfPageCount = result.PageCount;
+        SelectedPdfPageIndex = 0;
     }
 
     [RelayCommand]
@@ -345,6 +382,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
                 // and committed text — a scale of NaN or 0 divides straight into an infinite
                 // canvas size the first time the plan is rendered.
                 PixelsPerMeter = SanitizeDimension(PixelsPerMeter, DefaultPixelsPerMeter),
+                PdfPageIndex = SelectedPdfPageIndex,
             }
             : new RoomListSource
             {

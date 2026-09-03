@@ -154,6 +154,9 @@
   <data name="WizardChooseFileButton.Content" xml:space="preserve">
     <value>Choose file…</value>
   </data>
+  <data name="WizardPdfPageLabel.Text" xml:space="preserve">
+    <value>Which page is the floor plan on?</value>
+  </data>
   <data name="WizardPixelsPerMeterField.Header" xml:space="preserve">
     <value>Pixels per meter</value>
   </data>

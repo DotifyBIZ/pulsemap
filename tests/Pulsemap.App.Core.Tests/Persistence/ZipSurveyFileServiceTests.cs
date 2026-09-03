@@ -268,6 +268,37 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task LoadAsync_ImagePlanWithNegativePdfPageIndex_ClampsItToZero()
+    {
+        await WriteSurveyJsonAsync("""
+            {
+              "SchemaVersion": 2,
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "Corrupt",
+              "Type": 0,
+              "TargetBands": [0],
+              "CreatedAt": "2026-01-01T00:00:00+00:00",
+              "ModifiedAt": "2026-01-01T00:00:00+00:00",
+              "Floors": [
+                {
+                  "Id": "33333333-3333-3333-3333-333333333333",
+                  "Name": "Floor 1",
+                  "PlanSource": { "kind": "image", "FileExtension": ".pdf", "PixelsPerMeter": 100, "PdfPageIndex": -3 },
+                  "Walls": [],
+                  "TestPoints": [],
+                  "AccessPoints": []
+                }
+              ]
+            }
+            """, assetEntryName: "assets/floor-33333333-3333-3333-3333-333333333333.pdf");
+
+        var survey = await _sut.LoadAsync(_filePath);
+
+        var plan = Assert.IsType<ImagePlanSource>(survey.Floors[0].PlanSource);
+        Assert.Equal(0, plan.PdfPageIndex);
+    }
+
+    [Fact]
     public async Task LoadAsync_SurveyDeclaringNoValidBands_IsRejectedAsCorrupt()
     {
         await WriteSurveyJsonAsync("""
