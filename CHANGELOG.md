@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/DotifyBIZ/pulsemap/compare/v1.1.1...v1.2.0) (2026-09-03)
+
+
+### Features
+
+* add canvas zoom and floor rename/delete ([020a0b2](https://github.com/DotifyBIZ/pulsemap/commit/020a0b23ecea3392d907edc97d3c997e3ea0c5ab))
+* support multi-page PDF floor plans ([6fdd17b](https://github.com/DotifyBIZ/pulsemap/commit/6fdd17b3d11430b10e56295d3dab9f106c0653a6)), closes [#16](https://github.com/DotifyBIZ/pulsemap/issues/16)
+
 ## [1.1.1](https://github.com/DotifyBIZ/pulsemap/compare/v1.1.0...v1.1.1) (2026-09-03)
 
 
