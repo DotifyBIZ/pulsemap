@@ -13,7 +13,9 @@ public sealed class HomeViewModelTests
     private readonly FakeAppSettingsService _appSettingsService = new();
     private readonly FakeLocalizationService _localizationService = new();
 
-    private HomeViewModel CreateSut() => new(_libraryService, _updateCheckService, _appSettingsService, _localizationService);
+    private readonly FakeAppLogger _logger = new();
+
+    private HomeViewModel CreateSut() => new(_libraryService, _updateCheckService, _appSettingsService, _localizationService, _logger);
 
     [Fact]
     public async Task LoadCommand_PopulatesSurveysFromLibrary()

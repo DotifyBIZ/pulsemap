@@ -28,11 +28,13 @@ public sealed partial class FloorPlanCanvas : UserControl
     private const double TestPointRadiusPx = 7;
     private const double AccessPointRadiusPx = 10;
     private const double WalkTargetRadiusPx = 14;
+    private const double WallAnchorRadiusPx = 5;
     private const double WallStrokeThicknessPx = 4;
     private const double HeatmapOpacity = 0.55;
     private const double OutdoorResizeHandleRadiusPx = 8;
     private const double OutdoorHitToleranceMeters = 0.5; // matches WorkspaceViewModel's own DeleteHitToleranceMeters
     private const double MinOutdoorSizeMeters = 2;
+    private const double WallHoverToleranceMeters = 0.5; // matches WorkspaceViewModel's own DeleteHitToleranceMeters
 
     private readonly FloorPlanImageCache _imageCache;
 
@@ -54,9 +56,15 @@ public sealed partial class FloorPlanCanvas : UserControl
     private Point2D? _previewBoundsMax;
     private Floor? _lastFloor;
     private IReadOnlyList<CoverageSample> _lastHeatmap = [];
+    private IReadOnlyList<CoverageSample>? _renderedHeatmap;
+    private Bounds _renderedHeatmapBounds;
     private Point2D? _lastWalkTarget;
     private IReadOnlyCollection<Wall>? _lastSelectedWalls;
     private IReadOnlyList<Point2D>? _lastRemainingWalkPoints;
+
+    // A wall visibly lit up under the cursor before it's clicked — Select's "click a wall to
+    // select it" behavior had no affordance telling a user a wall was clickable at all.
+    private Wall? _hoveredWall;
 
     private enum OutdoorDragMode
     {
@@ -71,7 +79,44 @@ public sealed partial class FloorPlanCanvas : UserControl
         _imageCache = App.Services.GetRequiredService<FloorPlanImageCache>();
     }
 
-    public WorkspaceTool Tool { get; set; } = WorkspaceTool.Select;
+    private WorkspaceTool _tool = WorkspaceTool.Select;
+
+    /// <summary>
+    /// Switching tools abandons any half-drawn wall and clears the hover highlight. Before this,
+    /// a first Draw Wall click left <see cref="_wallAnchor"/> set indefinitely — switch tools,
+    /// come back later, and the next click silently drew a wall from wherever you'd clicked
+    /// before.
+    /// </summary>
+    public WorkspaceTool Tool
+    {
+        get => _tool;
+        set
+        {
+            if (_tool == value)
+            {
+                return;
+            }
+
+            _tool = value;
+            _wallAnchor = null;
+            _hoveredWall = null;
+            HeatmapTooltip.Visibility = Visibility.Collapsed;
+            RedrawOverlays();
+        }
+    }
+
+    /// <summary>Cancels a half-drawn wall without switching tools — the page routes Escape here,
+    /// since the first click of a two-click wall was otherwise impossible to take back.</summary>
+    public void CancelPendingWall()
+    {
+        if (_wallAnchor is null)
+        {
+            return;
+        }
+
+        _wallAnchor = null;
+        RedrawOverlays();
+    }
 
     public event EventHandler<Point2D>? TestPointRequested;
 
@@ -193,18 +238,29 @@ public sealed partial class FloorPlanCanvas : UserControl
         BackgroundLayer.Width = _backgroundWidthMeters * PixelsPerMeter;
         BackgroundLayer.Height = _backgroundHeightMeters * PixelsPerMeter;
 
-        HeatmapLayer.Children.Clear();
+        // The heatmap is by far the heaviest layer (one Rectangle per grid sample — tens of
+        // thousands on a large floor) and it only changes when the samples or the meters-to-pixels
+        // mapping do. Hover highlighting and outdoor-bounds dragging re-render on every pointer
+        // move; rebuilding those rectangles each time made both crawl.
+        if (!ReferenceEquals(heatmap, _renderedHeatmap) || _bounds != _renderedHeatmapBounds)
+        {
+            HeatmapLayer.Children.Clear();
+            foreach (var sample in heatmap)
+            {
+                HeatmapLayer.Children.Add(BuildHeatmapCell(sample));
+            }
+
+            _renderedHeatmap = heatmap;
+            _renderedHeatmapBounds = _bounds;
+        }
+
         WallsLayer.Children.Clear();
         MarkersLayer.Children.Clear();
 
-        foreach (var sample in heatmap)
-        {
-            HeatmapLayer.Children.Add(BuildHeatmapCell(sample));
-        }
-
         foreach (var wall in floor.Walls)
         {
-            WallsLayer.Children.Add(BuildWallLine(wall, selectedWalls?.Contains(wall) == true));
+            bool isSelected = selectedWalls?.Contains(wall) == true;
+            WallsLayer.Children.Add(BuildWallLine(wall, isSelected, isHovered: !isSelected && ReferenceEquals(wall, _hoveredWall)));
         }
 
         if (floor.IsOutdoor
@@ -234,6 +290,41 @@ public sealed partial class FloorPlanCanvas : UserControl
         {
             MarkersLayer.Children.Add(BuildWalkTargetMarker(target));
         }
+
+        // Draw Wall takes two clicks; nothing used to show that the first one had registered, so a
+        // half-drawn wall was invisible until the second click completed it.
+        if (_wallAnchor is { } anchor)
+        {
+            MarkersLayer.Children.Add(BuildWallAnchorMarker(anchor));
+        }
+    }
+
+    /// <summary>Re-renders from the last state this control was given — for changes it owns itself
+    /// (hover highlight, pending wall anchor, an in-progress bounds drag) rather than ones pushed
+    /// in by <see cref="RenderAsync"/>.</summary>
+    private void RedrawOverlays()
+    {
+        if (_lastFloor is { } floor)
+        {
+            RenderCore(floor, _lastHeatmap, _lastWalkTarget, _lastSelectedWalls, _lastRemainingWalkPoints);
+        }
+    }
+
+    private Ellipse BuildWallAnchorMarker(Point2D position)
+    {
+        var (px, py) = ToPixels(position);
+        double diameter = WallAnchorRadiusPx * 2;
+        var marker = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Fill = new SolidColorBrush(Colors.DodgerBlue),
+            Stroke = new SolidColorBrush(Colors.White),
+            StrokeThickness = 2,
+        };
+        Canvas.SetLeft(marker, px - WallAnchorRadiusPx);
+        Canvas.SetTop(marker, py - WallAnchorRadiusPx);
+        return marker;
     }
 
     private Rectangle BuildHeatmapCell(CoverageSample sample)
@@ -252,7 +343,7 @@ public sealed partial class FloorPlanCanvas : UserControl
         return cell;
     }
 
-    private Line BuildWallLine(Wall wall, bool isSelected)
+    private Line BuildWallLine(Wall wall, bool isSelected, bool isHovered = false)
     {
         var (x1, y1) = ToPixels(wall.Start);
         var (x2, y2) = ToPixels(wall.End);
@@ -262,8 +353,8 @@ public sealed partial class FloorPlanCanvas : UserControl
             Y1 = y1,
             X2 = x2,
             Y2 = y2,
-            Stroke = new SolidColorBrush(isSelected ? Colors.DodgerBlue : Colors.DimGray),
-            StrokeThickness = isSelected ? WallStrokeThicknessPx + 2 : WallStrokeThicknessPx,
+            Stroke = new SolidColorBrush(isSelected ? Colors.DodgerBlue : isHovered ? Colors.CornflowerBlue : Colors.DimGray),
+            StrokeThickness = isSelected || isHovered ? WallStrokeThicknessPx + 2 : WallStrokeThicknessPx,
             StrokeStartLineCap = PenLineCap.Round,
             StrokeEndLineCap = PenLineCap.Round,
         };
@@ -395,12 +486,13 @@ public sealed partial class FloorPlanCanvas : UserControl
             case WorkspaceTool.DrawWall:
                 if (_wallAnchor is { } anchor)
                 {
-                    WallRequested?.Invoke(this, (anchor, meters));
                     _wallAnchor = null;
+                    WallRequested?.Invoke(this, (anchor, meters));
                 }
                 else
                 {
                     _wallAnchor = meters;
+                    RedrawOverlays();
                 }
 
                 break;
@@ -470,6 +562,11 @@ public sealed partial class FloorPlanCanvas : UserControl
         if (_outdoorDragMode == OutdoorDragMode.None)
         {
             UpdateHeatmapTooltip(ToMeters(pointerPosition), pointerPosition);
+
+            if (Tool == WorkspaceTool.Select)
+            {
+                UpdateHoveredWall(ToMeters(pointerPosition));
+            }
         }
 
         if (_outdoorDragMode == OutdoorDragMode.None || _lastFloor is null)
@@ -494,10 +591,67 @@ public sealed partial class FloorPlanCanvas : UserControl
                 Math.Max(_dragStartMin.Y + MinOutdoorSizeMeters, _dragStartMax.Y + deltaY));
         }
 
-        RenderCore(_lastFloor, _lastHeatmap, _lastWalkTarget, _lastSelectedWalls, _lastRemainingWalkPoints);
+        RedrawOverlays();
     }
 
-    private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e) => HeatmapTooltip.Visibility = Visibility.Collapsed;
+    private void UpdateHoveredWall(Point2D meters)
+    {
+        if (_lastFloor is not { } floor)
+        {
+            return;
+        }
+
+        Wall? nearest = null;
+        double nearestDistance = double.MaxValue;
+        foreach (var wall in floor.Walls)
+        {
+            double distance = DistanceToSegment(meters, wall.Start, wall.End);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = wall;
+            }
+        }
+
+        var hovered = nearestDistance <= WallHoverToleranceMeters ? nearest : null;
+        if (ReferenceEquals(hovered, _hoveredWall))
+        {
+            return;
+        }
+
+        _hoveredWall = hovered;
+        RedrawOverlays();
+    }
+
+    // Mirrors WorkspaceViewModel's own private DistanceToSegment — duplicated rather than shared
+    // since that one lives in the ViewModel layer for hit-testing selection/delete, and this is a
+    // pure rendering/gesture concern that belongs to the canvas itself.
+    private static double DistanceToSegment(Point2D point, Point2D segmentStart, Point2D segmentEnd)
+    {
+        double dx = segmentEnd.X - segmentStart.X;
+        double dy = segmentEnd.Y - segmentStart.Y;
+        double lengthSquared = (dx * dx) + (dy * dy);
+        if (lengthSquared < double.Epsilon)
+        {
+            return point.DistanceTo(segmentStart);
+        }
+
+        double t = (((point.X - segmentStart.X) * dx) + ((point.Y - segmentStart.Y) * dy)) / lengthSquared;
+        t = Math.Clamp(t, 0, 1);
+        var projection = new Point2D(segmentStart.X + (t * dx), segmentStart.Y + (t * dy));
+        return point.DistanceTo(projection);
+    }
+
+    private void RootGrid_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        HeatmapTooltip.Visibility = Visibility.Collapsed;
+
+        if (_hoveredWall is not null)
+        {
+            _hoveredWall = null;
+            RedrawOverlays();
+        }
+    }
 
     private void RootGrid_PointerReleased(object sender, PointerRoutedEventArgs e) => EndOutdoorBoundsDrag(raiseChanged: true);
 

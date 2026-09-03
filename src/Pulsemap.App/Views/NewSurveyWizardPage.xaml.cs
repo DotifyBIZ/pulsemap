@@ -14,10 +14,27 @@ public sealed partial class NewSurveyWizardPage : Page
     {
         ViewModel = App.Services.GetRequiredService<NewSurveyWizardViewModel>();
         InitializeComponent();
-        ViewModel.SurveyCreated += (_, filePath) => Frame.Navigate(typeof(WorkspacePage), filePath);
+        ViewModel.SurveyCreated += (_, filePath) =>
+        {
+            Frame.Navigate(typeof(WorkspacePage), filePath);
+
+            // Drop the wizard from the back stack once its survey exists. Leaving it there meant
+            // Workspace's Back button returned to a still-filled-in wizard whose Create button
+            // would happily make a second copy of the same survey.
+            if (Frame.BackStack.Count > 0 && Frame.BackStack[^1].SourcePageType == typeof(NewSurveyWizardPage))
+            {
+                Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
+            }
+        };
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e) => Frame.GoBack();
+    private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        if (Frame.CanGoBack)
+        {
+            Frame.GoBack();
+        }
+    }
 
     private void SurveyTypeRadio_Checked(object sender, RoutedEventArgs e) =>
         ViewModel.SelectedSurveyType = ReferenceEquals(sender, NewDeploymentRadio)

@@ -26,6 +26,13 @@ public sealed partial class WorkspacePage : Page
         InitializeComponent();
 
         ViewModel.FloorChanged += async (_, _) => await RenderCanvasAsync();
+        ViewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ViewModel.SelectedBand))
+            {
+                SyncBandSelectorToViewModel();
+            }
+        };
         PlanCanvas.TestPointRequested += async (_, position) => await ViewModel.AddTestPointAsync(position);
         PlanCanvas.WallRequested += async (_, span) => await ViewModel.AddWallAsync(span.Start, span.End);
         PlanCanvas.DeleteRequested += async (_, position) => await ViewModel.DeleteNearestElementAsync(position);
@@ -33,6 +40,17 @@ public sealed partial class WorkspacePage : Page
         PlanCanvas.OutdoorBoundsChanged += async (_, bounds) => await ViewModel.UpdateOutdoorBoundsAsync(bounds.Min, bounds.Max);
         PlanCanvas.DiagnosePositionRequested += async (_, position) => await OnDiagnoseClickAsync(position);
         SelectToolButton.IsChecked = true;
+
+        // Escape is the conventional "abandon what I started" key, and the first click of a
+        // two-click wall had no other way out.
+        KeyDown += (_, args) =>
+        {
+            if (args.Key == Windows.System.VirtualKey.Escape)
+            {
+                PlanCanvas.CancelPendingWall();
+                args.Handled = true;
+            }
+        };
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -67,6 +85,10 @@ public sealed partial class WorkspacePage : Page
         else if (ReferenceEquals(sender, OnboardingStep3))
         {
             OnboardingStep4.IsOpen = true;
+        }
+        else if (ReferenceEquals(sender, OnboardingStep4))
+        {
+            OnboardingStep5.IsOpen = true;
         }
     }
 
@@ -229,6 +251,21 @@ public sealed partial class WorkspacePage : Page
         }
     }
 
+    // Resuming a saved guided walk switches the view model's band to whichever one the walk was
+    // suggested for. The picker is populated in code (not bound), so without this it kept showing
+    // the old band while the heatmap underneath had already changed.
+    private void SyncBandSelectorToViewModel()
+    {
+        for (int i = 0; i < BandSelector.Items.Count; i++)
+        {
+            if (BandSelector.Items[i] is ComboBoxItem { Tag: Band band } && band == ViewModel.SelectedBand)
+            {
+                BandSelector.SelectedIndex = i;
+                return;
+            }
+        }
+    }
+
     private void Back_Click(object sender, RoutedEventArgs e) => Frame.GoBack();
 
     private async void AddFloor_Click(object sender, RoutedEventArgs e)
@@ -278,9 +315,23 @@ public sealed partial class WorkspacePage : Page
         }
     }
 
+    private ToggleButton[] ToolButtons => [SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton, DiagnoseToolButton];
+
+    // ToggleButtons untoggle themselves when clicked a second time, which left every tool button
+    // visibly off while the canvas kept using whichever tool was last set — the toolbar lied about
+    // what a click on the plan would do. These behave as a radio group instead: the active tool
+    // stays lit until a different one is chosen.
+    private void ToolToggle_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton button && !ToolButtons.Any(other => !ReferenceEquals(other, button) && other.IsChecked == true))
+        {
+            button.IsChecked = true;
+        }
+    }
+
     private void ToolToggle_Checked(object sender, RoutedEventArgs e)
     {
-        foreach (var button in new[] { SelectToolButton, AddTestPointToolButton, DrawWallToolButton, DeleteToolButton, DiagnoseToolButton })
+        foreach (var button in ToolButtons)
         {
             if (!ReferenceEquals(button, sender))
             {

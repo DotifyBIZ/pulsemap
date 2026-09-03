@@ -18,11 +18,23 @@ public sealed class GitHubUpdateCheckService(IHttpClientFactory httpClientFactor
     private const string ReleasesApiUrl = "https://api.github.com/repos/DotifyBIZ/pulsemap/releases/latest";
     private const string ReleasesPageUrl = "https://github.com/DotifyBIZ/pulsemap/releases/latest";
 
+    // This check runs on Home's load path. HttpClient's 100-second default would leave the update
+    // banner pending for well over a minute against a black-holed or captive-portal network; a
+    // version check nobody asked for doesn't deserve that long.
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
+
+    // A release JSON payload is a few KB. Capping the buffer means a hostile or misbehaving
+    // response (a captive portal returning an endless stream, say) fails fast instead of
+    // buffering without limit.
+    private const int MaxResponseBytes = 1024 * 1024;
+
     public async Task<UpdateCheckResult> CheckForUpdateAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var client = httpClientFactory.CreateClient(nameof(GitHubUpdateCheckService));
+            client.Timeout = RequestTimeout;
+            client.MaxResponseContentBufferSize = MaxResponseBytes;
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Pulsemap-App");
             var release = await client.GetFromJsonAsync<GitHubRelease>(ReleasesApiUrl, cancellationToken);
 

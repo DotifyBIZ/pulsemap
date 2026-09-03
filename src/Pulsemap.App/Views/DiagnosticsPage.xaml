@@ -30,11 +30,23 @@
                         DisplayMemberPath="Name"
                         HorizontalAlignment="Stretch" />
 
+                    <TextBlock
+                        x:Uid="DiagnosticsNoAdapterNote"
+                        Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
+                        TextWrapping="Wrap"
+                        FontSize="{StaticResource FontSizeSm}"
+                        Foreground="{StaticResource Gray500Brush}" />
+
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button x:Uid="DiagnosticsRunButton" Command="{x:Bind ViewModel.RunDiagnosticsCommand}" />
                         <ProgressRing IsActive="{x:Bind ViewModel.IsRunning, Mode=OneWay}" Width="20" Height="20" />
                         <Button Content="{x:Bind ViewModel.ToggleMonitoringButtonText, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleMonitoringCommand}" />
                     </StackPanel>
+
+                    <InfoBar
+                        Severity="Error"
+                        IsOpen="{x:Bind ViewModel.HasMonitoringError, Mode=OneWay}"
+                        Message="{x:Bind ViewModel.MonitoringErrorMessage, Mode=OneWay}" />
                 </StackPanel>
             </Border>
 

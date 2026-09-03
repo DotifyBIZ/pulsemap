@@ -164,4 +164,150 @@ public sealed class ZipSurveyFileServiceTests : IDisposable
 
         public Task LogInfoAsync(string message, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
+
+    // A .pulsemap file is untrusted input. System.Text.Json puts any integer into an enum field
+    // without validating it, so a hand-edited or corrupt file could carry a WallMaterial/Band that
+    // no lookup table has — which used to surface much later as a KeyNotFoundException or
+    // ArgumentOutOfRangeException thrown out of the render path.
+    [Fact]
+    public async Task LoadAsync_SurveyJsonWithOutOfRangeEnumValues_NormalizesThemInsteadOfThrowingLater()
+    {
+        await WriteSurveyJsonAsync("""
+            {
+              "SchemaVersion": 2,
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "Corrupt",
+              "Type": 0,
+              "TargetBands": [0, 99],
+              "CreatedAt": "2026-01-01T00:00:00+00:00",
+              "ModifiedAt": "2026-01-01T00:00:00+00:00",
+              "Floors": [
+                {
+                  "Name": "Floor 1",
+                  "PlanSource": { "kind": "roomList", "Rooms": [] },
+                  "Walls": [
+                    { "Start": { "X": 0, "Y": 0 }, "End": { "X": 5, "Y": 0 }, "Material": 99, "ThicknessMeters": 0.2 }
+                  ],
+                  "TestPoints": [],
+                  "AccessPoints": []
+                }
+              ]
+            }
+            """);
+
+        var survey = await _sut.LoadAsync(_filePath);
+
+        Assert.Equal([Band.TwoPointFourGhz], survey.TargetBands);
+        Assert.Null(survey.Floors[0].Walls[0].Material);
+    }
+
+    [Fact]
+    public async Task LoadAsync_SurveyJsonWithAbsurdCoordinates_ClampsThemToAWorkableExtent()
+    {
+        await WriteSurveyJsonAsync("""
+            {
+              "SchemaVersion": 2,
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "Corrupt",
+              "Type": 0,
+              "TargetBands": [0],
+              "CreatedAt": "2026-01-01T00:00:00+00:00",
+              "ModifiedAt": "2026-01-01T00:00:00+00:00",
+              "Floors": [
+                {
+                  "Name": "Floor 1",
+                  "PlanSource": { "kind": "roomList", "Rooms": [] },
+                  "Walls": [
+                    { "Start": { "X": 0, "Y": 0 }, "End": { "X": 1e30, "Y": 1e30 } }
+                  ],
+                  "TestPoints": [],
+                  "AccessPoints": []
+                }
+              ]
+            }
+            """);
+
+        var survey = await _sut.LoadAsync(_filePath);
+
+        var end = survey.Floors[0].Walls[0].End;
+        Assert.True(Math.Abs(end.X) <= 100_000, $"X was {end.X}");
+        Assert.True(Math.Abs(end.Y) <= 100_000, $"Y was {end.Y}");
+    }
+
+    [Fact]
+    public async Task LoadAsync_ImagePlanWithUnusablePixelsPerMeter_ReplacesItWithAUsableScale()
+    {
+        await WriteSurveyJsonAsync("""
+            {
+              "SchemaVersion": 2,
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "Corrupt",
+              "Type": 0,
+              "TargetBands": [0],
+              "CreatedAt": "2026-01-01T00:00:00+00:00",
+              "ModifiedAt": "2026-01-01T00:00:00+00:00",
+              "Floors": [
+                {
+                  "Id": "22222222-2222-2222-2222-222222222222",
+                  "Name": "Floor 1",
+                  "PlanSource": { "kind": "image", "FileExtension": ".png", "PixelsPerMeter": 0 },
+                  "Walls": [],
+                  "TestPoints": [],
+                  "AccessPoints": []
+                }
+              ]
+            }
+            """, assetEntryName: "assets/floor-22222222-2222-2222-2222-222222222222.png");
+
+        var survey = await _sut.LoadAsync(_filePath);
+
+        // A zero scale divides straight into an infinite canvas size the first time the plan is
+        // drawn, so it must never survive the load.
+        var plan = Assert.IsType<ImagePlanSource>(survey.Floors[0].PlanSource);
+        Assert.True(plan.PixelsPerMeter > 0);
+    }
+
+    [Fact]
+    public async Task LoadAsync_SurveyDeclaringNoValidBands_IsRejectedAsCorrupt()
+    {
+        await WriteSurveyJsonAsync("""
+            {
+              "SchemaVersion": 2,
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "Corrupt",
+              "Type": 0,
+              "TargetBands": [42],
+              "CreatedAt": "2026-01-01T00:00:00+00:00",
+              "ModifiedAt": "2026-01-01T00:00:00+00:00",
+              "Floors": [
+                {
+                  "Name": "Floor 1",
+                  "PlanSource": { "kind": "roomList", "Rooms": [] },
+                  "Walls": [],
+                  "TestPoints": [],
+                  "AccessPoints": []
+                }
+              ]
+            }
+            """);
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => _sut.LoadAsync(_filePath));
+    }
+
+    private async Task WriteSurveyJsonAsync(string json, string? assetEntryName = null)
+    {
+        await using var stream = new FileStream(_filePath, FileMode.Create, FileAccess.Write);
+        using var archive = new System.IO.Compression.ZipArchive(stream, System.IO.Compression.ZipArchiveMode.Create);
+
+        var entry = archive.CreateEntry("survey.json");
+        await using (var writer = new StreamWriter(entry.Open()))
+        {
+            await writer.WriteAsync(json);
+        }
+
+        if (assetEntryName is not null)
+        {
+            archive.CreateEntry(assetEntryName);
+        }
+    }
 }
