@@ -61,6 +61,16 @@
         <Grid Grid.Row="3">
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0" />
 
+            <TextBlock
+                x:Uid="HomeNoSurveysMessage"
+                Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}"
+                TextWrapping="Wrap"
+                MaxWidth="420"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                FontSize="{StaticResource FontSizeSm}"
+                Foreground="{StaticResource Gray500Brush}" />
+
             <GridView
                 ItemsSource="{x:Bind ViewModel.Surveys}"
                 SelectionMode="None"

@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulsemap.App.Core.Abstractions;
+using Pulsemap.App.Core.Logging;
 using Pulsemap.App.Core.Settings;
 using Pulsemap.App.Services;
 using Windows.System;
@@ -13,7 +14,8 @@ public partial class HomeViewModel(
     ISurveyLibraryService surveyLibraryService,
     IUpdateCheckService updateCheckService,
     IAppSettingsService appSettingsService,
-    ILocalizationService localizationService) : ObservableObject
+    ILocalizationService localizationService,
+    IAppLogger logger) : ObservableObject
 {
     // Home is a dashboard, not the library — the Surveys nav tab shows the full, unlimited list.
     private const int RecentSurveysLimit = 3;
@@ -68,14 +70,25 @@ public partial class HomeViewModel(
             {
                 Surveys.Add(summary);
             }
-
-            await CheckForUpdateAsync();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Home loads from an async void Loaded handler — an unreadable surveys folder must
+            // degrade to an empty dashboard, not kill the process on launch.
+            await logger.LogErrorAsync("Failed to list recent surveys for Home.", ex);
         }
         finally
         {
             IsLoading = false;
+            OnPropertyChanged(nameof(IsEmpty));
         }
+
+        await CheckForUpdateAsync();
     }
+
+    /// <summary>Drives Home's empty state — with no surveys yet, the "Recent surveys" heading
+    /// previously sat above nothing at all.</summary>
+    public bool IsEmpty => !IsLoading && Surveys.Count == 0;
 
     private async Task CheckForUpdateAsync()
     {

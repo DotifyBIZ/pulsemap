@@ -14,7 +14,10 @@ public sealed class SnapshotComparisonViewModelTests
     private readonly LogDistancePropagationModel _propagationModel = new();
     private readonly FakeSurveyFileService _surveyFileService = new();
 
-    private SnapshotComparisonViewModel CreateSut() => new(_propagationModel, _surveyFileService);
+    private readonly FakeLocalizationService _localizationService = new();
+    private readonly FakeAppLogger _logger = new();
+
+    private SnapshotComparisonViewModel CreateSut() => new(_propagationModel, _surveyFileService, _localizationService, _logger);
 
     [Fact]
     public void Initialize_PopulatesOptionsWithCurrentFirstThenSnapshots()
@@ -40,7 +43,7 @@ public sealed class SnapshotComparisonViewModelTests
         Assert.Same(sut.Options[0], sut.LeftOption);
         Assert.Same(sut.Options[0], sut.RightOption);
         Assert.Equal(survey.Floors[0].Id, sut.SelectedFloor!.Id);
-        Assert.Equal(Band.TwoPointFourGhz, sut.SelectedBand);
+        Assert.Equal(Band.TwoPointFourGhz, sut.SelectedBand!.Band);
     }
 
     [Fact]

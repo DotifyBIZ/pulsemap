@@ -567,4 +567,28 @@
   <data name="DiagnosticsMonitoringSectionLabel" xml:space="preserve">
     <value>Monitorowanie</value>
   </data>
+  <data name="WorkspaceOnboardingStep5.Title" xml:space="preserve">
+    <value>Diagnostyka</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.Subtitle" xml:space="preserve">
+    <value>Kliknij dowolne miejsce na planie, aby porównać bieżące połączenie WiFi tego komputera z tym, co przewiduje w tym miejscu model pomiaru.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.ActionButtonContent" xml:space="preserve">
+    <value>Rozumiem</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.CloseButtonContent" xml:space="preserve">
+    <value>Pomiń</value>
+  </data>
+  <data name="WorkspaceNoAdapterNote.Text" xml:space="preserve">
+    <value>Nie znaleziono karty WiFi. Skanowanie i pomiar terenowy jej wymagają — sprawdź, czy komputer ma sprzęt WiFi i czy usługa Autokonfiguracja WLAN jest uruchomiona.</value>
+  </data>
+  <data name="DiagnosticsNoAdapterNote.Text" xml:space="preserve">
+    <value>Nie znaleziono karty WiFi. Sprawdź, czy komputer ma sprzęt WiFi i czy usługa Autokonfiguracja WLAN jest uruchomiona.</value>
+  </data>
+  <data name="HomeNoSurveysMessage.Text" xml:space="preserve">
+    <value>Nie masz jeszcze żadnych badań. Rozpocznij od przycisku Nowe badanie powyżej — możesz narysować plan albo zaimportować jego obraz lub PDF.</value>
+  </data>
+  <data name="SurveysNoSurveysMessage.Text" xml:space="preserve">
+    <value>Nie masz jeszcze żadnych badań. Rozpocznij od przycisku Nowe badanie powyżej.</value>
+  </data>
 </root>

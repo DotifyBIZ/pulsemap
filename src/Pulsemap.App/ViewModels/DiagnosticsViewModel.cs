@@ -20,6 +20,10 @@ public sealed partial class DiagnosticsViewModel(
 {
     private static readonly TimeSpan MonitoringInterval = TimeSpan.FromSeconds(5);
 
+    // ~15 minutes of history at the interval above — enough to see a pattern, bounded enough that
+    // an all-day monitoring session doesn't grow without limit.
+    private const int MaxMonitoringSamples = 180;
+
     private CancellationTokenSource? _monitoringCts;
 
     public ObservableCollection<NetworkAdapterInfo> Adapters { get; } = [];
@@ -44,6 +48,16 @@ public sealed partial class DiagnosticsViewModel(
     public partial bool HasResult { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMonitoringError))]
+    public partial string? MonitoringErrorMessage { get; set; }
+
+    public bool HasMonitoringError => MonitoringErrorMessage is not null;
+
+    /// <summary>No WLAN adapter at all — every button on this page is disabled, so without this
+    /// the page reads as broken rather than as "this machine has no WiFi".</summary>
+    public bool HasNoAdapters => Adapters.Count == 0;
+
+    [ObservableProperty]
     public partial string? SsidDisplay { get; set; }
 
     [ObservableProperty]
@@ -60,7 +74,19 @@ public sealed partial class DiagnosticsViewModel(
     [RelayCommand]
     private async Task LoadAdaptersAsync(CancellationToken cancellationToken)
     {
-        var adapters = await wlanAdapterService.GetAdaptersAsync(cancellationToken);
+        IReadOnlyList<NetworkAdapterInfo> adapters;
+        try
+        {
+            adapters = await wlanAdapterService.GetAdaptersAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Called from the page's async void OnNavigatedTo — a WLAN service failure has to
+            // land in the page, not in the process's unhandled-exception handler.
+            MonitoringErrorMessage = ex.Message;
+            adapters = [];
+        }
+
         Adapters.Clear();
         foreach (var adapter in adapters)
         {
@@ -68,6 +94,7 @@ public sealed partial class DiagnosticsViewModel(
         }
 
         SelectedAdapter = Adapters.Count > 0 ? Adapters[0] : null;
+        OnPropertyChanged(nameof(HasNoAdapters));
     }
 
     private bool CanRunDiagnostics() => SelectedAdapter is not null && !IsRunning;
@@ -81,10 +108,15 @@ public sealed partial class DiagnosticsViewModel(
         }
 
         IsRunning = true;
+        MonitoringErrorMessage = null;
         try
         {
             var (link, health) = await CaptureAsync(adapter.Id, cancellationToken);
             ApplySnapshot(link, health);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            MonitoringErrorMessage = ex.Message;
         }
         finally
         {
@@ -176,6 +208,7 @@ public sealed partial class DiagnosticsViewModel(
         }
 
         MonitoringSamples.Clear();
+        MonitoringErrorMessage = null;
         _monitoringCts = new CancellationTokenSource();
         IsMonitoring = true;
         _ = MonitorLoopAsync(adapter.Id, _monitoringCts.Token);
@@ -202,12 +235,32 @@ public sealed partial class DiagnosticsViewModel(
                     string.Format(CultureInfo.CurrentCulture, "{0}%", link.SignalPercent),
                     string.Format(CultureInfo.CurrentCulture, localizationService.GetString("DiagnosticsMbpsFormat"), link.RxLinkSpeedMbps),
                     health.GatewayPingMs is { } pingMs ? string.Format(CultureInfo.CurrentCulture, localizationService.GetString("DiagnosticsPingMsFormat"), pingMs) : localizationService.GetString("DiagnosticsNoPingReplyDisplay")));
+
+                // Monitoring is meant to be left running for a long time; without a ceiling this
+                // list grows by 12 rows a minute for as long as the page is open.
+                while (MonitoringSamples.Count > MaxMonitoringSamples)
+                {
+                    MonitoringSamples.RemoveAt(0);
+                }
             }
             while (await timer.WaitForNextTickAsync(cancellationToken));
         }
         catch (OperationCanceledException)
         {
             // Expected when StopMonitoring cancels the token — not an error.
+        }
+        catch (Exception ex)
+        {
+            // Fire-and-forget loop: anything escaping here would be an unobserved exception that
+            // silently stops sampling while the button still reads "Stop monitoring".
+            MonitoringErrorMessage = ex.Message;
+        }
+        finally
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                StopMonitoring();
+            }
         }
     }
 

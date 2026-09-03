@@ -177,7 +177,10 @@ public partial class WorkspaceViewModel : ObservableObject
     /// <summary>Guided-walk test point suggestions live in the Suggestions tab, but still need an
     /// adapter picked over on the Adapter tab — this note points a user there instead of leaving
     /// the Start Guided Walk button silently disabled with no explanation.</summary>
-    public bool NeedsAdapterForGuidedWalk => SelectedAdapter is null;
+    /// <remarks>Suppressed when the machine has no WLAN adapter at all — pointing a user at a
+    /// picker with nothing in it is worse than the separate "no adapter found" note that case
+    /// gets instead.</remarks>
+    public bool NeedsAdapterForGuidedWalk => SelectedAdapter is null && !HasNoAdapters;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
@@ -285,6 +288,7 @@ public partial class WorkspaceViewModel : ObservableObject
             OnPropertyChanged(nameof(AvailableBands));
             OnPropertyChanged(nameof(Floors));
             OnPropertyChanged(nameof(AccessPointSummaryDisplay));
+            OnPropertyChanged(nameof(HasSnapshots));
             Recompute();
             await LoadAdaptersAsync(cancellationToken);
         }
@@ -301,7 +305,19 @@ public partial class WorkspaceViewModel : ObservableObject
 
     private async Task LoadAdaptersAsync(CancellationToken cancellationToken)
     {
-        var adapters = await _wlanAdapterService.GetAdaptersAsync(cancellationToken);
+        IReadOnlyList<NetworkAdapterInfo> adapters;
+        try
+        {
+            adapters = await _wlanAdapterService.GetAdaptersAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Enumerating adapters goes through wlanapi.dll; a machine with the WLAN service
+            // stopped shouldn't fail the whole survey load.
+            await _logger.LogErrorAsync("Failed to enumerate WLAN adapters.", ex, CancellationToken.None);
+            adapters = [];
+        }
+
         Adapters.Clear();
         foreach (var adapter in adapters)
         {
@@ -309,7 +325,12 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         SelectedAdapter = Adapters.Count > 0 ? Adapters[0] : null;
+        OnPropertyChanged(nameof(HasNoAdapters));
     }
+
+    /// <summary>No WLAN adapter at all (no hardware, WLAN service stopped) — Scan and the guided
+    /// walk are both unusable, and a disabled button with no explanation reads as a broken app.</summary>
+    public bool HasNoAdapters => Adapters.Count == 0;
 
     private bool CanScan() => SelectedAdapter is not null && !IsScanning;
 
@@ -325,7 +346,7 @@ public partial class WorkspaceViewModel : ObservableObject
         ScanStatusMessage = null;
         try
         {
-            var result = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+            var result = await SafeScanAsync(SelectedAdapter.Id);
             LastScanStatus = result.Status;
             ScanResults.Clear();
 
@@ -356,6 +377,22 @@ public partial class WorkspaceViewModel : ObservableObject
         finally
         {
             IsScanning = false;
+        }
+    }
+
+    /// <summary>Every scan in this view model crosses into wlanapi.dll, and all three callers reach
+    /// it from an <c>async void</c> handler or a command — a driver-level failure has to come back
+    /// as a reportable <see cref="WlanScanStatus.Failed"/>, never as an unhandled exception.</summary>
+    private async Task<WlanScanResult> SafeScanAsync(Guid adapterId)
+    {
+        try
+        {
+            return await _wlanAdapterService.ScanAsync(adapterId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await _logger.LogErrorAsync("WLAN scan failed.", ex, CancellationToken.None);
+            return new WlanScanResult(WlanScanStatus.Failed, []);
         }
     }
 
@@ -412,7 +449,7 @@ public partial class WorkspaceViewModel : ObservableObject
         GuidedWalkStatusMessage = null;
         try
         {
-            var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+            var scanResult = await SafeScanAsync(SelectedAdapter.Id);
             if (scanResult.Status != WlanScanStatus.Success)
             {
                 GuidedWalkStatusMessage = DescribeScanStatus(scanResult.Status);
@@ -645,12 +682,20 @@ public partial class WorkspaceViewModel : ObservableObject
 
     public async Task RecaptureTestPointAsync(TestPoint testPoint)
     {
-        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        if (Survey is null || SelectedFloor is null)
         {
             return;
         }
 
-        var scanResult = await _wlanAdapterService.ScanAsync(SelectedAdapter.Id);
+        // The user has already confirmed a recapture dialog by the time we get here — going quiet
+        // because no adapter happens to be picked would look like the app simply ignored them.
+        if (SelectedAdapter is null)
+        {
+            ErrorMessage = _localizationService.GetString("WorkspaceNoAdapterSelectedError");
+            return;
+        }
+
+        var scanResult = await SafeScanAsync(SelectedAdapter.Id);
         if (scanResult.Status != WlanScanStatus.Success)
         {
             ErrorMessage = DescribeScanStatus(scanResult.Status);
@@ -675,15 +720,37 @@ public partial class WorkspaceViewModel : ObservableObject
     /// <see cref="CoverageGridCalculator.StrongestSignalDbm"/>, so the two never disagree.</summary>
     public async Task DiagnoseAtPointAsync(Point2D position)
     {
-        if (Survey is null || SelectedFloor is null || SelectedAdapter is null)
+        if (Survey is null || SelectedFloor is null)
         {
+            return;
+        }
+
+        // The page shows a flyout at the clicked point whatever happens here, so every early exit
+        // has to leave something readable behind — otherwise the flyout renders last click's
+        // findings, or nothing at all.
+        if (SelectedAdapter is null)
+        {
+            DiagnoseFindings.Clear();
+            DiagnoseSummaryDisplay = _localizationService.GetString("WorkspaceNoAdapterSelectedError");
             return;
         }
 
         double? predicted = CoverageGridCalculator.StrongestSignalDbm(position, SelectedFloor, Survey.Floors, SelectedBand, _propagationModel);
 
-        var link = await _linkDiagnosticsService.GetCurrentLinkAsync(SelectedAdapter.Id);
-        var health = link.IsConnected ? await _networkHealthService.CheckHealthAsync(SelectedAdapter.Id) : NetworkHealthSnapshot.Unavailable;
+        LinkDiagnosticsSnapshot link;
+        NetworkHealthSnapshot health;
+        try
+        {
+            link = await _linkDiagnosticsService.GetCurrentLinkAsync(SelectedAdapter.Id);
+            health = link.IsConnected ? await _networkHealthService.CheckHealthAsync(SelectedAdapter.Id) : NetworkHealthSnapshot.Unavailable;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await _logger.LogErrorAsync("Failed to read live link diagnostics.", ex, CancellationToken.None);
+            DiagnoseFindings.Clear();
+            DiagnoseSummaryDisplay = _localizationService.GetString("WorkspaceDiagnoseFailedDisplay");
+            return;
+        }
 
         DiagnoseSummaryDisplay = predicted is { } predictedDbm
             ? string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceDiagnosePredictedFormat"), predictedDbm)
@@ -712,9 +779,25 @@ public partial class WorkspaceViewModel : ObservableObject
             return;
         }
 
-        SelectedFloor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
-        var suggestions = _placementOptimizer.SuggestPlacements(SelectedFloor, Survey.Floors, Survey.TargetBands, _propagationModel);
-        SelectedFloor.AccessPoints.AddRange(suggestions);
+        var floor = SelectedFloor;
+        var allFloors = Survey.Floors;
+        var bands = Survey.TargetBands;
+
+        // Greedy maximum-coverage is O(candidate points²) per access point placed — seconds of
+        // pure CPU on a large floor. Running it inline froze the whole window; the progress ring
+        // bound to IsLoading can only actually spin if the work is off the UI thread.
+        IsLoading = true;
+        try
+        {
+            var suggestions = await Task.Run(() => _placementOptimizer.SuggestPlacements(floor, allFloors, bands, _propagationModel));
+            floor.AccessPoints.RemoveAll(ap => !ap.IsUserOverride);
+            floor.AccessPoints.AddRange(suggestions);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+
         await SaveAndRefreshAsync();
     }
 
@@ -755,8 +838,14 @@ public partial class WorkspaceViewModel : ObservableObject
         }
 
         Survey.Snapshots.Add(new SurveySnapshot { Label = label, Floors = CloneFloorsForSnapshot(Survey.Floors) });
+        OnPropertyChanged(nameof(HasSnapshots));
         await SaveAndRefreshAsync();
     }
+
+    /// <summary>Whether Compare has anything to compare against. With no saved snapshot the
+    /// comparison page can only show "Current" against "Current" — a dead end reached through an
+    /// enabled-looking button.</summary>
+    public bool HasSnapshots => Survey is { Snapshots.Count: > 0 };
 
     // A snapshot freezes geometry/measurements only — sharing Wall/TestPoint/AccessPoint object
     // references with the live floor would mean editing the live floor also (invisibly) edits the
@@ -870,6 +959,11 @@ public partial class WorkspaceViewModel : ObservableObject
         FloorChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Auto-save is wired to nearly every canvas edit, and those edits arrive through
+    /// <c>async void</c> event handlers on the page — an unhandled save failure there kills the
+    /// process rather than surfacing anywhere. A failed save is reported in the page's error bar
+    /// and logged; the in-memory edit stays, so retrying (or fixing the disk problem) still
+    /// works.</summary>
     private async Task SaveAndRefreshAsync()
     {
         if (Survey is null || _filePath is null)
@@ -877,7 +971,17 @@ public partial class WorkspaceViewModel : ObservableObject
             return;
         }
 
-        await _surveyFileService.SaveAsync(Survey, _filePath);
+        try
+        {
+            await _surveyFileService.SaveAsync(Survey, _filePath);
+            ErrorMessage = null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WorkspaceSaveErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync($"Failed to save survey '{_filePath}'.", ex, CancellationToken.None);
+        }
+
         Recompute();
         OnPropertyChanged(nameof(AccessPointSummaryDisplay));
         FloorChanged?.Invoke(this, EventArgs.Empty);

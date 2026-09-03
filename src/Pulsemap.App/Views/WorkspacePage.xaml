@@ -32,7 +32,10 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                 <Button x:Uid="WorkspaceSaveSnapshotButton" Click="SaveSnapshot_Click" />
-                <Button x:Uid="WorkspaceCompareSnapshotsButton" Click="CompareSnapshots_Click" />
+                <Button
+                    x:Uid="WorkspaceCompareSnapshotsButton"
+                    Click="CompareSnapshots_Click"
+                    IsEnabled="{x:Bind ViewModel.HasSnapshots, Mode=OneWay}" />
                 <Button x:Uid="WorkspaceExportMenuButton">
                     <Button.Flyout>
                         <MenuFlyout Placement="Bottom">
@@ -61,11 +64,11 @@
         </InfoBar>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0" VerticalAlignment="Center">
-            <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" />
-            <ToggleButton x:Uid="WorkspaceDiagnoseToolButton" x:Name="DiagnoseToolButton" Checked="ToolToggle_Checked" />
+            <ToggleButton x:Uid="WorkspaceSelectToolButton" x:Name="SelectToolButton" Checked="ToolToggle_Checked" Unchecked="ToolToggle_Unchecked" />
+            <ToggleButton x:Uid="WorkspaceAddTestPointToolButton" x:Name="AddTestPointToolButton" Checked="ToolToggle_Checked" Unchecked="ToolToggle_Unchecked" />
+            <ToggleButton x:Uid="WorkspaceDrawWallToolButton" x:Name="DrawWallToolButton" Checked="ToolToggle_Checked" Unchecked="ToolToggle_Unchecked" />
+            <ToggleButton x:Uid="WorkspaceDeleteToolButton" x:Name="DeleteToolButton" Checked="ToolToggle_Checked" Unchecked="ToolToggle_Unchecked" />
+            <ToggleButton x:Uid="WorkspaceDiagnoseToolButton" x:Name="DiagnoseToolButton" Checked="ToolToggle_Checked" Unchecked="ToolToggle_Unchecked" />
 
             <Button x:Name="ToolLegendButton" x:Uid="WorkspaceToolLegendButton" Margin="8,0,0,0">
                 <Button.Flyout>
@@ -263,6 +266,13 @@
                                 TextWrapping="Wrap"
                                 FontSize="{StaticResource FontSizeXs}"
                                 Foreground="{StaticResource Gray400Brush}" />
+
+                            <TextBlock
+                                x:Uid="WorkspaceNoAdapterNote"
+                                Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeXs}"
+                                Foreground="{StaticResource Gray400Brush}" />
                         </StackPanel>
                         </ScrollViewer>
                     </TabViewItem>
@@ -276,6 +286,13 @@
                                 SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
                                 DisplayMemberPath="Name"
                                 HorizontalAlignment="Stretch" />
+
+                            <TextBlock
+                                x:Uid="WorkspaceNoAdapterNote"
+                                Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeXs}"
+                                Foreground="{StaticResource Gray400Brush}" />
 
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <Button
@@ -330,6 +347,7 @@
         <TeachingTip x:Name="OnboardingStep1" x:Uid="WorkspaceOnboardingStep1" Target="{x:Bind SelectToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
         <TeachingTip x:Name="OnboardingStep2" x:Uid="WorkspaceOnboardingStep2" Target="{x:Bind AddTestPointToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
         <TeachingTip x:Name="OnboardingStep3" x:Uid="WorkspaceOnboardingStep3" Target="{x:Bind DrawWallToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
-        <TeachingTip x:Name="OnboardingStep4" x:Uid="WorkspaceOnboardingStep4" Target="{x:Bind DeleteToolButton}" ActionButtonClick="OnboardingFinish_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep4" x:Uid="WorkspaceOnboardingStep4" Target="{x:Bind DeleteToolButton}" ActionButtonClick="OnboardingNext_Click" CloseButtonClick="OnboardingSkip_Click" />
+        <TeachingTip x:Name="OnboardingStep5" x:Uid="WorkspaceOnboardingStep5" Target="{x:Bind DiagnoseToolButton}" ActionButtonClick="OnboardingFinish_Click" CloseButtonClick="OnboardingSkip_Click" />
     </Grid>
 </Page>

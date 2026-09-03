@@ -20,6 +20,10 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
 
     private const int CurrentSchemaVersion = 2;
 
+    // Matches the New Survey wizard's own default — used only to replace an unusable scale read
+    // from a corrupt file, never to override a valid one.
+    private const double DefaultPixelsPerMeter = 100;
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -62,7 +66,17 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
         }
         catch (Exception ex)
         {
-            File.Delete(tempFilePath);
+            // Best-effort cleanup only: if deleting the half-written temp file itself fails
+            // (locked by AV, permissions), that must not replace the real save failure below.
+            try
+            {
+                File.Delete(tempFilePath);
+            }
+            catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+            {
+                // Leaving a stray .tmp behind is strictly better than losing the original error.
+            }
+
             if (ex is not OperationCanceledException)
             {
                 // CancellationToken.None: a caller-cancelled save shouldn't also cancel the log write.
@@ -112,6 +126,10 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
             throw new InvalidDataException($"'{filePath}' contains an invalid or corrupted survey.json.", ex);
         }
 
+        // Before the asset pass, not after: everything below reads fields off the deserialized
+        // survey, so normalization belongs as close to the parse as possible.
+        Sanitize(survey);
+
         foreach (var floor in survey.Floors)
         {
             if (floor.PlanSource is not ImagePlanSource imagePlan)
@@ -136,6 +154,90 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
 
         return survey;
     }
+
+    // A .pulsemap file is untrusted input: it can be hand-edited, corrupted, or produced by a
+    // different build. System.Text.Json deserializes *any* integer into an enum field without
+    // validating it, and any finite double into a coordinate — so an out-of-range Band or
+    // WallMaterial would later throw out of the propagation/channel-plan switches (which are
+    // written as real invariants), and an absurd coordinate would blow up the canvas and the
+    // candidate grid. Normalize both here, at the boundary, rather than defensively everywhere
+    // downstream.
+    private static void Sanitize(Survey survey)
+    {
+        survey.TargetBands = [.. survey.TargetBands.Where(Enum.IsDefined).Distinct()];
+        if (survey.TargetBands.Count == 0)
+        {
+            throw new InvalidDataException("Survey declares no valid target bands.");
+        }
+
+        foreach (var floor in survey.Floors.Concat(survey.Snapshots.SelectMany(s => s.Floors)))
+        {
+            SanitizeFloor(floor);
+        }
+    }
+
+    private static void SanitizeFloor(Floor floor)
+    {
+        if (floor.PendingGuidedWalkBand is { } pendingBand && !Enum.IsDefined(pendingBand))
+        {
+            floor.PendingGuidedWalkBand = null;
+        }
+
+        // A zero/negative/non-finite scale would divide straight into an infinite canvas size.
+        if (floor.PlanSource is ImagePlanSource imagePlan && (!double.IsFinite(imagePlan.PixelsPerMeter) || imagePlan.PixelsPerMeter <= 0))
+        {
+            imagePlan.PixelsPerMeter = DefaultPixelsPerMeter;
+        }
+
+        floor.OutdoorBoundsMin = SanitizeNullablePoint(floor.OutdoorBoundsMin);
+        floor.OutdoorBoundsMax = SanitizeNullablePoint(floor.OutdoorBoundsMax);
+        floor.PendingGuidedWalkPoints.RemoveAll(point => !IsSanePoint(point));
+
+        foreach (var wall in floor.Walls)
+        {
+            if (wall.Material is { } material && !Enum.IsDefined(material))
+            {
+                wall.Material = null;
+            }
+
+            wall.Start = SanitizePoint(wall.Start);
+            wall.End = SanitizePoint(wall.End);
+        }
+
+        foreach (var testPoint in floor.TestPoints)
+        {
+            testPoint.Position = SanitizePoint(testPoint.Position);
+            RemoveUndefinedBandKeys(testPoint.Measurements);
+        }
+
+        foreach (var accessPoint in floor.AccessPoints)
+        {
+            accessPoint.Position = SanitizePoint(accessPoint.Position);
+            RemoveUndefinedBandKeys(accessPoint.Radios);
+        }
+    }
+
+    private static void RemoveUndefinedBandKeys<T>(Dictionary<Band, T> byBand)
+    {
+        foreach (var band in byBand.Keys.Where(band => !Enum.IsDefined(band)).ToList())
+        {
+            byBand.Remove(band);
+        }
+    }
+
+    // Far larger than any real site survey, small enough that a grid or canvas built from it
+    // still has finite, workable dimensions.
+    private const double MaxCoordinateMeters = 100_000;
+
+    private static bool IsSanePoint(Point2D point) =>
+        double.IsFinite(point.X) && double.IsFinite(point.Y) &&
+        Math.Abs(point.X) <= MaxCoordinateMeters && Math.Abs(point.Y) <= MaxCoordinateMeters;
+
+    private static Point2D SanitizePoint(Point2D point) => IsSanePoint(point) ? point : new Point2D(
+        double.IsFinite(point.X) ? Math.Clamp(point.X, -MaxCoordinateMeters, MaxCoordinateMeters) : 0,
+        double.IsFinite(point.Y) ? Math.Clamp(point.Y, -MaxCoordinateMeters, MaxCoordinateMeters) : 0);
+
+    private static Point2D? SanitizeNullablePoint(Point2D? point) => point is { } value ? SanitizePoint(value) : null;
 
     // Schema v1 had a single, unnamed `"Floor"` object instead of a `"Floors"` array, and Floor had
     // none of its current Id/Name/IsOutdoor/Level/OutdoorBounds properties. None of those are

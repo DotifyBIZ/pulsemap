@@ -24,6 +24,7 @@ public sealed partial class SurveysViewModel(ISurveyLibraryService surveyLibrary
     private async Task LoadAsync()
     {
         IsLoading = true;
+        ErrorMessage = null;
         try
         {
             var summaries = await surveyLibraryService.ListSurveysAsync();
@@ -33,11 +34,23 @@ public sealed partial class SurveysViewModel(ISurveyLibraryService surveyLibrary
                 Surveys.Add(summary);
             }
         }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Reached from the page's async void Loaded handler — an escaping exception here is a
+            // process kill, not a failed page.
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, localizationService.GetString("SurveysListErrorFormat"), ex.Message);
+            await logger.LogErrorAsync("Failed to list surveys.", ex);
+        }
         finally
         {
             IsLoading = false;
+            OnPropertyChanged(nameof(IsEmpty));
         }
     }
+
+    /// <summary>Drives the empty-state panel — an empty library previously rendered as a page with
+    /// a title and nothing else, and no way to start a survey from here.</summary>
+    public bool IsEmpty => !IsLoading && Surveys.Count == 0;
 
     [RelayCommand]
     private async Task DeleteAsync(SurveySummary summary)
@@ -47,6 +60,7 @@ public sealed partial class SurveysViewModel(ISurveyLibraryService surveyLibrary
         {
             await surveyLibraryService.DeleteAsync(summary.FilePath);
             Surveys.Remove(summary);
+            OnPropertyChanged(nameof(IsEmpty));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

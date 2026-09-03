@@ -138,6 +138,11 @@ public partial class NewSurveyWizardViewModel : ObservableObject
 
     public bool IsNotReviewStep => !IsReviewStepVisible;
 
+    private const int StepCount = 5;
+
+    public string StepProgressDisplay =>
+        string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardStepProgressFormat"), CurrentStepIndex + 1, StepCount);
+
     public string SurveyTypeSummaryDisplay => SelectedSurveyType == SurveyType.NewDeployment
         ? _localizationService.GetString("WizardSurveyTypeSummaryNewDeployment")
         : string.IsNullOrWhiteSpace(TargetNetworkSsid)
@@ -202,6 +207,7 @@ public partial class NewSurveyWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(IsAdapterBandsStepVisible));
         OnPropertyChanged(nameof(IsReviewStepVisible));
         OnPropertyChanged(nameof(IsNotReviewStep));
+        OnPropertyChanged(nameof(StepProgressDisplay));
         NextCommand.NotifyCanExecuteChanged();
         BackCommand.NotifyCanExecuteChanged();
     }
@@ -215,7 +221,28 @@ public partial class NewSurveyWizardViewModel : ObservableObject
     [RelayCommand]
     private async Task PickImageAsync()
     {
-        var result = await _filePickerService.PickFloorPlanFileAsync();
+        ErrorMessage = null;
+
+        FloorPlanFilePickResult? result;
+        try
+        {
+            result = await _filePickerService.PickFloorPlanFileAsync();
+        }
+        catch (FloorPlanTooLargeException ex)
+        {
+            ErrorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                _localizationService.GetString("WizardFloorPlanTooLargeFormat"),
+                ex.MaxBytes / (1024 * 1024));
+            return;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            ErrorMessage = string.Format(CultureInfo.CurrentCulture, _localizationService.GetString("WizardFloorPlanReadErrorFormat"), ex.Message);
+            await _logger.LogErrorAsync("Failed to read the picked floor plan file.", ex);
+            return;
+        }
+
         if (result is null)
         {
             return;
@@ -314,14 +341,25 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             {
                 ImageData = _pickedImageData ?? [],
                 FileExtension = _pickedImageExtension ?? string.Empty,
-                PixelsPerMeter = PixelsPerMeter,
+                // A NumberBox left empty reports NaN, and its Minimum only constrains the spinner
+                // and committed text — a scale of NaN or 0 divides straight into an infinite
+                // canvas size the first time the plan is rendered.
+                PixelsPerMeter = SanitizeDimension(PixelsPerMeter, DefaultPixelsPerMeter),
             }
-            : new RoomListSource { Rooms = [.. Rooms] };
+            : new RoomListSource
+            {
+                Rooms = [.. Rooms.Select(room => new RoomListEntry
+                {
+                    Name = room.Name,
+                    WidthMeters = SanitizeDimension(room.WidthMeters, NewRoomSizeMeters),
+                    LengthMeters = SanitizeDimension(room.LengthMeters, NewRoomSizeMeters),
+                })],
+            };
 
         var floor = new Floor { PlanSource = planSource };
-        if (IsRoomListStyleSelected)
+        if (planSource is RoomListSource roomList)
         {
-            floor.Walls.AddRange(BuildPerimeterWalls(Rooms, DefaultWallMaterial));
+            floor.Walls.AddRange(BuildPerimeterWalls(roomList.Rooms, DefaultWallMaterial));
         }
 
         return new Survey
@@ -334,6 +372,9 @@ public partial class NewSurveyWizardViewModel : ObservableObject
             Floors = [floor],
         };
     }
+
+    private static double SanitizeDimension(double value, double fallback) =>
+        double.IsFinite(value) && value > 0 ? value : fallback;
 
     private static List<Wall> BuildPerimeterWalls(IEnumerable<RoomListEntry> rooms, WallMaterial material)
     {

@@ -45,4 +45,21 @@ public sealed class SettingsViewModelTests
         Assert.NotNull(_appSettingsService.LastSaved);
         Assert.False(_appSettingsService.LastSaved.CheckForUpdatesEnabled);
     }
+
+    // settings.json holds more than this one preference. Saving a freshly-constructed AppSettings
+    // reset everything else in the file — toggling this switch replayed the Workspace first-run
+    // tour, because HasSeenWorkspaceOnboarding went back to its default.
+    [Fact]
+    public async Task TogglingCheckForUpdatesEnabled_PreservesOtherSettings()
+    {
+        _appSettingsService.SettingsToReturn = new AppSettings { CheckForUpdatesEnabled = true, HasSeenWorkspaceOnboarding = true };
+        var sut = CreateSut();
+        await sut.LoadCommand.ExecuteAsync(null);
+
+        sut.CheckForUpdatesEnabled = false;
+
+        Assert.NotNull(_appSettingsService.LastSaved);
+        Assert.False(_appSettingsService.LastSaved.CheckForUpdatesEnabled);
+        Assert.True(_appSettingsService.LastSaved.HasSeenWorkspaceOnboarding);
+    }
 }

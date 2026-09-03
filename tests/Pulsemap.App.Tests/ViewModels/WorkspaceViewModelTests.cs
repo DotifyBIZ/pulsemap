@@ -840,11 +840,25 @@ public sealed class WorkspaceViewModelTests
         Assert.False(sut.HasReplaceableSuggestions);
     }
 
+    // With no WLAN hardware at all, "pick an adapter on the Adapter tab" points at an empty
+    // picker — that case gets the separate HasNoAdapters note instead.
     [Fact]
-    public async Task NeedsAdapterForGuidedWalk_NoAdapterAvailable_IsTrue()
+    public async Task NoAdapterAvailable_ReportsNoAdaptersRatherThanAskingTheUserToPickOne()
     {
         var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
 
+        Assert.True(sut.HasNoAdapters);
+        Assert.False(sut.NeedsAdapterForGuidedWalk);
+    }
+
+    [Fact]
+    public async Task NeedsAdapterForGuidedWalk_AdapterAvailableButNoneSelected_IsTrue()
+    {
+        _wlanAdapterService.AdaptersToReturn = [new NetworkAdapterInfo(Guid.NewGuid(), "Test Adapter")];
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        sut.SelectedAdapter = null;
+
+        Assert.False(sut.HasNoAdapters);
         Assert.True(sut.NeedsAdapterForGuidedWalk);
     }
 
@@ -876,4 +890,60 @@ public sealed class WorkspaceViewModelTests
             new Wall { Start = new Point2D(0, sizeMeters), End = new Point2D(0, 0) },
         },
     };
+
+    // Auto-save runs behind async void canvas event handlers on the page. An escaping IOException
+    // there killed the process instead of surfacing anywhere the user could see it.
+    [Fact]
+    public async Task AddTestPointAsync_WhenSaveFails_ReportsTheErrorInsteadOfThrowing()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        _surveyFileService.SaveExceptionToThrow = new IOException("the disk is full");
+
+        await sut.AddTestPointAsync(new Point2D(2, 2));
+
+        // FakeLocalizationService echoes the key back, so the key itself is what's assertable here.
+        Assert.True(sut.HasError);
+        Assert.Equal("WorkspaceSaveErrorFormat", sut.ErrorMessage);
+
+        // The edit itself is kept, so retrying after fixing the disk still saves it.
+        Assert.Single(sut.SelectedFloor!.TestPoints);
+    }
+
+    [Fact]
+    public async Task DiagnoseAtPointAsync_WithNoAdapterSelected_LeavesAReadableMessageRatherThanStaleFindings()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        sut.SelectedAdapter = null;
+
+        await sut.DiagnoseAtPointAsync(new Point2D(2, 2));
+
+        Assert.Empty(sut.DiagnoseFindings);
+        Assert.False(string.IsNullOrEmpty(sut.DiagnoseSummaryDisplay));
+    }
+
+    [Fact]
+    public async Task RecaptureTestPointAsync_WithNoAdapterSelected_ReportsWhyNothingHappened()
+    {
+        var floor = SquareRoomFloor(10);
+        var testPoint = new TestPoint { Position = new Point2D(2, 2) };
+        floor.TestPoints.Add(testPoint);
+        var sut = await LoadedViewModelAsync(floor);
+        sut.SelectedAdapter = null;
+
+        await sut.RecaptureTestPointAsync(testPoint);
+
+        Assert.True(sut.HasError);
+    }
+
+    [Fact]
+    public async Task HasSnapshots_IsFalseUntilASnapshotIsSaved()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        Assert.False(sut.HasSnapshots);
+
+        await sut.SaveSnapshotCommand.ExecuteAsync("Before upgrade");
+
+        Assert.True(sut.HasSnapshots);
+    }
 }

@@ -60,6 +60,17 @@ public sealed partial class SettingsViewModel(ILocalizationService localizationS
             return;
         }
 
-        _ = appSettingsService.SaveAsync(new AppSettings { CheckForUpdatesEnabled = value });
+        _ = SaveCheckForUpdatesAsync(value);
+    }
+
+    // Load-modify-save, not save-a-fresh-AppSettings: settings.json holds more than this one
+    // preference (HasSeenWorkspaceOnboarding lives there too), and writing a default-constructed
+    // AppSettings silently reset everything else — toggling this switch replayed the Workspace
+    // first-run tour.
+    private async Task SaveCheckForUpdatesAsync(bool value)
+    {
+        var settings = await appSettingsService.LoadAsync();
+        settings.CheckForUpdatesEnabled = value;
+        await appSettingsService.SaveAsync(settings);
     }
 }

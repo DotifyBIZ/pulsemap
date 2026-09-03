@@ -36,8 +36,21 @@ public static class FloorGrid
         return BuildGrid(minX, maxX, minY, maxY, spacingMeters);
     }
 
+    /// <summary>
+    /// Ceiling on how many candidate points any one grid may contain. Every consumer of this grid
+    /// is at least O(points) — AP placement is O(points²) — and all of them run while the user
+    /// waits, so an accidentally huge extent (a wall dragged to an absurd coordinate, a floor plan
+    /// with a tiny pixels-per-meter scale) would otherwise turn into an unbounded allocation and a
+    /// frozen app rather than a coarse heatmap. Past this point the spacing is widened instead:
+    /// the result gets less detailed, never unbounded. 250k at 0.5m spacing still covers roughly a
+    /// 250m x 250m floor at full requested resolution.
+    /// </summary>
+    public const int MaxGridPoints = 250_000;
+
     private static List<Point2D> BuildGrid(double minX, double maxX, double minY, double maxY, double spacingMeters)
     {
+        spacingMeters = ClampSpacingToMaxPoints(maxX - minX, maxY - minY, spacingMeters);
+
         var points = new List<Point2D>();
         for (double x = minX; x <= maxX; x += spacingMeters)
         {
@@ -49,4 +62,23 @@ public static class FloorGrid
 
         return points;
     }
+
+    private static double ClampSpacingToMaxPoints(double widthMeters, double heightMeters, double spacingMeters)
+    {
+        double width = Math.Max(widthMeters, 0);
+        double height = Math.Max(heightMeters, 0);
+
+        // Scaling by the square root of the overshoot is the factor that brings a two-dimensional
+        // point count back under the ceiling; the loop only re-runs because the per-axis "+1"
+        // (the grid includes both endpoints) can leave it fractionally over after one pass.
+        while (PointCount(width, height, spacingMeters) > MaxGridPoints)
+        {
+            spacingMeters *= Math.Sqrt(PointCount(width, height, spacingMeters) / MaxGridPoints);
+        }
+
+        return spacingMeters;
+    }
+
+    private static double PointCount(double width, double height, double spacingMeters) =>
+        (Math.Floor(width / spacingMeters) + 1) * (Math.Floor(height / spacingMeters) + 1);
 }
