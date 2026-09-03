@@ -115,6 +115,16 @@
                         <StackPanel Visibility="{x:Bind ViewModel.IsImageStyleSelected, Mode=OneWay}" Spacing="12">
                             <Button x:Uid="WizardChooseFileButton" Command="{x:Bind ViewModel.PickImageCommand}" />
                             <TextBlock Text="{x:Bind ViewModel.SelectedImageFileName, Mode=OneWay}" Foreground="{StaticResource Gray500Brush}" FontSize="{StaticResource FontSizeSm}" />
+
+                            <!-- Only shown for a PDF with more than one page — a single-page PDF or
+                                 an image stays exactly as simple as before this existed. -->
+                            <StackPanel Visibility="{x:Bind ViewModel.IsPdfWithMultiplePages, Mode=OneWay}" Spacing="4">
+                                <TextBlock x:Uid="WizardPdfPageLabel" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
+                                <ComboBox
+                                    ItemsSource="{x:Bind ViewModel.PdfPageNumbers, Mode=OneWay}"
+                                    SelectedIndex="{x:Bind ViewModel.SelectedPdfPageIndex, Mode=TwoWay}" />
+                            </StackPanel>
+
                             <NumberBox x:Uid="WizardPixelsPerMeterField" SmallChange="1" Minimum="1" Maximum="10000" Value="{x:Bind ViewModel.PixelsPerMeter, Mode=TwoWay}" />
                         </StackPanel>
                     </StackPanel>

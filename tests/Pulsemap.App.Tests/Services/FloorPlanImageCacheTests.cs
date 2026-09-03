@@ -92,4 +92,45 @@ public sealed class FloorPlanImageCacheTests : IDisposable
         document.Save(stream);
         return stream.ToArray();
     }
+
+    // PdfPageIndex existed as a property on ImagePlanSource but this cache used to hardcode
+    // page: 0 regardless of it, and cached solely by image-data hash — so a second floor picking
+    // a different page of the same PDF bytes would have silently gotten the first floor's cached
+    // page 0 PNG back, or (before that constant existed at all) always rendered page 0 no matter
+    // which page the survey actually asked for.
+    [Fact]
+    public async Task GetOrCreateAsync_Pdf_RendersTheRequestedPageNotAlwaysTheFirst()
+    {
+        byte[] pdfBytes = TwoDifferentlySizedPagesPdf();
+        var firstPagePlan = new ImagePlanSource { ImageData = pdfBytes, FileExtension = ".pdf", PixelsPerMeter = 100, PdfPageIndex = 0 };
+        var secondPagePlan = new ImagePlanSource { ImageData = pdfBytes, FileExtension = ".pdf", PixelsPerMeter = 100, PdfPageIndex = 1 };
+
+        string? firstPath = await _sut.GetOrCreateAsync(firstPagePlan);
+        string? secondPath = await _sut.GetOrCreateAsync(secondPagePlan);
+
+        Assert.NotNull(firstPath);
+        Assert.NotNull(secondPath);
+        Assert.NotEqual(firstPath, secondPath);
+
+        int firstWidth = PngWidthPx(await File.ReadAllBytesAsync(firstPath!));
+        int secondWidth = PngWidthPx(await File.ReadAllBytesAsync(secondPath!));
+        Assert.NotEqual(firstWidth, secondWidth);
+    }
+
+    private static int PngWidthPx(byte[] png) =>
+        (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19];
+
+    private static byte[] TwoDifferentlySizedPagesPdf()
+    {
+        using var document = new PdfDocument();
+        var firstPage = document.AddPage();
+        firstPage.Width = PdfSharp.Drawing.XUnit.FromPoint(200);
+        firstPage.Height = PdfSharp.Drawing.XUnit.FromPoint(150);
+        var secondPage = document.AddPage();
+        secondPage.Width = PdfSharp.Drawing.XUnit.FromPoint(400);
+        secondPage.Height = PdfSharp.Drawing.XUnit.FromPoint(300);
+        using var stream = new MemoryStream();
+        document.Save(stream);
+        return stream.ToArray();
+    }
 }

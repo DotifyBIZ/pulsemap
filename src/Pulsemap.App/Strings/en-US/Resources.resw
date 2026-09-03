@@ -154,6 +154,9 @@
   <data name="WizardChooseFileButton.Content" xml:space="preserve">
     <value>Choose file…</value>
   </data>
+  <data name="WizardPdfPageLabel.Text" xml:space="preserve">
+    <value>Which page is the floor plan on?</value>
+  </data>
   <data name="WizardPixelsPerMeterField.Header" xml:space="preserve">
     <value>Pixels per meter</value>
   </data>
@@ -360,7 +363,7 @@
     <value>Click near anything to remove it — an Undo option appears right after, so a misclick isn't permanent.</value>
   </data>
   <data name="WorkspaceOnboardingStep4.ActionButtonContent" xml:space="preserve">
-    <value>Got it</value>
+    <value>Next</value>
   </data>
   <data name="WorkspaceOnboardingStep4.CloseButtonContent" xml:space="preserve">
     <value>Skip tour</value>
@@ -376,6 +379,12 @@
   </data>
   <data name="WorkspaceAddFloorButton.Content" xml:space="preserve">
     <value>+ Add Floor</value>
+  </data>
+  <data name="WorkspaceRenameFloorButton.Content" xml:space="preserve">
+    <value>Rename Floor</value>
+  </data>
+  <data name="WorkspaceDeleteFloorButton.Content" xml:space="preserve">
+    <value>Delete Floor</value>
   </data>
   <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
     <value>Export</value>
@@ -490,8 +499,11 @@
   <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
     <value>Band</value>
   </data>
-  <data name="SnapshotComparisonDeleteButton.Content" xml:space="preserve">
-    <value>Delete</value>
+  <data name="SnapshotComparisonDeleteLeftButton.Content" xml:space="preserve">
+    <value>Delete left</value>
+  </data>
+  <data name="SnapshotComparisonDeleteRightButton.Content" xml:space="preserve">
+    <value>Delete right</value>
   </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->

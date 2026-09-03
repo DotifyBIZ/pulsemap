@@ -154,6 +154,9 @@
   <data name="WizardChooseFileButton.Content" xml:space="preserve">
     <value>Wybierz plik…</value>
   </data>
+  <data name="WizardPdfPageLabel.Text" xml:space="preserve">
+    <value>Na której stronie jest plan?</value>
+  </data>
   <data name="WizardPixelsPerMeterField.Header" xml:space="preserve">
     <value>Pikseli na metr</value>
   </data>
@@ -360,7 +363,7 @@
     <value>Kliknij w pobliżu dowolnego elementu, aby go usunąć — zaraz potem pojawi się opcja cofnięcia, więc pomyłka nie jest trwała.</value>
   </data>
   <data name="WorkspaceOnboardingStep4.ActionButtonContent" xml:space="preserve">
-    <value>Rozumiem</value>
+    <value>Dalej</value>
   </data>
   <data name="WorkspaceOnboardingStep4.CloseButtonContent" xml:space="preserve">
     <value>Pomiń</value>
@@ -376,6 +379,12 @@
   </data>
   <data name="WorkspaceAddFloorButton.Content" xml:space="preserve">
     <value>+ Dodaj piętro</value>
+  </data>
+  <data name="WorkspaceRenameFloorButton.Content" xml:space="preserve">
+    <value>Zmień nazwę</value>
+  </data>
+  <data name="WorkspaceDeleteFloorButton.Content" xml:space="preserve">
+    <value>Usuń piętro</value>
   </data>
   <data name="WorkspaceExportMenuButton.Content" xml:space="preserve">
     <value>Eksportuj</value>
@@ -490,8 +499,11 @@
   <data name="SnapshotComparisonBandField.Header" xml:space="preserve">
     <value>Pasmo</value>
   </data>
-  <data name="SnapshotComparisonDeleteButton.Content" xml:space="preserve">
-    <value>Usuń</value>
+  <data name="SnapshotComparisonDeleteLeftButton.Content" xml:space="preserve">
+    <value>Usuń lewy</value>
+  </data>
+  <data name="SnapshotComparisonDeleteRightButton.Content" xml:space="preserve">
+    <value>Usuń prawy</value>
   </data>
 
   <!-- Workspace: dynamic (ViewModel-built) strings -->

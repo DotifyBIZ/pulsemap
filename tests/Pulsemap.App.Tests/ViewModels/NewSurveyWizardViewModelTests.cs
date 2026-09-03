@@ -249,4 +249,76 @@ public sealed class NewSurveyWizardViewModelTests : IDisposable
 
         Assert.Null(sut.SelectedImageFileName);
     }
+
+    [Fact]
+    public async Task PickImageCommand_SinglePagePdf_DoesNotShowThePagePicker()
+    {
+        var sut = CreateSut();
+        sut.SelectedFloorPlanStyle = FloorPlanStyleChoice.Image;
+        _filePickerService.ResultToReturn = new FloorPlanFilePickResult("plan.pdf", ".pdf", [1, 2, 3], PageCount: 1);
+
+        await sut.PickImageCommand.ExecuteAsync(null);
+
+        Assert.False(sut.IsPdfWithMultiplePages);
+    }
+
+    [Fact]
+    public async Task PickImageCommand_MultiPagePdf_ShowsThePagePickerWithOnePageIndexPerPage()
+    {
+        var sut = CreateSut();
+        sut.SelectedFloorPlanStyle = FloorPlanStyleChoice.Image;
+        _filePickerService.ResultToReturn = new FloorPlanFilePickResult("plan.pdf", ".pdf", [1, 2, 3], PageCount: 5);
+
+        await sut.PickImageCommand.ExecuteAsync(null);
+
+        Assert.True(sut.IsPdfWithMultiplePages);
+        Assert.Equal([1, 2, 3, 4, 5], sut.PdfPageNumbers);
+        Assert.Equal(0, sut.SelectedPdfPageIndex);
+    }
+
+    [Fact]
+    public async Task PickImageCommand_PickingAgain_ResetsThePreviouslySelectedPage()
+    {
+        var sut = CreateSut();
+        sut.SelectedFloorPlanStyle = FloorPlanStyleChoice.Image;
+        _filePickerService.ResultToReturn = new FloorPlanFilePickResult("first.pdf", ".pdf", [1, 2, 3], PageCount: 5);
+        await sut.PickImageCommand.ExecuteAsync(null);
+        sut.SelectedPdfPageIndex = 3;
+
+        _filePickerService.ResultToReturn = new FloorPlanFilePickResult("second.pdf", ".pdf", [4, 5, 6], PageCount: 2);
+        await sut.PickImageCommand.ExecuteAsync(null);
+
+        Assert.Equal(0, sut.SelectedPdfPageIndex);
+    }
+
+    [Fact]
+    public async Task CreateSurveyAsync_ImageStyleWithASelectedPdfPage_CarriesThePageIndexIntoTheSurvey()
+    {
+        var sut = CreateSut();
+        sut.SurveyName = "Riverside Site";
+        sut.SelectedFloorPlanStyle = FloorPlanStyleChoice.Image;
+        _filePickerService.ResultToReturn = new FloorPlanFilePickResult("plan.pdf", ".pdf", [1, 2, 3], PageCount: 5);
+        await sut.PickImageCommand.ExecuteAsync(null);
+        sut.SelectedPdfPageIndex = 2;
+
+        await sut.CreateSurveyCommand.ExecuteAsync(null);
+
+        var plan = Assert.IsType<ImagePlanSource>(_surveyFileService.SaveCalls[0].Survey.Floors[0].PlanSource);
+        Assert.Equal(2, plan.PdfPageIndex);
+    }
+
+    // GetPdfPageCount reads the PDF's page count via PDFtoImage as part of picking the file — a
+    // corrupt or password-protected PDF throws one of PDFtoImage's own exception types there, and
+    // that must read the same as any other "couldn't read that file" failure, not crash the wizard.
+    [Fact]
+    public async Task PickImageCommand_UnreadablePdf_SetsErrorMessageRatherThanThrowing()
+    {
+        var sut = CreateSut();
+        _filePickerService.ExceptionToThrow = new PDFtoImage.Exceptions.PdfInvalidFormatException();
+
+        await sut.PickImageCommand.ExecuteAsync(null);
+
+        Assert.True(sut.HasError);
+        Assert.Null(sut.SelectedImageFileName);
+    }
 }

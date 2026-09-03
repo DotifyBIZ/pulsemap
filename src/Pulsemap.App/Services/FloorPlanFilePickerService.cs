@@ -39,6 +39,21 @@ public sealed class FloorPlanFilePickerService : IFloorPlanFilePickerService
         }
 
         byte[] imageData = await File.ReadAllBytesAsync(file.Path, cancellationToken);
-        return new FloorPlanFilePickResult(file.Name, Path.GetExtension(file.Path), imageData);
+        string extension = Path.GetExtension(file.Path);
+        int pageCount = string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase)
+            ? GetPdfPageCount(imageData)
+            : 1;
+
+        return new FloorPlanFilePickResult(file.Name, extension, imageData, pageCount);
+    }
+
+    // A corrupt, password-protected, or otherwise unreadable PDF throws one of PDFtoImage's own
+    // exception types here — let it propagate. The wizard's existing catch for
+    // IOException/UnauthorizedAccessException around this call already needs to widen to include
+    // it, since a bad PDF is exactly the same "couldn't read that file" story to the user.
+    private static int GetPdfPageCount(byte[] pdfBytes)
+    {
+        using var stream = new MemoryStream(pdfBytes);
+        return PDFtoImage.Conversion.GetPageCount(stream);
     }
 }

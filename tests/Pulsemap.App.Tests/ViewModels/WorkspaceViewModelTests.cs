@@ -946,4 +946,79 @@ public sealed class WorkspaceViewModelTests
 
         Assert.True(sut.HasSnapshots);
     }
+
+    [Fact]
+    public async Task CanDeleteCurrentFloor_SingleFloor_IsFalse()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        Assert.False(sut.CanDeleteCurrentFloor);
+        Assert.False(sut.DeleteFloorCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task CanDeleteCurrentFloor_MultipleFloors_IsTrue()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        await sut.AddFloorCommand.ExecuteAsync(("Floor 2", false));
+
+        Assert.True(sut.CanDeleteCurrentFloor);
+        Assert.True(sut.DeleteFloorCommand.CanExecute(null));
+    }
+
+    // AsyncRelayCommand.ExecuteAsync doesn't re-check CanExecute when called directly, unlike the
+    // ICommand-binding path a bound button uses — this must be safe even bypassing the button.
+    [Fact]
+    public async Task DeleteFloorAsync_CalledDirectlyWithOnlyOneFloor_DoesNothing()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        var onlyFloor = sut.SelectedFloor;
+
+        await sut.DeleteFloorCommand.ExecuteAsync(null);
+
+        Assert.Single(sut.Floors);
+        Assert.Same(onlyFloor, sut.SelectedFloor);
+    }
+
+    [Fact]
+    public async Task DeleteFloorAsync_WithMultipleFloors_RemovesSelectedFloorAndSelectsAnother()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        var firstFloor = sut.SelectedFloor;
+        await sut.AddFloorCommand.ExecuteAsync(("Floor 2", false));
+        var secondFloor = sut.SelectedFloor;
+        Assert.NotSame(firstFloor, secondFloor);
+
+        await sut.DeleteFloorCommand.ExecuteAsync(null);
+
+        Assert.Single(sut.Floors);
+        Assert.Same(firstFloor, sut.Floors[0]);
+        Assert.Same(firstFloor, sut.SelectedFloor);
+        Assert.False(sut.CanDeleteCurrentFloor);
+    }
+
+    [Fact]
+    public async Task DeleteFloorAsync_PersistsTheRemovalToDisk()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+        await sut.AddFloorCommand.ExecuteAsync(("Floor 2", false));
+        int savesBeforeDelete = _surveyFileService.SaveCalls.Count;
+
+        await sut.DeleteFloorCommand.ExecuteAsync(null);
+
+        Assert.True(_surveyFileService.SaveCalls.Count > savesBeforeDelete);
+        Assert.Single(_surveyFileService.SaveCalls[^1].Survey.Floors);
+    }
+
+    [Fact]
+    public async Task RenameFloorAsync_UpdatesTheSelectedFloorsNameAndSaves()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        await sut.RenameFloorCommand.ExecuteAsync("Ground Floor");
+
+        Assert.Equal("Ground Floor", sut.SelectedFloor!.Name);
+        Assert.Equal("Ground Floor", _surveyFileService.SaveCalls[^1].Survey.Floors[0].Name);
+    }
 }

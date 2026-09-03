@@ -183,10 +183,23 @@ public sealed class ZipSurveyFileService(IAppLogger logger) : ISurveyFileService
             floor.PendingGuidedWalkBand = null;
         }
 
-        // A zero/negative/non-finite scale would divide straight into an infinite canvas size.
-        if (floor.PlanSource is ImagePlanSource imagePlan && (!double.IsFinite(imagePlan.PixelsPerMeter) || imagePlan.PixelsPerMeter <= 0))
+        if (floor.PlanSource is ImagePlanSource imagePlan)
         {
-            imagePlan.PixelsPerMeter = DefaultPixelsPerMeter;
+            // A zero/negative/non-finite scale would divide straight into an infinite canvas size.
+            if (!double.IsFinite(imagePlan.PixelsPerMeter) || imagePlan.PixelsPerMeter <= 0)
+            {
+                imagePlan.PixelsPerMeter = DefaultPixelsPerMeter;
+            }
+
+            // Core has no PDF library reference (PDFtoImage lives in the App layer, per this
+            // project's zero-WinUI-dependency rule for Core), so an upper bound against the PDF's
+            // actual page count can't be checked here — FloorPlanImageCache's own catch-all
+            // already degrades gracefully if this is still out of range once it gets there. A
+            // negative index, though, is never valid regardless of page count.
+            if (imagePlan.PdfPageIndex < 0)
+            {
+                imagePlan.PdfPageIndex = 0;
+            }
         }
 
         floor.OutdoorBoundsMin = SanitizeNullablePoint(floor.OutdoorBoundsMin);
