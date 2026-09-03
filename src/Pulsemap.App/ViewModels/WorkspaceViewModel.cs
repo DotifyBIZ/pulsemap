@@ -171,7 +171,13 @@ public partial class WorkspaceViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(StartGuidedWalkCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConfirmWalkPointCommand))]
+    [NotifyPropertyChangedFor(nameof(NeedsAdapterForGuidedWalk))]
     public partial NetworkAdapterInfo? SelectedAdapter { get; set; }
+
+    /// <summary>Guided-walk test point suggestions live in the Suggestions tab, but still need an
+    /// adapter picked over on the Adapter tab — this note points a user there instead of leaving
+    /// the Start Guided Walk button silently disabled with no explanation.</summary>
+    public bool NeedsAdapterForGuidedWalk => SelectedAdapter is null;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand))]

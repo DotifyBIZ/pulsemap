@@ -177,7 +177,9 @@
                     </TabViewItem>
 
                     <TabViewItem x:Uid="WorkspaceSuggestionsTab" IsClosable="False">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12">
+                            <TextBlock x:Uid="WorkspaceSuggestApSectionHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
                             <Button
                                 x:Uid="WorkspaceSuggestPlacementsButton"
                                 Style="{StaticResource PrimaryButtonStyle}"
@@ -197,58 +199,6 @@
                                 TextWrapping="Wrap"
                                 FontSize="{StaticResource FontSizeSm}"
                                 Foreground="{StaticResource Gray700Brush}" />
-                        </StackPanel>
-                    </TabViewItem>
-
-                    <TabViewItem x:Uid="WorkspaceAdapterTab" IsClosable="False">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Spacing="12">
-                            <ComboBox
-                                x:Uid="WorkspaceAdapterField"
-                                ItemsSource="{x:Bind ViewModel.Adapters}"
-                                SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
-                                DisplayMemberPath="Name"
-                                HorizontalAlignment="Stretch" />
-
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <Button
-                                    x:Uid="WorkspaceScanButton"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    Command="{x:Bind ViewModel.ScanCommand}">
-                                    <Button.Resources>
-                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                                    </Button.Resources>
-                                </Button>
-                                <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
-                            </StackPanel>
-
-                            <TextBlock
-                                Text="{x:Bind ViewModel.ScanStatusMessage, Mode=OneWay}"
-                                Visibility="{x:Bind ViewModel.HasScanStatusMessage, Mode=OneWay}"
-                                TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeSm}"
-                                Foreground="{StaticResource Gray500Brush}" />
-
-                            <Button
-                                x:Uid="WorkspaceOpenLocationSettingsButton"
-                                Visibility="{x:Bind ViewModel.ShowLocationSettingsLink, Mode=OneWay}"
-                                Command="{x:Bind ViewModel.OpenLocationSettingsCommand}" />
-
-                            <ItemsControl ItemsSource="{x:Bind ViewModel.ScanResults}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:WlanNetworkDisplay">
-                                        <StackPanel Margin="0,0,0,10">
-                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
 
                             <Rectangle Height="1" Fill="{StaticResource Gray200Brush}" Margin="0,4,0,0" />
                             <TextBlock x:Uid="WorkspaceGuidedWalkHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
@@ -306,6 +256,66 @@
                                 TextWrapping="Wrap"
                                 FontSize="{StaticResource FontSizeSm}"
                                 Foreground="{StaticResource Gray500Brush}" />
+
+                            <TextBlock
+                                x:Uid="WorkspaceGuidedWalkNeedsAdapterNote"
+                                Visibility="{x:Bind ViewModel.NeedsAdapterForGuidedWalk, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeXs}"
+                                Foreground="{StaticResource Gray400Brush}" />
+                        </StackPanel>
+                        </ScrollViewer>
+                    </TabViewItem>
+
+                    <TabViewItem x:Uid="WorkspaceAdapterTab" IsClosable="False">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="12">
+                            <ComboBox
+                                x:Uid="WorkspaceAdapterField"
+                                ItemsSource="{x:Bind ViewModel.Adapters}"
+                                SelectedItem="{x:Bind ViewModel.SelectedAdapter, Mode=TwoWay}"
+                                DisplayMemberPath="Name"
+                                HorizontalAlignment="Stretch" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Button
+                                    x:Uid="WorkspaceScanButton"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{x:Bind ViewModel.ScanCommand}">
+                                    <Button.Resources>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
+                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
+                                    </Button.Resources>
+                                </Button>
+                                <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
+                            </StackPanel>
+
+                            <TextBlock
+                                Text="{x:Bind ViewModel.ScanStatusMessage, Mode=OneWay}"
+                                Visibility="{x:Bind ViewModel.HasScanStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="{StaticResource FontSizeSm}"
+                                Foreground="{StaticResource Gray500Brush}" />
+
+                            <Button
+                                x:Uid="WorkspaceOpenLocationSettingsButton"
+                                Visibility="{x:Bind ViewModel.ShowLocationSettingsLink, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.OpenLocationSettingsCommand}" />
+
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.ScanResults}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WlanNetworkDisplay">
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                         </ScrollViewer>
                     </TabViewItem>

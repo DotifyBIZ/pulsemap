@@ -840,6 +840,23 @@ public sealed class WorkspaceViewModelTests
         Assert.False(sut.HasReplaceableSuggestions);
     }
 
+    [Fact]
+    public async Task NeedsAdapterForGuidedWalk_NoAdapterAvailable_IsTrue()
+    {
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        Assert.True(sut.NeedsAdapterForGuidedWalk);
+    }
+
+    [Fact]
+    public async Task NeedsAdapterForGuidedWalk_AdapterSelected_IsFalse()
+    {
+        _wlanAdapterService.AdaptersToReturn = [new NetworkAdapterInfo(Guid.NewGuid(), "Test Adapter")];
+        var sut = await LoadedViewModelAsync(SquareRoomFloor(10));
+
+        Assert.False(sut.NeedsAdapterForGuidedWalk);
+    }
+
     private static Survey BuildSurvey(Floor floor) => new()
     {
         Name = "Test Survey",

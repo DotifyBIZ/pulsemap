@@ -435,7 +435,13 @@
     <value>Open Location Settings</value>
   </data>
   <data name="WorkspaceGuidedWalkHeader.Text" xml:space="preserve">
-    <value>Guided measurement walk</value>
+    <value>Test points (guided measurement walk)</value>
+  </data>
+  <data name="WorkspaceSuggestApSectionHeader.Text" xml:space="preserve">
+    <value>Access points</value>
+  </data>
+  <data name="WorkspaceGuidedWalkNeedsAdapterNote.Text" xml:space="preserve">
+    <value>Pick a WiFi adapter on the Adapter tab first.</value>
   </data>
   <data name="WorkspaceGuidedWalkExplanation.Text" xml:space="preserve">
     <value>Pick candidate points across the floor, walk to each one, and capture a real reading — background noise everywhere, plus this network's own signal for an existing-network audit.</value>

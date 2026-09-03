@@ -435,7 +435,13 @@
     <value>Otwórz ustawienia lokalizacji</value>
   </data>
   <data name="WorkspaceGuidedWalkHeader.Text" xml:space="preserve">
-    <value>Prowadzony pomiar terenowy</value>
+    <value>Punkty pomiarowe (prowadzony pomiar terenowy)</value>
+  </data>
+  <data name="WorkspaceSuggestApSectionHeader.Text" xml:space="preserve">
+    <value>Punkty dostępowe</value>
+  </data>
+  <data name="WorkspaceGuidedWalkNeedsAdapterNote.Text" xml:space="preserve">
+    <value>Najpierw wybierz adapter WiFi w zakładce Adapter.</value>
   </data>
   <data name="WorkspaceGuidedWalkExplanation.Text" xml:space="preserve">
     <value>Wybierz punkty pomiarowe na planie, podejdź do każdego z nich i zarejestruj rzeczywisty odczyt — szum tła wszędzie, a przy audycie istniejącej sieci również sygnał tej sieci.</value>
