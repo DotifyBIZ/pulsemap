@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/DotifyBIZ/pulsemap/compare/v1.1.0...v1.1.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **app:** highlight hoverable walls, merge test-point suggestions into Suggestions tab ([62621ac](https://github.com/DotifyBIZ/pulsemap/commit/62621acf52e0e39a8d94d4e37200e843a663e854))
+* close dead ends, crash paths, and untrusted-input gaps found in a full app review ([f38b795](https://github.com/DotifyBIZ/pulsemap/commit/f38b795d0db9810ebd6dee712b06ba8ffbb0fbaa))
+
 # [1.1.0](https://github.com/DotifyBIZ/pulsemap/compare/v1.0.0...v1.1.0) (2026-09-02)
 
 
