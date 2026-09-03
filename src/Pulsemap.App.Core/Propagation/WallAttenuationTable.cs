@@ -28,13 +28,24 @@ public static class WallAttenuationTable
 
     public static double GetAttenuationDb(WallMaterial? material, double? thicknessMeters, Band band)
     {
-        var reference = material is { } knownMaterial ? References[knownMaterial] : GenericFallback;
+        // TryGetValue, not an indexer: System.Text.Json happily deserializes any integer into an
+        // enum field, so a corrupt or hand-edited survey.json can carry a WallMaterial value that
+        // isn't in this table at all. An unrecognized material is treated exactly like an
+        // unspecified one rather than throwing KeyNotFoundException out of the render path.
+        var reference = GenericFallback;
+        bool isKnownMaterial = false;
+        if (material is { } knownMaterial && References.TryGetValue(knownMaterial, out var known))
+        {
+            reference = known;
+            isKnownMaterial = true;
+        }
+
         double baseDb = BaseAttenuationDb(reference, band);
 
         // A non-positive or non-finite thickness (corrupt/hand-edited project bundle) would
         // otherwise scale to zero or negative attenuation — RF-transparent or signal-boosting
         // through a wall. Treat it the same as "unspecified" rather than propagating garbage.
-        if (material is null || thicknessMeters is not { } thickness || !double.IsFinite(thickness) || thickness <= 0)
+        if (!isKnownMaterial || thicknessMeters is not { } thickness || !double.IsFinite(thickness) || thickness <= 0)
         {
             return baseDb;
         }

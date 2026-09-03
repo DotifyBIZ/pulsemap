@@ -435,7 +435,13 @@
     <value>Open Location Settings</value>
   </data>
   <data name="WorkspaceGuidedWalkHeader.Text" xml:space="preserve">
-    <value>Guided measurement walk</value>
+    <value>Test points (guided measurement walk)</value>
+  </data>
+  <data name="WorkspaceSuggestApSectionHeader.Text" xml:space="preserve">
+    <value>Access points</value>
+  </data>
+  <data name="WorkspaceGuidedWalkNeedsAdapterNote.Text" xml:space="preserve">
+    <value>Pick a WiFi adapter on the Adapter tab first.</value>
   </data>
   <data name="WorkspaceGuidedWalkExplanation.Text" xml:space="preserve">
     <value>Pick candidate points across the floor, walk to each one, and capture a real reading — background noise everywhere, plus this network's own signal for an existing-network audit.</value>
@@ -560,5 +566,29 @@
   </data>
   <data name="DiagnosticsMonitoringSectionLabel" xml:space="preserve">
     <value>Monitoring</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.Title" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.Subtitle" xml:space="preserve">
+    <value>Click anywhere on the plan to compare this machine's live WiFi link against what the survey predicts there.</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.ActionButtonContent" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="WorkspaceOnboardingStep5.CloseButtonContent" xml:space="preserve">
+    <value>Skip tour</value>
+  </data>
+  <data name="WorkspaceNoAdapterNote.Text" xml:space="preserve">
+    <value>No WiFi adapter found. Scanning and the guided walk need one — check that this machine has WiFi hardware and that the WLAN AutoConfig service is running.</value>
+  </data>
+  <data name="DiagnosticsNoAdapterNote.Text" xml:space="preserve">
+    <value>No WiFi adapter found. Check that this machine has WiFi hardware and that the WLAN AutoConfig service is running.</value>
+  </data>
+  <data name="HomeNoSurveysMessage.Text" xml:space="preserve">
+    <value>No surveys yet. Start one with New Survey above — you can draw a floor plan or import an image or PDF of one.</value>
+  </data>
+  <data name="SurveysNoSurveysMessage.Text" xml:space="preserve">
+    <value>No surveys yet. Start one with New Survey above.</value>
   </data>
 </root>

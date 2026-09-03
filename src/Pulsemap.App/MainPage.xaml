@@ -8,11 +8,20 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
+    <!--
+        The back button is the shell-level way out of the pages that aren't in the rail (the New
+        Survey wizard, Workspace, snapshot comparison); those pages keep their own explicit
+        Back/Cancel buttons too, but relying on those alone made the rail's own highlighted item
+        unclickable and left no standard way back.
+    -->
     <NavigationView
         x:Name="Nav"
-        IsBackButtonVisible="Collapsed"
+        IsBackButtonVisible="Visible"
+        IsBackEnabled="False"
         IsSettingsVisible="False"
         SelectionChanged="Nav_SelectionChanged"
+        ItemInvoked="Nav_ItemInvoked"
+        BackRequested="Nav_BackRequested"
         PaneDisplayMode="Left">
 
         <NavigationView.MenuItems>

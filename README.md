@@ -44,7 +44,7 @@ Pulsemap is a local-first WiFi site survey and planning tool covering the full l
 
 - Read live data from AP controllers (UniFi, Omada, ...) — this is survey/measurement tooling, not a controller integration
 - Ship a built-in vendor hardware database — recommendations stay generic (power, channel, position)
-- Send telemetry, require an account, or use a server for your data. Projects are local files; diagnostics are a local log file you choose whether to share (see [ADR-0003](docs/adr/0003-local-diagnostic-logging.md)). The one exception: an optional, on-by-default check against GitHub's public release list looks for newer versions on launch — nothing about you or your surveys is sent, and it's a toggle in Settings (see [ADR-0004](docs/adr/0004-update-check-network-call.md))
+- Send telemetry, require an account, or use a server for your data. Projects are local files; diagnostics are a local log file you choose whether to share (see [ADR-0003](docs/adr/0003-local-diagnostic-logging.md)). Two things do touch the network, neither carrying anything about you or your surveys: an optional, on-by-default check against GitHub's public release list looks for newer versions on launch (a toggle in Settings — see [ADR-0004](docs/adr/0004-update-check-network-call.md)), and the WLAN diagnostics feature pings your own router and times one DNS lookup while you're actively running it, because measuring those is the whole point of a "why is my WiFi slow" check
 
 ## Status
 

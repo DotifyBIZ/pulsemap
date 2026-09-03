@@ -11,9 +11,17 @@ internal sealed class FakeSurveyFileService : ISurveyFileService
 
     public Exception? LoadExceptionToThrow { get; set; }
 
+    public Exception? SaveExceptionToThrow { get; set; }
+
     public Task SaveAsync(Survey survey, string filePath, CancellationToken cancellationToken = default)
     {
         SaveCalls.Add((survey, filePath));
+
+        if (SaveExceptionToThrow is not null)
+        {
+            throw SaveExceptionToThrow;
+        }
+
         return Task.CompletedTask;
     }
 

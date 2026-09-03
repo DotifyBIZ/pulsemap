@@ -26,9 +26,12 @@ public sealed class SurveyLibraryService(ISurveyFileService surveyFileService, I
                 var survey = await surveyFileService.LoadAsync(filePath, cancellationToken);
                 summaries.Add(new SurveySummary(filePath, survey.Name, survey.SiteDescription, survey.ModifiedAt));
             }
-            catch (InvalidDataException ex)
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
             {
-                // Not a valid Pulsemap survey — skip it rather than fail the whole list.
+                // Not a valid Pulsemap survey, or one we can't read right now (locked by another
+                // process, permissions, a disconnected drive) — skip that one file rather than
+                // fail the whole list. This runs behind Home's and Surveys' page-load handlers,
+                // which are async void: an escaping exception there takes the process down.
                 await logger.LogWarningAsync($"Skipped '{filePath}' while listing surveys: {ex.Message}", cancellationToken);
             }
         }

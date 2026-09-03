@@ -19,6 +19,9 @@ public sealed partial class SurveysPage : Page
         Loaded += async (_, _) => await ViewModel.LoadCommand.ExecuteAsync(null);
     }
 
+    private void NewSurvey_Click(object sender, RoutedEventArgs e) =>
+        Frame.Navigate(typeof(NewSurveyWizardPage));
+
     private void SurveysGridView_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is SurveySummary summary)

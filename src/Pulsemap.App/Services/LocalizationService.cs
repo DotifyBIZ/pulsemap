@@ -58,6 +58,9 @@ public sealed class LocalizationService : ILocalizationService
             ["WizardRoomWordMany"] = "rooms",
             ["WizardBandsSummaryNoneSelected"] = "None selected",
             ["WizardSaveSurveyErrorFormat"] = "Couldn't save the survey: {0}",
+            ["WizardStepProgressFormat"] = "Step {0} of {1}",
+            ["WizardFloorPlanTooLargeFormat"] = "That floor plan is too large. Please choose a file under {0} MB.",
+            ["WizardFloorPlanReadErrorFormat"] = "Couldn't read that file: {0}",
             ["WizardWallMaterialDrywall.Content"] = "Drywall",
             ["WizardWallMaterialGlassStandard.Content"] = "Glass (standard)",
             ["WizardWallMaterialGlassLowE.Content"] = "Glass (low-E)",
@@ -90,6 +93,10 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceGuidedWalkProgressFormat"] = "Point {0} of {1} — walk to ({2:0.0}m, {3:0.0}m) and confirm.",
             ["WorkspaceGuidedWalkNotWalking"] = "Not walking.",
             ["WorkspaceAccessPointSummaryFormat"] = "{0} — {1}",
+            ["WorkspaceSaveErrorFormat"] = "Couldn't save this survey: {0}. Your latest change is still on screen — fix the problem and edit again to retry.",
+            ["WorkspaceNoAdapterSelectedError"] = "Pick a WiFi adapter on the Adapter tab first.",
+            ["WorkspaceDiagnoseFailedDisplay"] = "Couldn't read this machine's live WiFi link.",
+            ["SnapshotComparisonCurrentOptionLabel"] = "Current",
 
             ["SurveysRenameDialogTitle"] = "Rename survey",
             ["SurveysRenameDialogPrimaryButton"] = "Rename",
@@ -100,6 +107,7 @@ public sealed class LocalizationService : ILocalizationService
             ["SurveysDeleteDialogCloseButton"] = "Cancel",
             ["SurveysDeleteErrorFormat"] = "Couldn't delete: {0}",
             ["SurveysRenameErrorFormat"] = "Couldn't rename: {0}",
+            ["SurveysListErrorFormat"] = "Couldn't read your surveys folder: {0}",
 
             ["WorkspaceAddFloorDialogTitle"] = "Add floor or area",
             ["WorkspaceAddFloorDialogNameLabel"] = "Name",
@@ -128,6 +136,7 @@ public sealed class LocalizationService : ILocalizationService
             ["SnapshotComparisonDeleteDialogContentFormat"] = "Delete \"{0}\"? This can't be undone.",
             ["SnapshotComparisonDeleteDialogPrimaryButton"] = "Delete",
             ["SnapshotComparisonDeleteDialogCloseButton"] = "Cancel",
+            ["SnapshotComparisonDeleteErrorFormat"] = "Couldn't delete that snapshot: {0}",
 
             ["HomeUpdateAvailableFormat"] = "Pulsemap {0} is available.",
             ["HomeGreetingMorning"] = "Good morning",
@@ -182,6 +191,9 @@ public sealed class LocalizationService : ILocalizationService
             ["WizardRoomWordMany"] = "pomieszczeń",
             ["WizardBandsSummaryNoneSelected"] = "Brak wybranych",
             ["WizardSaveSurveyErrorFormat"] = "Nie udało się zapisać badania: {0}",
+            ["WizardStepProgressFormat"] = "Krok {0} z {1}",
+            ["WizardFloorPlanTooLargeFormat"] = "Ten plan jest zbyt duży. Wybierz plik mniejszy niż {0} MB.",
+            ["WizardFloorPlanReadErrorFormat"] = "Nie udało się odczytać pliku: {0}",
             ["WizardWallMaterialDrywall.Content"] = "Płyta gipsowo-kartonowa",
             ["WizardWallMaterialGlassStandard.Content"] = "Szkło (standardowe)",
             ["WizardWallMaterialGlassLowE.Content"] = "Szkło (niskoemisyjne)",
@@ -214,6 +226,10 @@ public sealed class LocalizationService : ILocalizationService
             ["WorkspaceGuidedWalkProgressFormat"] = "Punkt {0} z {1} — podejdź do ({2:0.0}m, {3:0.0}m) i potwierdź.",
             ["WorkspaceGuidedWalkNotWalking"] = "Brak aktywnego pomiaru.",
             ["WorkspaceAccessPointSummaryFormat"] = "{0} — {1}",
+            ["WorkspaceSaveErrorFormat"] = "Nie udało się zapisać badania: {0}. Ostatnia zmiana nadal jest widoczna — usuń przyczynę i wykonaj kolejną edycję, aby spróbować ponownie.",
+            ["WorkspaceNoAdapterSelectedError"] = "Najpierw wybierz kartę WiFi na karcie Adapter.",
+            ["WorkspaceDiagnoseFailedDisplay"] = "Nie udało się odczytać bieżącego połączenia WiFi tego komputera.",
+            ["SnapshotComparisonCurrentOptionLabel"] = "Bieżący",
 
             ["SurveysRenameDialogTitle"] = "Zmień nazwę badania",
             ["SurveysRenameDialogPrimaryButton"] = "Zmień nazwę",
@@ -224,6 +240,7 @@ public sealed class LocalizationService : ILocalizationService
             ["SurveysDeleteDialogCloseButton"] = "Anuluj",
             ["SurveysDeleteErrorFormat"] = "Nie udało się usunąć: {0}",
             ["SurveysRenameErrorFormat"] = "Nie udało się zmienić nazwy: {0}",
+            ["SurveysListErrorFormat"] = "Nie udało się odczytać folderu z badaniami: {0}",
 
             ["WorkspaceAddFloorDialogTitle"] = "Dodaj piętro lub obszar",
             ["WorkspaceAddFloorDialogNameLabel"] = "Nazwa",
@@ -252,6 +269,7 @@ public sealed class LocalizationService : ILocalizationService
             ["SnapshotComparisonDeleteDialogContentFormat"] = "Usunąć „{0}”? Tej operacji nie można cofnąć.",
             ["SnapshotComparisonDeleteDialogPrimaryButton"] = "Usuń",
             ["SnapshotComparisonDeleteDialogCloseButton"] = "Anuluj",
+            ["SnapshotComparisonDeleteErrorFormat"] = "Nie udało się usunąć tej migawki: {0}",
 
             ["HomeUpdateAvailableFormat"] = "Dostępny jest Pulsemap {0}.",
             ["HomeGreetingMorning"] = "Dzień dobry",
