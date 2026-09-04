@@ -21,6 +21,7 @@
   - [What it does](#what-it-does)
   - [What it deliberately doesn't do](#what-it-deliberately-doesnt-do)
   - [Status](#status)
+  - [Installing](#installing)
   - [Building from source](#building-from-source)
   - [Architecture](#architecture)
   - [Roadmap](#roadmap)
@@ -48,9 +49,13 @@ Pulsemap is a local-first WiFi site survey and planning tool covering the full l
 
 ## Status
 
-Pre-release, developed in the open. The Core engine and WinUI shell both build and run today — see [Building from source](#building-from-source) — but no packaged installer has shipped yet. [CHANGELOG.md](CHANGELOG.md) is the source of truth for what's actually been released, generated automatically from commit history.
+Actively developed in the open, with real releases shipping — see [CHANGELOG.md](CHANGELOG.md) (generated automatically from commit history) for what's actually out.
 
 Backed by a real automated test suite, with branch coverage on the platform-independent engine enforced at an 80% floor in CI.
+
+## Installing
+
+Download the latest `PulsemapSetup-<version>.exe` from [Releases](https://github.com/DotifyBIZ/pulsemap/releases) and run it — no admin rights needed, installs per-user. Windows SmartScreen will likely warn you since the installer isn't code-signed yet; see the [User Guide](docs/user-guide.md#faq) for why that's expected. Full instructions, and how to use the app once it's installed, are in the **[User Guide](docs/user-guide.md)**.
 
 ## Building from source
 
@@ -71,7 +76,7 @@ dotnet run --project src/Pulsemap.App
 - **`Pulsemap.App`** — the WinUI 3 shell: native Fluent design, Mica backdrop, unpackaged (no MSIX — see [ADR-0002](docs/adr/0002-installer-innosetup-over-msix.md) for why) so it runs on client machines Dotify doesn't administer.
 - WLAN access goes through native `wlanapi.dll` P/Invoke rather than the WinRT `Windows.Devices.WiFi` API, which requires package identity this app deliberately doesn't have.
 
-Architectural decisions, and the alternatives rejected, are recorded as they're made in [`docs/adr/`](docs/adr/).
+Architectural decisions, and the alternatives rejected, are recorded as they're made in [`docs/adr/`](docs/adr/). For a full walkthrough of how the engine actually works — propagation math, Kriging, AP placement, persistence — see the **[Developer Guide](docs/developer-guide.md)**.
 
 ## Roadmap
 
@@ -81,7 +86,7 @@ Architectural decisions, and the alternatives rejected, are recorded as they're 
 
 ## Contributing
 
-Contributions are welcome from day one — see [CONTRIBUTING.md](CONTRIBUTING.md). Agents and contributors working in this repo should read [CLAUDE.md](CLAUDE.md) first; it documents the engineering standards and a few hard-won platform footguns this project has already hit, so they don't get hit twice.
+Contributions are welcome from day one — see [CONTRIBUTING.md](CONTRIBUTING.md) for the process, and the **[Developer Guide](docs/developer-guide.md)** for how the codebase is actually organized and how the propagation/placement engine works. Agents and contributors working in this repo should read [CLAUDE.md](CLAUDE.md) first; it documents the engineering standards and a few hard-won platform footguns this project has already hit, so they don't get hit twice.
 
 ## License
 

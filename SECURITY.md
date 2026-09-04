@@ -13,7 +13,7 @@ Include what you'd include in any good bug report: the affected version or commi
 
 ## Supported Versions
 
-Pulsemap has no stable release yet. Until the first release, report issues against the latest commit on `main`.
+Pulsemap ships frequent releases with no long-term-support branch — please report against the [latest release](https://github.com/DotifyBIZ/pulsemap/releases/latest), or the latest commit on `main` if you're building from source.
 
 ## What to expect
 
