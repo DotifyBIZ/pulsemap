@@ -2,9 +2,12 @@
 
 Thanks for considering a contribution. Pulsemap is early — expect things to move and shift.
 
+This file covers *process* — branching, commits, the PR checklist. For how the codebase is actually organized, how to get it running, and how the propagation/placement engine works, see the **[Developer Guide](docs/developer-guide.md)**.
+
 ## Before you start
 
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Read [CLAUDE.md](CLAUDE.md) — the project's engineering rules and a running log of platform-specific gotchas already hit once; no need to hit them again.
 - For anything nontrivial, open an issue first to talk through the approach before writing code. Saves everyone rework.
 - Contributions are accepted under the project's [PolyForm Shield 1.0.0 license](LICENSE) — by submitting a change, you agree it's licensed on the same terms as the rest of the project.
 
@@ -31,7 +34,7 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 - [ ] `dotnet build --configuration Release` and `dotnet test --configuration Release` pass
 - [ ] New business logic in `Pulsemap.App.Core` has tests
 - [ ] Commits follow Conventional Commits; PR title matches `type(scope): summary`
-- [ ] User-facing changes are documented
+- [ ] User-facing changes are documented (usually in [docs/user-guide.md](docs/user-guide.md)); architecture/behavior changes affecting contributors are reflected in [docs/developer-guide.md](docs/developer-guide.md)
 - [ ] No `Co-Authored-By` trailers or other AI attribution
 
 ## Code review
