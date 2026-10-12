@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: Pulsemap
+  annotations:
+    github.com/project-slug: DotifyBIZ/pulsemap
+spec:
+  type: other
+  lifecycle: unknown
+  owner: 1c2b973e-7b63-4f3b-bca4-17c950dfb1b6
