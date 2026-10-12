@@ -4,7 +4,8 @@ metadata:
   name: Pulsemap
   annotations:
     github.com/project-slug: DotifyBIZ/pulsemap
+    backstage.io/techdocs-ref: dir:.
 spec:
-  type: other
-  lifecycle: unknown
+  type: Software
+  lifecycle: Production
   owner: 1c2b973e-7b63-4f3b-bca4-17c950dfb1b6
