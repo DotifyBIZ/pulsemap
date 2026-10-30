@@ -9,3 +9,5 @@ spec:
   type: Software
   lifecycle: Production
   owner: 1c2b973e-7b63-4f3b-bca4-17c950dfb1b6
+  dependsOn:
+    - component:default/one-design-system
