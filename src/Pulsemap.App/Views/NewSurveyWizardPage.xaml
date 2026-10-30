@@ -25,8 +25,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock x:Uid="WizardTitle" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
-                <TextBlock x:Uid="WizardSubtitle" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
+                <TextBlock x:Uid="WizardTitle" Style="{StaticResource DotifyPageTitleTextStyle}" />
+                <TextBlock Style="{StaticResource DotifyPageSubtitleTextStyle}" x:Uid="WizardSubtitle" Margin="0,4,0,0" />
                 <!-- Five steps with no indication of which one you're on or how many are left. -->
                 <TextBlock
                     Text="{x:Bind ViewModel.StepProgressDisplay, Mode=OneWay}"

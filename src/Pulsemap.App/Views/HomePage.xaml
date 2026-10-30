@@ -35,8 +35,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock Text="{x:Bind ViewModel.GreetingDisplay}" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
-                <TextBlock x:Uid="HomeSubtitle" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
+                <TextBlock Text="{x:Bind ViewModel.GreetingDisplay}" Style="{StaticResource DotifyPageTitleTextStyle}" />
+                <TextBlock Style="{StaticResource DotifyPageSubtitleTextStyle}" x:Uid="HomeSubtitle" Margin="0,4,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.WellbeingMessageDisplay}" FontSize="{StaticResource DotifyTextXs}" FontStyle="Italic" Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}" Margin="0,6,0,0" />
             </StackPanel>
 

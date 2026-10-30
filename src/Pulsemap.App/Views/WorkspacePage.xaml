@@ -25,9 +25,9 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
-                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
-                <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" Style="{StaticResource DotifyPageTitleTextStyle}" />
+                <TextBlock Style="{StaticResource DotifyPageSubtitleTextStyle}" Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" Margin="0,4,0,0" />
+                <TextBlock Style="{StaticResource DotifyPageSubtitleTextStyle}" Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" Margin="0,4,0,0" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">

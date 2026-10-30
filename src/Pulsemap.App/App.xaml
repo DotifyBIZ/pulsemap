@@ -453,10 +453,14 @@
                     <x:Double x:Key="DotifyText4xl">36</x:Double>
                     <x:Double x:Key="DotifyText5xl">48</x:Double>
 
-                    <!-- Montserrat: copy resources/fonts/montserrat/*.ttf into Assets/Fonts/. -->
-                    <FontFamily x:Key="DotifyFontFamily">ms-appx:///Assets/Fonts/Montserrat-Regular.ttf#Montserrat</FontFamily>
-                    <FontFamily x:Key="DotifyFontFamilySemiBold">ms-appx:///Assets/Fonts/Montserrat-SemiBold.ttf#Montserrat SemiBold</FontFamily>
-                    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/Montserrat-Regular.ttf#Montserrat</FontFamily>
+                    <!-- Montserrat: copy fonts/montserrat/Montserrat-Variable.ttf into Assets/Fonts/. Weights 400 and 600 only. -->
+                    <FontFamily x:Key="DotifyFontFamily">ms-appx:///Assets/Fonts/Montserrat-Variable.ttf#Montserrat</FontFamily>
+                    <FontFamily x:Key="DotifyFontFamilySemiBold">ms-appx:///Assets/Fonts/Montserrat-Variable.ttf#Montserrat</FontFamily>
+                    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/Montserrat-Variable.ttf#Montserrat</FontFamily>
+                    <!-- ContentControlThemeFontFamily only reaches text a control draws; a bare TextBlock would be Segoe UI. -->
+                    <Style TargetType="TextBlock">
+                        <Setter Property="FontFamily" Value="{StaticResource DotifyFontFamily}" />
+                    </Style>
 
                     <!-- Text styles, one per tokens.json type style. -->
                     <Style x:Key="DotifyH1TextStyle" TargetType="TextBlock">
@@ -543,6 +547,11 @@
                     </Style>
                     <Style x:Key="DotifySectionLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DotifyLabelTextStyle}">
                         <Setter Property="Foreground" Value="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                    </Style>
+                    <!-- Small secondary text: hints, timestamps, explanations under a setting. The web's field hint. -->
+                    <Style x:Key="DotifyHintTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DotifyCaptionTextStyle}">
+                        <Setter Property="Foreground" Value="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                        <Setter Property="TextWrapping" Value="Wrap" />
                     </Style>
                     <Style x:Key="DotifyCardStyle" TargetType="Border">
                         <Setter Property="Background" Value="{ThemeResource DotifyColorSurfaceRaisedBrush}" />

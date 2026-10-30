@@ -22,7 +22,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock x:Uid="SurveysTitle" Grid.Column="0" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+            <TextBlock x:Uid="SurveysTitle" Grid.Column="0" Style="{StaticResource DotifyPageTitleTextStyle}" />
 
             <!-- The library page had no way to start a survey; with an empty library it was a
                  titled blank page whose only exit was back to Home. -->

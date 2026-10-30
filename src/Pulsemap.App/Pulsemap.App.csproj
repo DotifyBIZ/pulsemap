@@ -33,9 +33,8 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\AppIcon.ico" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <!-- Montserrat (SIL OFL), from the Dotify One Design System. -->
-    <Content Include="Assets\Fonts\Montserrat-Regular.ttf" />
-    <Content Include="Assets\Fonts\Montserrat-SemiBold.ttf" />
+    <!-- Montserrat, variable (SIL OFL), from the Dotify One Design System. -->
+    <Content Include="Assets\Fonts\Montserrat-Variable.ttf" />
     <Content Include="Assets\Fonts\OFL.txt" />
   </ItemGroup>
 

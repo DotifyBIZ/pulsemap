@@ -16,7 +16,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Uid="SettingsTitle" Grid.Row="0" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+        <TextBlock x:Uid="SettingsTitle" Grid.Row="0" Style="{StaticResource DotifyPageTitleTextStyle}" />
 
         <Border Grid.Row="1" Margin="0,24,0,0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
             <StackPanel Spacing="12">

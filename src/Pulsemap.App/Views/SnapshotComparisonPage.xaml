@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock x:Uid="SnapshotComparisonTitle" Grid.Column="0" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+            <TextBlock x:Uid="SnapshotComparisonTitle" Grid.Column="0" Style="{StaticResource DotifyPageTitleTextStyle}" />
             <Button x:Uid="SnapshotComparisonBackButton" Grid.Column="1" Click="Back_Click" />
         </Grid>
 
