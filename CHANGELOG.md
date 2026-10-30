@@ -1,3 +1,17 @@
+# [1.3.0](https://github.com/DotifyBIZ/pulsemap/compare/v1.2.0...v1.3.0) (2026-10-30)
+
+
+### Bug Fixes
+
+* **diagnostics:** show the page title and subtitle ([c8f9e6d](https://github.com/DotifyBIZ/pulsemap/commit/c8f9e6d8a1fc7233b5140bd68917c327d7a8d517))
+
+
+### Features
+
+* **app:** adopt the Dotify One Design System, with dark mode ([aba0cb0](https://github.com/DotifyBIZ/pulsemap/commit/aba0cb0ec99c8dc0fa2d33b99943057e8d4a1f23))
+* **app:** use the page header styles and the variable Montserrat ([753b29a](https://github.com/DotifyBIZ/pulsemap/commit/753b29a7bfa99b38dff3deb1b836c63ecb54cb84))
+* **ui:** follow Windows high contrast ([34e2857](https://github.com/DotifyBIZ/pulsemap/commit/34e285706bd9c46a7ee9f69c984a16954bb6c0b6))
+
 # [1.2.0](https://github.com/DotifyBIZ/pulsemap/compare/v1.1.1...v1.2.0) (2026-09-03)
 
 
