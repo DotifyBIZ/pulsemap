@@ -226,7 +226,7 @@ public sealed partial class WorkspacePage : Page
 
     private static Brush SeverityBrush(DiagnosticSeverity severity)
     {
-        string resourceKey = severity is DiagnosticSeverity.Error ? "DangerBrush" : severity is DiagnosticSeverity.Warning ? "WarningBrush" : "SuccessBrush";
+        string resourceKey = severity is DiagnosticSeverity.Error ? "DotifyColorErrorTextBrush" : severity is DiagnosticSeverity.Warning ? "DotifyColorWarningTextBrush" : "DotifyColorSuccessTextBrush";
         return (Brush)Application.Current.Resources[resourceKey];
     }
 

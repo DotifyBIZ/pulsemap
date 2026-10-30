@@ -558,10 +558,10 @@
   <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
     <value>{0} — {1}</value>
   </data>
-  <data name="DiagnosticsTitle" xml:space="preserve">
+  <data name="DiagnosticsTitle.Text" xml:space="preserve">
     <value>Diagnose</value>
   </data>
-  <data name="DiagnosticsSubtitle" xml:space="preserve">
+  <data name="DiagnosticsSubtitle.Text" xml:space="preserve">
     <value>Check this machine's live WiFi link and local network health — no survey needed.</value>
   </data>
   <data name="DiagnosticsAdapterField.Header" xml:space="preserve">

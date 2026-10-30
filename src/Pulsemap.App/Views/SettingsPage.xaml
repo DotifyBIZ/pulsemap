@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{StaticResource Gray50Brush}">
+    Background="{ThemeResource DotifyColorSurfaceBrush}">
 
     <Grid Padding="32,24">
         <Grid.RowDefinitions>
@@ -16,46 +16,46 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Uid="SettingsTitle" Grid.Row="0" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+        <TextBlock x:Uid="SettingsTitle" Grid.Row="0" Style="{StaticResource DotifyPageTitleTextStyle}" />
 
-        <Border Grid.Row="1" Margin="0,24,0,0" Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Border Grid.Row="1" Margin="0,24,0,0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
             <StackPanel Spacing="12">
-                <TextBlock x:Uid="SettingsLanguageLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock Text="{x:Bind ViewModel.CurrentLanguageDisplay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <TextBlock x:Uid="SettingsLanguageLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                <TextBlock Text="{x:Bind ViewModel.CurrentLanguageDisplay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                 <TextBlock
                     x:Uid="SettingsLanguageExplanation"
                     TextWrapping="Wrap"
-                    FontSize="{StaticResource FontSizeXs}"
-                    Foreground="{StaticResource Gray500Brush}" />
+                    FontSize="{StaticResource DotifyTextXs}"
+                    Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                 <Button
                     x:Uid="SettingsOpenLanguageSettingsButton"
                     Command="{x:Bind ViewModel.OpenLanguageSettingsCommand}" />
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="2" Margin="0,16,0,0" Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Border Grid.Row="2" Margin="0,16,0,0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
             <StackPanel Spacing="12">
-                <TextBlock x:Uid="SettingsDiagnosticsLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock Text="{x:Bind ViewModel.LogDirectoryDisplay}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <TextBlock x:Uid="SettingsDiagnosticsLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                <TextBlock Text="{x:Bind ViewModel.LogDirectoryDisplay}" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                 <TextBlock
                     x:Uid="SettingsDiagnosticsExplanation"
                     TextWrapping="Wrap"
-                    FontSize="{StaticResource FontSizeXs}"
-                    Foreground="{StaticResource Gray500Brush}" />
+                    FontSize="{StaticResource DotifyTextXs}"
+                    Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                 <Button
                     x:Uid="SettingsOpenLogsFolderButton"
                     Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="3" Margin="0,16,0,0" Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Border Grid.Row="3" Margin="0,16,0,0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Width="400" HorizontalAlignment="Left" VerticalAlignment="Top">
             <StackPanel Spacing="12">
-                <TextBlock x:Uid="SettingsUpdatesLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                <TextBlock x:Uid="SettingsUpdatesLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                 <TextBlock
                     x:Uid="SettingsUpdatesExplanation"
                     TextWrapping="Wrap"
-                    FontSize="{StaticResource FontSizeXs}"
-                    Foreground="{StaticResource Gray500Brush}" />
+                    FontSize="{StaticResource DotifyTextXs}"
+                    Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                 <ToggleSwitch x:Uid="SettingsCheckForUpdatesToggle" IsOn="{x:Bind ViewModel.CheckForUpdatesEnabled, Mode=TwoWay}" />
             </StackPanel>
         </Border>
