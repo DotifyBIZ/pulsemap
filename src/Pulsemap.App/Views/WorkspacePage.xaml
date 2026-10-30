@@ -8,7 +8,7 @@
     xmlns:controls="using:Pulsemap.App.Controls"
     xmlns:vm="using:Pulsemap.App.ViewModels"
     mc:Ignorable="d"
-    Background="{StaticResource Gray50Brush}">
+    Background="{ThemeResource DotifyColorSurfaceBrush}">
 
     <Grid Padding="32,24">
         <Grid.RowDefinitions>
@@ -25,9 +25,9 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
-                <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyNameDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                <TextBlock Text="{x:Bind ViewModel.SurveyTypeDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
+                <TextBlock Text="{x:Bind ViewModel.CoveragePercentDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
@@ -74,26 +74,26 @@
                 <Button.Flyout>
                     <Flyout Placement="Bottom">
                         <StackPanel Spacing="10" MaxWidth="320">
-                            <TextBlock x:Uid="WorkspaceToolLegendTitle" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WorkspaceToolLegendTitle" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             <StackPanel Spacing="2">
-                                <TextBlock x:Uid="WorkspaceToolLegendSelectHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                <TextBlock x:Uid="WorkspaceToolLegendSelectBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendSelectBody" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendAddTestPointBody" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDrawWallBody" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDeleteBody" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseBody" TextWrapping="Wrap" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                <TextBlock x:Uid="WorkspaceToolLegendDiagnoseBody" TextWrapping="Wrap" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             </StackPanel>
                         </StackPanel>
                     </Flyout>
@@ -115,7 +115,7 @@
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" Margin="8,0,0,0" />
 
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0" VerticalAlignment="Center" Visibility="{x:Bind ViewModel.HasWallSelection, Mode=OneWay}">
-                <TextBlock Text="{x:Bind ViewModel.WallSelectionCountDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                <TextBlock Text="{x:Bind ViewModel.WallSelectionCountDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                 <ComboBox x:Name="WallMaterialSelector" Width="170" SelectedIndex="0">
                     <ComboBoxItem x:Uid="WorkspaceWallMaterialUnspecified" Tag="" />
                     <ComboBoxItem x:Uid="WizardWallMaterialDrywall" Tag="Drywall" />
@@ -138,11 +138,11 @@
                 <ColumnDefinition Width="440" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Margin="0,0,16,0">
+            <Border Grid.Column="0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource DotifyRadius}" Margin="0,0,16,0">
                 <controls:FloorPlanCanvas x:Name="PlanCanvas" />
             </Border>
 
-            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12" Padding="16">
+            <Border Grid.Column="1" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource DotifyRadius}" Padding="16">
                 <!-- TabView, not Pivot: Pivot silently clips overflowing headers into an
                      unreachable scroll strip once the host column narrows even slightly (see
                      CLAUDE.md's documented XAML compiler/control quirks) — TabView doesn't have
@@ -150,82 +150,66 @@
                 <TabView IsAddTabButtonVisible="False" CanReorderTabs="False" CanDragTabs="False" TabWidthMode="SizeToContent">
                     <TabViewItem x:Uid="WorkspaceCoverageTab" IsClosable="False">
                         <StackPanel Spacing="12">
-                            <TextBlock x:Uid="WorkspaceSignalLegendLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WorkspaceSignalLegendLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Green" RadiusX="3" RadiusY="3" />
-                                    <TextBlock x:Uid="WorkspaceLegendExcellent" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendExcellent" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="YellowGreen" RadiusX="3" RadiusY="3" />
-                                    <TextBlock x:Uid="WorkspaceLegendGood" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendGood" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Gold" RadiusX="3" RadiusY="3" />
-                                    <TextBlock x:Uid="WorkspaceLegendFair" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendFair" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Orange" RadiusX="3" RadiusY="3" />
-                                    <TextBlock x:Uid="WorkspaceLegendWeak" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendWeak" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <Rectangle Width="14" Height="14" Fill="Red" RadiusX="3" RadiusY="3" />
-                                    <TextBlock x:Uid="WorkspaceLegendPoor" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
+                                    <TextBlock x:Uid="WorkspaceLegendPoor" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock
                                 x:Uid="WorkspacePredictiveOnlyNote"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeXs}"
-                                Foreground="{StaticResource Gray400Brush}" />
+                                FontSize="{StaticResource DotifyTextXs}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}" />
                         </StackPanel>
                     </TabViewItem>
 
                     <TabViewItem x:Uid="WorkspaceSuggestionsTab" IsClosable="False">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="12">
-                            <TextBlock x:Uid="WorkspaceSuggestApSectionHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WorkspaceSuggestApSectionHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             <Button
                                 x:Uid="WorkspaceSuggestPlacementsButton"
-                                Style="{StaticResource PrimaryButtonStyle}"
+                                Style="{StaticResource DotifyPrimaryButtonStyle}"
                                 Click="SuggestPlacements_Click">
-                                <Button.Resources>
-                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                                </Button.Resources>
                             </Button>
                             <TextBlock
                                 x:Name="AccessPointSummaryText"
                                 Text="{x:Bind ViewModel.AccessPointSummaryDisplay, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeSm}"
-                                Foreground="{StaticResource Gray700Brush}" />
+                                FontSize="{StaticResource DotifyTextSm}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
 
-                            <Rectangle Height="1" Fill="{StaticResource Gray200Brush}" Margin="0,4,0,0" />
-                            <TextBlock x:Uid="WorkspaceGuidedWalkHeader" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                            <Rectangle Height="1" Fill="{ThemeResource DotifyColorBorderBrush}" Margin="0,4,0,0" />
+                            <TextBlock x:Uid="WorkspaceGuidedWalkHeader" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
 
                             <StackPanel Visibility="{x:Bind ViewModel.IsGuidedWalkIdle, Mode=OneWay}" Spacing="8">
                                 <TextBlock
                                     x:Uid="WorkspaceGuidedWalkExplanation"
                                     TextWrapping="Wrap"
-                                    FontSize="{StaticResource FontSizeXs}"
-                                    Foreground="{StaticResource Gray500Brush}" />
+                                    FontSize="{StaticResource DotifyTextXs}"
+                                    Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                                 <Button
                                     x:Uid="WorkspaceStartGuidedWalkButton"
-                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Style="{StaticResource DotifyPrimaryButtonStyle}"
                                     Command="{x:Bind ViewModel.StartGuidedWalkCommand}">
-                                    <Button.Resources>
-                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                                    </Button.Resources>
                                 </Button>
                             </StackPanel>
 
@@ -233,21 +217,13 @@
                                 <TextBlock
                                     Text="{x:Bind ViewModel.GuidedWalkProgressDisplay, Mode=OneWay}"
                                     TextWrapping="Wrap"
-                                    FontSize="{StaticResource FontSizeSm}"
-                                    Foreground="{StaticResource Gray700Brush}" />
+                                    FontSize="{StaticResource DotifyTextSm}"
+                                    Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Button
                                         x:Uid="WorkspaceConfirmWalkPointButton"
-                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Style="{StaticResource DotifyPrimaryButtonStyle}"
                                         Command="{x:Bind ViewModel.ConfirmWalkPointCommand}">
-                                        <Button.Resources>
-                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                                            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                                        </Button.Resources>
                                     </Button>
                                     <Button x:Uid="WorkspaceSkipWalkPointButton" Command="{x:Bind ViewModel.SkipWalkPointCommand}" />
                                     <Button x:Uid="WorkspaceCancelWalkButton" Command="{x:Bind ViewModel.CancelGuidedWalkCommand}" />
@@ -259,22 +235,22 @@
                                 Text="{x:Bind ViewModel.GuidedWalkStatusMessage, Mode=OneWay}"
                                 Visibility="{x:Bind ViewModel.HasGuidedWalkStatusMessage, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeSm}"
-                                Foreground="{StaticResource Gray500Brush}" />
+                                FontSize="{StaticResource DotifyTextSm}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
 
                             <TextBlock
                                 x:Uid="WorkspaceGuidedWalkNeedsAdapterNote"
                                 Visibility="{x:Bind ViewModel.NeedsAdapterForGuidedWalk, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeXs}"
-                                Foreground="{StaticResource Gray400Brush}" />
+                                FontSize="{StaticResource DotifyTextXs}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}" />
 
                             <TextBlock
                                 x:Uid="WorkspaceNoAdapterNote"
                                 Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeXs}"
-                                Foreground="{StaticResource Gray400Brush}" />
+                                FontSize="{StaticResource DotifyTextXs}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}" />
                         </StackPanel>
                         </ScrollViewer>
                     </TabViewItem>
@@ -293,22 +269,14 @@
                                 x:Uid="WorkspaceNoAdapterNote"
                                 Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeXs}"
-                                Foreground="{StaticResource Gray400Brush}" />
+                                FontSize="{StaticResource DotifyTextXs}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}" />
 
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <Button
                                     x:Uid="WorkspaceScanButton"
-                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Style="{StaticResource DotifyPrimaryButtonStyle}"
                                     Command="{x:Bind ViewModel.ScanCommand}">
-                                    <Button.Resources>
-                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                                    </Button.Resources>
                                 </Button>
                                 <ProgressRing IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" Width="20" Height="20" />
                             </StackPanel>
@@ -317,8 +285,8 @@
                                 Text="{x:Bind ViewModel.ScanStatusMessage, Mode=OneWay}"
                                 Visibility="{x:Bind ViewModel.HasScanStatusMessage, Mode=OneWay}"
                                 TextWrapping="Wrap"
-                                FontSize="{StaticResource FontSizeSm}"
-                                Foreground="{StaticResource Gray500Brush}" />
+                                FontSize="{StaticResource DotifyTextSm}"
+                                Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
 
                             <Button
                                 x:Uid="WorkspaceOpenLocationSettingsButton"
@@ -329,8 +297,8 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:WlanNetworkDisplay">
                                         <StackPanel Margin="0,0,0,10">
-                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                                            <TextBlock Text="{x:Bind Ssid}" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                                            <TextBlock Text="{x:Bind SubtitleDisplay}" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

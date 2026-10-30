@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Pulsemap.App.Core.Models"
     mc:Ignorable="d"
-    Background="{StaticResource Gray50Brush}">
+    Background="{ThemeResource DotifyColorSurfaceBrush}">
 
     <Grid Padding="32,24">
         <Grid.RowDefinitions>
@@ -25,13 +25,13 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0">
-                <TextBlock x:Uid="WizardTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock x:Uid="WizardSubtitle" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" Margin="0,4,0,0" />
+                <TextBlock x:Uid="WizardTitle" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                <TextBlock x:Uid="WizardSubtitle" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" Margin="0,4,0,0" />
                 <!-- Five steps with no indication of which one you're on or how many are left. -->
                 <TextBlock
                     Text="{x:Bind ViewModel.StepProgressDisplay, Mode=OneWay}"
-                    FontSize="{StaticResource FontSizeXs}"
-                    Foreground="{StaticResource Gray400Brush}"
+                    FontSize="{StaticResource DotifyTextXs}"
+                    Foreground="{ThemeResource DotifyColorOnSurfaceFaintBrush}"
                     Margin="0,6,0,0" />
             </StackPanel>
 
@@ -39,11 +39,11 @@
         </Grid>
 
         <ScrollViewer Grid.Row="1" Margin="0,24,0,0" HorizontalAlignment="Left" HorizontalScrollBarVisibility="Disabled">
-            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="32" Width="560">
+            <Border Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="32" Width="560">
                 <Grid>
                     <!-- Step 1: Basics -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsBasicsStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock x:Uid="WizardStep1Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep1Title" FontSize="{StaticResource DotifyTextXl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         <TextBox
                             x:Uid="WizardSurveyNameField"
                             Text="{x:Bind ViewModel.SurveyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -54,7 +54,7 @@
                             Height="80"
                             Text="{x:Bind ViewModel.SiteDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <StackPanel Spacing="8">
-                            <TextBlock x:Uid="WizardSurveyTypeLabel" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
+                            <TextBlock x:Uid="WizardSurveyTypeLabel" FontSize="{StaticResource DotifyTextSm}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                             <RadioButton
                                 x:Uid="WizardNewDeploymentRadio"
                                 x:Name="NewDeploymentRadio"
@@ -75,7 +75,7 @@
 
                     <!-- Step 2: Floor plan -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsFloorPlanStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock x:Uid="WizardStep2Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep2Title" FontSize="{StaticResource DotifyTextXl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         <StackPanel Spacing="8">
                             <RadioButton
                                 x:Uid="WizardRoomListRadio"
@@ -114,12 +114,12 @@
 
                         <StackPanel Visibility="{x:Bind ViewModel.IsImageStyleSelected, Mode=OneWay}" Spacing="12">
                             <Button x:Uid="WizardChooseFileButton" Command="{x:Bind ViewModel.PickImageCommand}" />
-                            <TextBlock Text="{x:Bind ViewModel.SelectedImageFileName, Mode=OneWay}" Foreground="{StaticResource Gray500Brush}" FontSize="{StaticResource FontSizeSm}" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedImageFileName, Mode=OneWay}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" FontSize="{StaticResource DotifyTextSm}" />
 
                             <!-- Only shown for a PDF with more than one page — a single-page PDF or
                                  an image stays exactly as simple as before this existed. -->
                             <StackPanel Visibility="{x:Bind ViewModel.IsPdfWithMultiplePages, Mode=OneWay}" Spacing="4">
-                                <TextBlock x:Uid="WizardPdfPageLabel" FontSize="{StaticResource FontSizeSm}" FontWeight="SemiBold" Foreground="{StaticResource Gray700Brush}" />
+                                <TextBlock x:Uid="WizardPdfPageLabel" FontSize="{StaticResource DotifyTextSm}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                                 <ComboBox
                                     ItemsSource="{x:Bind ViewModel.PdfPageNumbers, Mode=OneWay}"
                                     SelectedIndex="{x:Bind ViewModel.SelectedPdfPageIndex, Mode=TwoWay}" />
@@ -131,12 +131,12 @@
 
                     <!-- Step 3: Building details -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsBuildingDetailsStepVisible, Mode=OneWay}" Spacing="20">
-                        <TextBlock x:Uid="WizardStep3Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep3Title" FontSize="{StaticResource DotifyTextXl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         <TextBlock
                             x:Uid="WizardWallMaterialExplanation"
                             TextWrapping="Wrap"
-                            FontSize="{StaticResource FontSizeSm}"
-                            Foreground="{StaticResource Gray500Brush}" />
+                            FontSize="{StaticResource DotifyTextSm}"
+                            Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                         <ComboBox x:Uid="WizardWallMaterialField" SelectedIndex="0" SelectionChanged="WallMaterialComboBox_SelectionChanged">
                             <ComboBoxItem x:Uid="WizardWallMaterialDrywall" Tag="Drywall" />
                             <ComboBoxItem x:Uid="WizardWallMaterialGlassStandard" Tag="GlassStandard" />
@@ -150,12 +150,12 @@
 
                     <!-- Step 4: Adapter & bands -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsAdapterBandsStepVisible, Mode=OneWay}" Spacing="16">
-                        <TextBlock x:Uid="WizardStep4Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep4Title" FontSize="{StaticResource DotifyTextXl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         <TextBlock
                             x:Uid="WizardBandsExplanation"
                             TextWrapping="Wrap"
-                            FontSize="{StaticResource FontSizeSm}"
-                            Foreground="{StaticResource Gray500Brush}" />
+                            FontSize="{StaticResource DotifyTextSm}"
+                            Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                         <CheckBox x:Uid="WizardBand24Checkbox" IsChecked="{x:Bind ViewModel.Includes24Ghz, Mode=TwoWay}" />
                         <CheckBox x:Uid="WizardBand5Checkbox" IsChecked="{x:Bind ViewModel.Includes5Ghz, Mode=TwoWay}" />
                         <CheckBox x:Uid="WizardBand6Checkbox" IsChecked="{x:Bind ViewModel.Includes6Ghz, Mode=TwoWay}" />
@@ -163,31 +163,31 @@
 
                     <!-- Step 5: Review -->
                     <StackPanel Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}" Spacing="16">
-                        <TextBlock x:Uid="WizardStep5Title" FontSize="{StaticResource FontSizeXl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+                        <TextBlock x:Uid="WizardStep5Title" FontSize="{StaticResource DotifyTextXl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
 
                         <StackPanel Spacing="2">
-                            <TextBlock x:Uid="WizardReviewNameLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                            <TextBlock Text="{x:Bind ViewModel.SurveyName, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WizardReviewNameLabel" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.SurveyName, Mode=OneWay}" FontSize="{StaticResource DotifyTextBase}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock x:Uid="WizardReviewSurveyTypeLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                            <TextBlock Text="{x:Bind ViewModel.SurveyTypeSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WizardReviewSurveyTypeLabel" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.SurveyTypeSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextBase}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock x:Uid="WizardReviewFloorPlanLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                            <TextBlock Text="{x:Bind ViewModel.FloorPlanSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WizardReviewFloorPlanLabel" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.FloorPlanSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextBase}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock x:Uid="WizardReviewWallMaterialLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                            <TextBlock Text="{x:Bind ViewModel.DefaultWallMaterialDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WizardReviewWallMaterialLabel" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.DefaultWallMaterialDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextBase}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         </StackPanel>
 
                         <StackPanel Spacing="2">
-                            <TextBlock x:Uid="WizardReviewBandsLabel" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                            <TextBlock Text="{x:Bind ViewModel.BandsSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeBase}" Foreground="{StaticResource Gray900Brush}" />
+                            <TextBlock x:Uid="WizardReviewBandsLabel" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.BandsSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextBase}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                         </StackPanel>
 
                     </StackPanel>
@@ -211,31 +211,15 @@
             <Button x:Uid="WizardBackButton" Command="{x:Bind ViewModel.BackCommand}" />
             <Button
                 x:Uid="WizardNextButton"
-                Style="{StaticResource PrimaryButtonStyle}"
+                Style="{StaticResource DotifyPrimaryButtonStyle}"
                 Command="{x:Bind ViewModel.NextCommand}"
                 Visibility="{x:Bind ViewModel.IsNotReviewStep, Mode=OneWay}">
-                <Button.Resources>
-                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                </Button.Resources>
             </Button>
             <Button
                 x:Uid="WizardCreateSurveyButton"
-                Style="{StaticResource PrimaryButtonStyle}"
+                Style="{StaticResource DotifyPrimaryButtonStyle}"
                 Command="{x:Bind ViewModel.CreateSurveyCommand}"
                 Visibility="{x:Bind ViewModel.IsReviewStepVisible, Mode=OneWay}">
-                <Button.Resources>
-                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
-                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
-                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource Primary700Color}" />
-                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource Primary700Color}" />
-                </Button.Resources>
             </Button>
             <ProgressRing IsActive="{x:Bind ViewModel.IsCreating, Mode=OneWay}" Width="24" Height="24" />
         </StackPanel>

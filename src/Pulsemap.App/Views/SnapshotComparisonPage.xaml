@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Pulsemap.App.Controls"
     mc:Ignorable="d"
-    Background="{StaticResource Gray50Brush}">
+    Background="{ThemeResource DotifyColorSurfaceBrush}">
 
     <Grid Padding="32,24">
         <Grid.RowDefinitions>
@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock x:Uid="SnapshotComparisonTitle" Grid.Column="0" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
+            <TextBlock x:Uid="SnapshotComparisonTitle" Grid.Column="0" FontSize="{StaticResource DotifyText2xl}" FontWeight="SemiBold" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
             <Button x:Uid="SnapshotComparisonBackButton" Grid.Column="1" Click="Back_Click" />
         </Grid>
 
@@ -75,10 +75,10 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12">
+            <Border Grid.Column="0" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource DotifyRadius}">
                 <controls:FloorPlanCanvas x:Name="LeftCanvas" />
             </Border>
-            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" CornerRadius="12">
+            <Border Grid.Column="1" Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource DotifyRadius}">
                 <controls:FloorPlanCanvas x:Name="RightCanvas" />
             </Border>
         </Grid>

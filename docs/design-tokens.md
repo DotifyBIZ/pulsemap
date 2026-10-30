@@ -1,67 +1,36 @@
 # Design tokens
 
-Pulsemap adopts Dotify's design-system **palette and type scale only** — UI structure follows native WinUI 3/Fluent patterns (`NavigationView`, native controls), not Dotify's web app shell. See [docs/adr/](adr/) for the platform and packaging decisions this sits alongside.
+Pulsemap uses the [Dotify One Design System](https://repo.dotify.biz/one/design-system/) for colour, type, radius and the primary button. UI structure follows native WinUI 3/Fluent patterns (`NavigationView`, native controls), not Dotify's web app shell. See [docs/adr/](adr/) for the platform and packaging decisions this sits alongside.
 
-These values are proven out in the [design proposal](../README.md) mockups — implement them as XAML `Color`/`SolidColorBrush` resources in a shared `ResourceDictionary`, not hand-picked hex values inline in views.
+## Where the values live
 
-## Color
+`App.xaml` holds the design system's `xaml/Dotify.inline.xaml`, pasted inside `MergedDictionaries` after `XamlControlsResources`. It is not a separate merged file, because this environment's XAML compiler fails on a standalone `ResourceDictionary`-rooted file (see `CLAUDE.md`). To update, paste the current file over the inner `ResourceDictionary`. Never edit the values in place, and never write a hex value in a view.
 
-**Primary (brand red)** — primary actions, active nav state, brand accents. Never used to signal an error.
+Montserrat (Regular and SemiBold, SIL OFL) ships in `Assets/Fonts/`.
 
-| Token | Hex |
+## Which resource to use
+
+| Use | Resource |
 |---|---|
-| primary-50 | `#fef2f2` |
-| primary-100 | `#fee2e2` |
-| primary-200 | `#fecaca` |
-| primary-300 | `#f9a8a8` |
-| primary-400 | `#e45a5c` |
-| primary-500 | `#d42a2c` |
-| primary-600 | `#b41618` — canonical brand red |
-| primary-700 | `#971214` |
-| primary-800 | `#7d1012` |
-| primary-900 | `#6b1113` |
-| primary-950 | `#3c0506` |
+| Page background | `{ThemeResource DotifyColorSurfaceBrush}` |
+| Card and panel background | `{ThemeResource DotifyColorSurfaceRaisedBrush}`, or `{StaticResource DotifyCardStyle}` on a `Border` |
+| Borders and dividers | `{ThemeResource DotifyColorBorderBrush}` |
+| Headings and body text | `{ThemeResource DotifyColorOnSurfaceBrush}` |
+| Secondary text | `{ThemeResource DotifyColorOnSurfaceMutedBrush}` |
+| Hints and timestamps | `{ThemeResource DotifyColorOnSurfaceFaintBrush}` |
+| Status text (diagnostics) | `DotifyColorErrorTextBrush`, `DotifyColorWarningTextBrush`, `DotifyColorSuccessTextBrush` |
+| Font sizes | `{StaticResource DotifyTextXs}` … `DotifyText3xl` (12, 14, 16, 18, 20, 24, 30) |
+| Corner radius | `{StaticResource DotifyRadius}` (15) |
+| The one primary action on a page | `Style="{StaticResource DotifyPrimaryButtonStyle}"` |
 
-**Secondary (navy)** — secondary emphasis, informational surfaces, links.
-
-| Token | Hex |
-|---|---|
-| secondary-50 | `#eeeef8` |
-| secondary-100 | `#d9d9ef` |
-| secondary-200 | `#b8b7e0` |
-| secondary-300 | `#9695cf` |
-| secondary-400 | `#6e6cb8` |
-| secondary-500 | `#3d3a8e` |
-| secondary-600 | `#211f60` — canonical navy |
-| secondary-700 | `#1b1950` |
-| secondary-800 | `#151341` |
-| secondary-900 | `#100e33` |
-| secondary-950 | `#090822` |
-
-**Neutrals** — standard Tailwind gray scale. Page background `gray-50` (`#f9fafb`), card surfaces white, borders `gray-200` (`#e5e7eb`).
-
-**Semantic** (state, never the accent) — success green, danger red `#ef4444` (distinct from brand primary), warning amber `#f59e0b`, info navy. Pair every semantic color with text or an icon — never color alone.
-
-## Typography
-
-- **Family:** `"Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif` — Segoe UI first, explicitly, for genuine Windows-native rendering rather than relying on `system-ui` resolution.
-- **Scale:** xs 12/16, sm 14/20, base 16/24, lg 18/28, xl 20/28, 2xl 24/32, 3xl 30/36 (px, size/line-height).
-- **Weight:** 400 body, 500 labels/nav items, 600 headings and buttons, 700–800 reserved for the brand wordmark.
-- **Default:** sm (14px) for dense application UI.
-
-## Radius
-
-| Element | Value |
-|---|---|
-| Inputs, buttons | 6px |
-| Dropdowns, popovers | 8px |
-| Panels | 12px |
-| Cards | 16px |
-| Avatars, badges, pills | full |
+- **Themes:** content follows the Windows light or dark setting. Every colour above is a theme brush, so use `{ThemeResource}` for brushes and `{StaticResource}` for sizes and styles.
+- **Primary button:** `DotifyPrimaryButtonStyle` has its own hover and pressed states. Don't add `Button.Resources` overrides or set the content's `Foreground`.
+- **Status:** pair every status colour with text or an icon, never colour alone. Brand red is for the primary action, never an error.
+- **Floor plan:** heatmap, access point and wall colours in `FloorPlanCanvas` are data colours, not design tokens.
 
 ## Mica backdrop
 
-Standard Mica (`MicaKind.Base`), single main window — see [ADR-0001](adr/0001-winui3-windows-only-platform.md). Backdrop-only: it shows through the title bar and the `NavigationView` pane (no solid fill behind either), never through content surfaces. The canvas, wizard panels, and side panels stay solid per the card/panel tokens above.
+Standard Mica (`MicaKind.Base`), single main window — see [ADR-0001](adr/0001-winui3-windows-only-platform.md). Backdrop-only: it shows through the title bar and the `NavigationView` pane (no solid fill behind either), never through content surfaces. The canvas, wizard panels, and side panels stay solid.
 
 ## Icons
 
