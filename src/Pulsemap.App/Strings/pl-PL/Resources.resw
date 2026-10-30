@@ -558,10 +558,10 @@
   <data name="WorkspaceAccessPointSummaryFormat" xml:space="preserve">
     <value>{0} — {1}</value>
   </data>
-  <data name="DiagnosticsTitle" xml:space="preserve">
+  <data name="DiagnosticsTitle.Text" xml:space="preserve">
     <value>Diagnostyka</value>
   </data>
-  <data name="DiagnosticsSubtitle" xml:space="preserve">
+  <data name="DiagnosticsSubtitle.Text" xml:space="preserve">
     <value>Sprawdź aktualne połączenie WiFi tego urządzenia i stan sieci lokalnej — bez potrzeby pomiaru.</value>
   </data>
   <data name="DiagnosticsAdapterField.Header" xml:space="preserve">

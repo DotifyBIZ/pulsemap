@@ -32,10 +32,10 @@
                     <Border
                         x:Name="HeatmapTooltip"
                         Visibility="Collapsed"
-                        Background="{StaticResource Gray900Brush}"
+                        Background="{StaticResource DotifyGray900Brush}"
                         CornerRadius="4"
                         Padding="6,3">
-                        <TextBlock x:Name="HeatmapTooltipText" Foreground="White" FontSize="{StaticResource FontSizeXs}" />
+                        <TextBlock x:Name="HeatmapTooltipText" Foreground="White" FontSize="{StaticResource DotifyTextXs}" />
                     </Border>
                 </Canvas>
             </Grid>
@@ -51,15 +51,15 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="12"
-            Background="White"
-            BorderBrush="{StaticResource Gray200Brush}"
+            Background="{ThemeResource DotifyColorSurfaceRaisedBrush}"
+            BorderBrush="{ThemeResource DotifyColorBorderBrush}"
             BorderThickness="1"
             CornerRadius="8"
             Padding="4">
             <StackPanel Orientation="Horizontal" Spacing="2">
                 <Button x:Name="ZoomOutButton" Content="−" Width="32" Click="ZoomOutButton_Click" />
                 <Button x:Name="ZoomResetButton" Width="56" Click="ZoomResetButton_Click">
-                    <TextBlock x:Name="ZoomPercentText" Text="100%" HorizontalAlignment="Center" FontSize="{StaticResource FontSizeXs}" />
+                    <TextBlock x:Name="ZoomPercentText" Text="100%" HorizontalAlignment="Center" FontSize="{StaticResource DotifyTextXs}" />
                 </Button>
                 <Button x:Name="ZoomInButton" Content="+" Width="32" Click="ZoomInButton_Click" />
             </StackPanel>

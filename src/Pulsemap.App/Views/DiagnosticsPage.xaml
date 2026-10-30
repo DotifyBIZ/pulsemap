@@ -8,7 +8,7 @@
     xmlns:vm="using:Pulsemap.App.ViewModels"
     xmlns:converters="using:Pulsemap.App.Converters"
     mc:Ignorable="d"
-    Background="{StaticResource Gray50Brush}">
+    Background="{ThemeResource DotifyColorSurfaceBrush}">
 
     <Page.Resources>
         <converters:DiagnosticSeverityToBrushConverter x:Key="SeverityToBrushConverter" />
@@ -17,11 +17,11 @@
     <ScrollViewer Padding="32,24">
         <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
             <StackPanel Spacing="4">
-                <TextBlock x:Uid="DiagnosticsTitle" FontSize="{StaticResource FontSize2xl}" FontWeight="SemiBold" Foreground="{StaticResource Gray900Brush}" />
-                <TextBlock x:Uid="DiagnosticsSubtitle" TextWrapping="Wrap" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray500Brush}" />
+                <TextBlock x:Uid="DiagnosticsTitle" Style="{StaticResource DotifyPageTitleTextStyle}" />
+                <TextBlock Style="{StaticResource DotifyPageSubtitleTextStyle}" x:Uid="DiagnosticsSubtitle" />
             </StackPanel>
 
-            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24">
+            <Border Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24">
                 <StackPanel Spacing="16">
                     <ComboBox
                         x:Uid="DiagnosticsAdapterField"
@@ -34,8 +34,8 @@
                         x:Uid="DiagnosticsNoAdapterNote"
                         Visibility="{x:Bind ViewModel.HasNoAdapters, Mode=OneWay}"
                         TextWrapping="Wrap"
-                        FontSize="{StaticResource FontSizeSm}"
-                        Foreground="{StaticResource Gray500Brush}" />
+                        FontSize="{StaticResource DotifyTextSm}"
+                        Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
 
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button x:Uid="DiagnosticsRunButton" Command="{x:Bind ViewModel.RunDiagnosticsCommand}" />
@@ -50,32 +50,32 @@
                 </StackPanel>
             </Border>
 
-            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
+            <Border Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
                 <StackPanel Spacing="8">
-                    <TextBlock x:Uid="DiagnosticsLinkSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
-                    <TextBlock Text="{x:Bind ViewModel.SsidDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray700Brush}" />
-                    <TextBlock Text="{x:Bind ViewModel.BandAndChannelDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                    <TextBlock Text="{x:Bind ViewModel.LinkSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
-                    <TextBlock Text="{x:Bind ViewModel.NetworkHealthSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource FontSizeXs}" Foreground="{StaticResource Gray500Brush}" />
+                    <TextBlock x:Uid="DiagnosticsLinkSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.SsidDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.BandAndChannelDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.LinkSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.NetworkHealthSummaryDisplay, Mode=OneWay}" FontSize="{StaticResource DotifyTextXs}" Foreground="{ThemeResource DotifyColorOnSurfaceMutedBrush}" />
                 </StackPanel>
             </Border>
 
-            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
+            <Border Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.HasResult, Mode=OneWay}">
                 <StackPanel Spacing="8">
-                    <TextBlock x:Uid="DiagnosticsFindingsSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                    <TextBlock x:Uid="DiagnosticsFindingsSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                     <ItemsControl ItemsSource="{x:Bind ViewModel.Findings}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:DiagnosticFindingDisplay">
-                                <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Foreground="{x:Bind Severity, Converter={StaticResource SeverityToBrushConverter}}" FontSize="{StaticResource FontSizeSm}" Margin="0,4" />
+                                <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" Foreground="{x:Bind Severity, Converter={StaticResource SeverityToBrushConverter}}" FontSize="{StaticResource DotifyTextSm}" Margin="0,4" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
             </Border>
 
-            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Gray200Brush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.IsMonitoring, Mode=OneWay}">
+            <Border Background="{ThemeResource DotifyColorSurfaceRaisedBrush}" CornerRadius="{StaticResource DotifyRadius}" BorderBrush="{ThemeResource DotifyColorBorderBrush}" BorderThickness="1" Padding="24" Visibility="{x:Bind ViewModel.IsMonitoring, Mode=OneWay}">
                 <StackPanel Spacing="8">
-                    <TextBlock x:Uid="DiagnosticsMonitoringSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource Gray900Brush}" />
+                    <TextBlock x:Uid="DiagnosticsMonitoringSectionLabel" FontWeight="SemiBold" FontSize="{StaticResource DotifyTextSm}" Foreground="{ThemeResource DotifyColorOnSurfaceBrush}" />
                     <ListView ItemsSource="{x:Bind ViewModel.MonitoringSamples}" SelectionMode="None" MaxHeight="300">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:MonitoringSampleDisplay">
@@ -86,10 +86,10 @@
                                         <ColumnDefinition Width="100" />
                                         <ColumnDefinition Width="100" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{x:Bind TimestampDisplay}" FontSize="{StaticResource FontSizeXs}" />
-                                    <TextBlock Grid.Column="1" Text="{x:Bind SignalPercentDisplay}" FontSize="{StaticResource FontSizeXs}" />
-                                    <TextBlock Grid.Column="2" Text="{x:Bind RxLinkSpeedDisplay}" FontSize="{StaticResource FontSizeXs}" />
-                                    <TextBlock Grid.Column="3" Text="{x:Bind GatewayPingDisplay}" FontSize="{StaticResource FontSizeXs}" />
+                                    <TextBlock Grid.Column="0" Text="{x:Bind TimestampDisplay}" FontSize="{StaticResource DotifyTextXs}" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind SignalPercentDisplay}" FontSize="{StaticResource DotifyTextXs}" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind RxLinkSpeedDisplay}" FontSize="{StaticResource DotifyTextXs}" />
+                                    <TextBlock Grid.Column="3" Text="{x:Bind GatewayPingDisplay}" FontSize="{StaticResource DotifyTextXs}" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
