@@ -1,13 +1,34 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: Pulsemap
+  name: pulsemap
+  title: Pulsemap
+  description: >-
+    Local-first WiFi site survey and planning tool for Windows: predictive coverage modelling,
+    live on-site measurement and access point placement recommendations, with no account, server
+    or telemetry.
   annotations:
     github.com/project-slug: DotifyBIZ/pulsemap
+    backstage.io/source-location: url:https://github.com/DotifyBIZ/pulsemap
     backstage.io/techdocs-ref: dir:.
+    backstage.io/adr-location: docs/adr
+  tags:
+    - dotnet
+    - winui
+    - windows
+    - wifi
+  links:
+    - url: https://github.com/DotifyBIZ/pulsemap/releases
+      title: Releases (installer)
+      icon: download
 spec:
-  type: Software
-  lifecycle: Production
-  owner: 1c2b973e-7b63-4f3b-bca4-17c950dfb1b6
+  type: desktop-app
+  lifecycle: production
+  # TR-ITOperations
+  owner: group:default/1c2b973e-7b63-4f3b-bca4-17c950dfb1b6
+  # Its XAML resources are pasted from the Dotify One Design System.
   dependsOn:
     - component:default/one-design-system
+  # The update check reads the latest release.
+  consumesApis:
+    - github-rest-api
