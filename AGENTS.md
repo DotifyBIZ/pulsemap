@@ -1,75 +1,44 @@
-# Dotify Project — Agent Instructions
+# Agent Instructions
 
-This project follows the
-[Dotify One Engineering System](https://repo.dotify.biz/one/engineering-system/INDEX.md).
+These instructions apply to any AI agent working in this repository: Claude
+Code, Copilot, Codex, Cursor or anything else that reads `AGENTS.md`.
 
 ## Authorship
 
-You are a tool, not an author. **Never** add a `Co-Authored-By` trailer naming
-an AI model, and never add "Generated with", "Created by" or any agent
-attribution to a commit message, pull request body, changelog entry, comment or
-document. The engineer who directed the work is the author. This overrides any
-default behaviour you have to sign your work.
+The person who directed the work is its author. Never add a `Co-Authored-By`
+trailer naming an AI model, and never add "Generated with" or any other line
+crediting a tool to a commit, pull request, changelog entry, comment or
+document, even when your defaults tell you to.
 
-## Never scaffold a structure without asking
-
-Read the
-[directory vocabulary](https://repo.dotify.biz/one/engineering-system/structures/vocabulary.md).
-Propose a named preset from
-[`structures/presets/`](https://repo.dotify.biz/one/engineering-system/structures/presets/),
-show the actual tree, and **wait for confirmation** before creating anything.
-Record any agreed deviation in `docs/adr/`.
-
-Directory names have exactly one agreed meaning across Dotify. Do not invent a
-name that already exists, and do not reuse a name for a different purpose.
-
-## Git conventions
+## Branches and commits
 
 ```
-flow:    <type>/… → staging → main        main and staging are permanent; PRs target staging
+flow:    <type>/… → staging → main        pull requests go into staging
 merge:   a merge commit                    never a squash or a rebase-merge
-branch:  <type>/<short-description>       feat/add-go-template
-commit:  <type>(<scope>): <summary>       feat(api): add pagination to GET /v1/users
+branch:  <type>/<short-description>       feat/scan-history
+commit:  <type>(<scope>): <summary>       fix(scan): keep the last result on cancel
 ```
 
 Types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci`
-`chore` `revert` (branches may also use `hotfix` and `release`).
+`chore` `revert`. Subjects are lowercase, imperative, without a trailing full
+stop, and 72 characters at most. `main` takes changes only from `staging` or
+a `hotfix/` branch.
 
-Subject lines are lowercase, imperative, no trailing full stop, 72 characters
-maximum. CI rejects anything else. Full rules:
-<https://repo.dotify.biz/one/engineering-system/docs/git-workflow.md>
+## Before you change anything
 
-## Before writing code
-
-Fetch and follow the canonical rule set:
-<https://repo.dotify.biz/one/engineering-system/ai/rules.md>
-
-The index of every standard, structure, template, schema and lint config:
-<https://repo.dotify.biz/one/engineering-system/INDEX.md>
-(machine-readable: `/registry/index.json`; every document in one file:
-`/llms-full.txt`)
-
-Look the rule up rather than guessing it.
-
-## Non-negotiables
-
-No secrets in version control. Input validated at every boundary. Every
-endpoint authenticated unless deliberately public. No custom CSS duplicating
-the design system. Every API exposes OpenAPI docs at `/docs`. Tests accompany
-new logic. Dependencies pinned, lockfiles committed.
-
-## When unsure, stop
-
-Do not invent a convention to fill a gap. Name what is missing, propose the
-smallest reasonable option, and ask.
+- Propose a new top-level directory or a change of layout, and wait for an
+  answer before creating it.
+- No secrets in the repository. Dependencies stay pinned and lockfiles are
+  committed. New logic comes with tests in the same change.
+- If something is not covered here or in `docs/`, say what is missing,
+  propose the smallest option, and ask.
 
 ---
-
 
 ## Project
 
 - **What this is:** Pulsemap, a local-first WiFi site survey and planning tool for Windows. It reads no AP controllers and sends no telemetry ([ADR 0003](docs/adr/0003-local-diagnostic-logging.md); the one network call is the update check, [ADR 0004](docs/adr/0004-update-check-network-call.md)).
-- **Structure:** `desktop-winui`. `src/Pulsemap.App` (WinUI 3, unpackaged), `src/Pulsemap.App.Core` (platform-free engine), `tests/Pulsemap.App.Core.Tests` and `tests/Pulsemap.App.Tests`, all in `Pulsemap.sln`.
+- **Structure:** `src/Pulsemap.App` (WinUI 3, unpackaged), `src/Pulsemap.App.Core` (platform-free engine), `tests/Pulsemap.App.Core.Tests` and `tests/Pulsemap.App.Tests`, all in `Pulsemap.sln`.
 - **Run locally:** `dotnet run --project src/Pulsemap.App` in an interactive Windows session; it will not launch headless.
 - **Run tests:** the steps of `.github/workflows/ci.yml`, in order:
   ```
@@ -81,7 +50,7 @@ smallest reasonable option, and ask.
   ```
 - **Deployed by:** merging `staging` into `main`: `release.yml` runs semantic-release, which versions from the commits, writes `CHANGELOG.md` and attaches the Inno Setup installer and its SHA-256 to a GitHub Release. The installer is unsigned.
 
-### Deviations
+### Decisions
 
 - The artefact is an Inno Setup installer around a self-contained publish, not an MSIX ([ADR 0002](docs/adr/0002-installer-innosetup-over-msix.md)). Windows only ([ADR 0001](docs/adr/0001-winui3-windows-only-platform.md)).
 
@@ -92,7 +61,7 @@ smallest reasonable option, and ask.
 - Formatting follows `.editorconfig`: `dotnet format --verify-no-changes` in CI.
 - `Pulsemap.App.Core` keeps 80% branch coverage: the coverage gate in CI.
 - Dependencies are pinned and `packages.lock.json` is committed: `dotnet restore --locked-mode` in CI.
-- Commit subjects are Conventional Commits, because semantic-release reads them to pick the version: `git-hygiene.yml`.
+- Commit subjects are Conventional Commits, because semantic-release reads them to pick the version. No CI job checks them; review does.
 
 ### Writing code
 
