@@ -27,7 +27,7 @@ Pulsemap holds no data centrally. Surveys, logs and settings stay on each user's
 - **Releases:** merging `staging` into `main` cuts a release. semantic-release picks the version from the commit messages and attaches the installer and its checksum.
 - **Dependencies:** Dependabot opens pull requests against `staging`. Lockfiles (`packages.lock.json`) are committed and restored in locked mode.
 - **Design system:** when the Dotify One Design System changes, paste the new `Dotify.inline.xaml` ([Design tokens](design-tokens.md)).
-- **Code signing:** the installer is unsigned. Whether that changes is not decided yet.
+- **Code signing:** the installer is unsigned, because a signing certificate costs money. That is decided.
 
 ## Lifecycle
 
