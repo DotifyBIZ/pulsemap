@@ -155,7 +155,7 @@ Pulsemap is local-first: no account, no server, your survey data never leaves yo
 1. **Update check** — one request to GitHub's public release list on launch, carrying nothing about you or your surveys. On by default, toggle it off in Settings.
 2. **WiFi diagnostics** — pinging your own router and timing one DNS lookup, only while you're actively running the Diagnose page or Workspace's Diagnose tool. This is inherent to what "check my network health" means and isn't separately toggleable — running the check is the consent.
 
-Nothing else. See [SECURITY.md](../SECURITY.md) to report a vulnerability.
+Nothing else. See [SECURITY.md](https://github.com/DotifyBIZ/pulsemap/blob/main/SECURITY.md) to report a vulnerability.
 
 ## Troubleshooting
 
@@ -178,7 +178,7 @@ The installer isn't code-signed — that costs money Pulsemap's project doesn't 
 No — every core feature (surveying, measuring, exporting) works fully offline. The only network activity is the optional update check and the WiFi diagnostics ping/DNS lookup described [above](#privacy--what-leaves-your-machine).
 
 **Can I run this on Linux or macOS?**
-Not currently — Pulsemap is Windows-only for now (see [ADR-0001](adr/0001-winui3-windows-only-platform.md) for why, if you're curious). A shared cross-platform core is on the long-term roadmap in the [README](../README.md#roadmap).
+Not currently — Pulsemap is Windows-only for now (see [ADR-0001](adr/0001-winui3-windows-only-platform.md) for why, if you're curious). A shared cross-platform core is on the long-term roadmap in the [README](https://github.com/DotifyBIZ/pulsemap/blob/main/README.md#roadmap).
 
 **Can Pulsemap read data from my UniFi/Omada/other AP controller?**
 No, and this is deliberate — Pulsemap is survey and planning tooling, not a controller integration. Recommendations (power, channel, placement) stay generic rather than vendor-specific.
@@ -189,5 +189,5 @@ A log-distance path-loss model per band, with per-material wall attenuation wher
 ## Getting help
 
 - **Bugs and feature requests:** [open a GitHub issue](https://github.com/DotifyBIZ/pulsemap/issues).
-- **Security vulnerabilities:** do **not** open a public issue — see [SECURITY.md](../SECURITY.md) for private reporting.
+- **Security vulnerabilities:** do **not** open a public issue — see [SECURITY.md](https://github.com/DotifyBIZ/pulsemap/blob/main/SECURITY.md) for private reporting.
 - **Questions:** open an issue tagged `question`.

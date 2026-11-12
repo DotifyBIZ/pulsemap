@@ -1,3 +1,21 @@
 site_name: Pulsemap
+nav:
+  - Overview: index.md
+  - For users:
+      - User guide: user-guide.md
+  - For admins:
+      - Admin guide: admin-guide.md
+  - For the owner:
+      - Ownership: ownership.md
+  - For developers:
+      - Developer guide: developer-guide.md
+      - Design tokens: design-tokens.md
+  - Decisions:
+      - Overview: adr/README.md
+      - "0001 WinUI 3, Windows only": adr/0001-winui3-windows-only-platform.md
+      - "0002 Inno Setup over MSIX": adr/0002-installer-innosetup-over-msix.md
+      - "0003 Local diagnostic logging": adr/0003-local-diagnostic-logging.md
+      - "0004 Update check": adr/0004-update-check-network-call.md
+      - Template: adr/template.md
 plugins:
   - techdocs-core
