@@ -2,8 +2,8 @@
 
 This is the map: how the codebase is organized, how the RF/planning engine actually works, and how to get productive as a contributor. It complements, rather than repeats:
 
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** — branching, commit style, and the pull-request checklist. Read that first if you're about to open a PR.
-- **[CLAUDE.md](../CLAUDE.md)** — the project's non-negotiable engineering rules and a running log of hard-won platform footguns (XAML compiler quirks, WinRT API dead ends). Originally written as instructions for AI coding agents working in this repo, but every rule in it applies equally to a human contributor — read it before writing code, not after something breaks.
+- **[CONTRIBUTING.md](https://github.com/DotifyBIZ/pulsemap/blob/main/CONTRIBUTING.md)** — branching, commit style, and the pull-request checklist. Read that first if you're about to open a PR.
+- **[CLAUDE.md](https://github.com/DotifyBIZ/pulsemap/blob/main/CLAUDE.md)** — the project's non-negotiable engineering rules and a running log of hard-won platform footguns (XAML compiler quirks, WinRT API dead ends). Originally written as instructions for AI coding agents working in this repo, but every rule in it applies equally to a human contributor — read it before writing code, not after something breaks.
 - **[docs/adr/](adr/)** — why significant architectural decisions were made, and what alternatives were rejected. If your change touches one of these decisions, either follow it or open a new ADR explaining why not.
 
 If you're here to *use* Pulsemap rather than build or modify it, see the [User Guide](user-guide.md) instead.
@@ -35,7 +35,7 @@ If you're here to *use* Pulsemap rather than build or modify it, see the [User G
 ## Prerequisites
 
 - **Windows 10, build 19041 or later, 64-bit.** Pulsemap is WinUI 3 and Windows-only for now — see [ADR-0001](adr/0001-winui3-windows-only-platform.md).
-- **.NET 9 SDK.** The exact version is pinned in [global.json](../global.json); `dotnet --version` should report something the SDK's `rollForward: latestMinor` policy accepts.
+- **.NET 9 SDK.** The exact version is pinned in [global.json](https://github.com/DotifyBIZ/pulsemap/blob/main/global.json); `dotnet --version` should report something the SDK's `rollForward: latestMinor` policy accepts.
 - **Visual Studio 2022** (with the "Windows App SDK" / WinUI workload) or VS Code with the C# Dev Kit both work. WinUI's XAML designer/hot-reload is VS-only if you rely on it, but the CLI build/test/run flow below doesn't need it.
 - **Inno Setup 6+**, only if you want to build the installer locally (`Pulsemap.iss`) — not needed for day-to-day development.
 
@@ -204,4 +204,4 @@ CLAUDE.md keeps the authoritative, continuously-updated list — don't duplicate
 
 ## Where to ask questions
 
-Open a GitHub issue tagged `question` — see [CONTRIBUTING.md](../CONTRIBUTING.md) for the full contribution process, including the PR checklist and commit-message conventions.
+Open a GitHub issue tagged `question` — see [CONTRIBUTING.md](https://github.com/DotifyBIZ/pulsemap/blob/main/CONTRIBUTING.md) for the full contribution process, including the PR checklist and commit-message conventions.

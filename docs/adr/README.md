@@ -9,3 +9,4 @@ This directory records significant architectural decisions for Pulsemap — the 
 | [0001](0001-winui3-windows-only-platform.md) | WinUI 3 as the Windows shell, accepting Windows-only for now | Accepted |
 | [0002](0002-installer-innosetup-over-msix.md) | InnoSetup installer instead of MSIX | Accepted |
 | [0003](0003-local-diagnostic-logging.md) | Local diagnostic logging, not telemetry | Accepted |
+| [0004](0004-update-check-network-call.md) | In-app update check, the first outbound network call | Accepted |
